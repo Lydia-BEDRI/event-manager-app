@@ -41,18 +41,22 @@ EventManager est une application web destinée à la gestion d’événements in
 
 ## Installation et exécution
 
-### Prérequis :
+### Prérequis
+
 - Node.js (v18 ou supérieur) et npm installés.
 - Docker (optionnel pour le déploiement).
 
-### Étapes :
+### Étapes
+
 1. **Cloner le dépôt :**
+
    ```bash
-   git clone <url-du-dépôt>
+   git clone https://github.com/Lydia-BEDRI/event-manager-app
    cd event-manager-app
    ```
 
 2. **Backend :**
+
    ```bash
    cd backend
    npm install
@@ -62,6 +66,7 @@ EventManager est une application web destinée à la gestion d’événements in
    ```
 
 3. **Frontend :**
+
    ```bash
    cd frontend
    npm install
@@ -75,11 +80,16 @@ EventManager est une application web destinée à la gestion d’événements in
    - Backend : [http://localhost:5000](http://localhost:5000)
    - Health check : [http://localhost:5000/health](http://localhost:5000/health)
 
-### Commandes disponibles :
+## Execution avec Docker Compose
 
-**Backend :**
-- `npm run dev` : Lance le serveur en mode développement avec hot-reload
-- `npm run build` : Compile le TypeScript en JavaScript
-- `npm start` : Lance le serveur en production
-- `npm run lint` : Vérifie le code avec ESLint
-- `npm test` : Execute les tests
+1. **Construire et démarrer les conteneurs :**
+
+   ```bash  
+   docker-compose up --build
+   ```
+
+2. **Accéder à l'application :**
+
+   - Frontend : [http://localhost:3000](http://localhost:3000)
+   - Backend : [http://localhost:5000](http://localhost:5000)
+   - Health check : [http://localhost:5000/health](http://localhost:5000/health)
