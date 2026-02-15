@@ -1,0 +1,33 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-error.log*
+yarn-debug.log*
+
+# Build / runtime artifacts
+/dist/
+/build/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# Coverage / nyc
+/coverage/
+/.nyc_output/
+
+# Temp / pids
+tmp/
+pids/
+
+# System files
+.DS_Store
+
+# IDEs
+.vscode/
+.idea/
