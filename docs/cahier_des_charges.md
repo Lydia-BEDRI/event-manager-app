@@ -64,11 +64,13 @@ Actions principales :
 
 - Demande de participation par les participants
 - Validation ou refus par l’organisateur
-- Génération d’un QR code unique après validation
-- Association du QR code aux zones autorisées
-- Vérification en temps réel lors du scan
-- Prévention des doubles scans
-- Historique des accès par zone
+- Génération d'un QR code signé cryptographiquement après validation
+- Association stricte du QR code au compte utilisateur
+- Module de vérification par upload d'image QR code
+- Vérification côté serveur de la signature et de l'identité
+- Invalidation automatique après scan
+- Prévention des doubles scans et de l'utilisation par un autre compte
+- Historique des présences et accès
 
 ### 4.3 Chat événementiel
 
@@ -91,11 +93,11 @@ Actions principales :
 2. Les participants consultent les événements disponibles.
 3. Un participant envoie une demande de participation.
 4. L’organisateur valide ou refuse la demande.
-5. En cas de validation, un QR code unique est généré et transmis au participant.
-6. Le participant présente son QR code lors de l’événement.
-7. Le système vérifie l’authenticité du QR code, les droits d’accès et l’absence de doublon.
-8. Les accès sont enregistrés et consultables par l’organisateur.
-9. Les participants peuvent utiliser le chat de l’événement.
+5. En cas de validation, un QR code signé cryptographiquement est généré et transmis au participant.
+6. Le participant upload son QR code via le module de vérification.
+7. Le serveur valide la signature cryptographique et l'identité de l'utilisateur.
+8. Le participant est marqué comme "présent" et l'accès au chat en temps réel est activé.
+9. Les accès sont enregistrés et consultables par l'organisateur.
 
 ## 6. Sécurité et authentification
 
@@ -112,9 +114,12 @@ L’application devra respecter les bonnes pratiques de sécurité enseignées e
 
 ### 6.2 Gestion des QR codes
 
+- QR codes signés cryptographiquement pour garantir leur authenticité
 - QR codes uniques et non falsifiables
-- Vérification côté serveur
-- Expiration ou invalidation après usage selon les règles définies
+- Vérification côté serveur obligatoire avec validation de la signature
+- Association stricte au compte utilisateur
+- Invalidation automatique après scan
+- Impossibilité d'utilisation par un autre compte
 - Protection contre les tentatives de réutilisation
 
 ## 7. Architecture technique

@@ -8,8 +8,8 @@ EventManager est une application web destinée à la gestion d’événements in
 
 - Création, modification et suppression d’événements.
 - Gestion des inscriptions avec validation manuelle.
-- Contrôle d’accès aux zones via QR codes uniques.
-- Suivi en temps réel des participants et des accès.
+- Génération de QR codes signés cryptographiquement pour les participants validés.
+- Suivi en temps réel des participants et des présences.
 - Tableau de bord avec statistiques et export des données.
 - Modération des discussions dans le chat événementiel.
 
@@ -17,14 +17,18 @@ EventManager est une application web destinée à la gestion d’événements in
 
 - Consultation des événements disponibles.
 - Demande de participation avec validation par l’organisateur.
-- Accès sécurisé aux zones autorisées via QR codes.
-- Participation aux discussions dans un chat dédié.
+- Réception d'un QR code signé cryptographiquement après validation.
+- Upload du QR code pour valider la présence via l'application web.
+- Participation aux discussions dans un chat dédié après validation de présence.
 
-### Pour les agents de contrôle
+### Module de vérification de présence
 
-- Scan des QR codes pour valider les accès.
+- Vérification par upload d'image QR code depuis l'application web.
+- Validation côté serveur de la signature cryptographique.
+- Contrôle de l'identité de l'utilisateur connecté.
 - Détection des tentatives de double utilisation.
-- Consultation de l’historique des passages.
+- Impossibilité d'utilisation par un autre compte.
+- Marquage automatique de la présence et activation du chat.
 
 ## Architecture technique
 
@@ -36,7 +40,9 @@ EventManager est une application web destinée à la gestion d’événements in
 ## Sécurité et conformité
 
 - Authentification sécurisée avec politique de mot de passe fort.
-- QR codes uniques et vérifiés côté serveur.
+- QR codes signés cryptographiquement et associés strictement au compte utilisateur.
+- Vérification côté serveur obligatoire avec validation de signature.
+- Invalidation automatique après scan et impossibilité de réutilisation.
 - Conformité RGPD avec gestion des données personnelles et consentement.
 
 ## Installation et exécution
