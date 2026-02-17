@@ -36,20 +36,22 @@ Actions principales :
 
 - Consulter les événements disponibles
 - Demander une participation
-- Recevoir un QR code après validation
-- Accéder aux zones autorisées
-- Participer au chat de l’événement
+- Recevoir un QR code signé cryptographiquement après validation
+- Uploader son QR code pour valider sa présence
+- Participer au chat de l'événement après validation de présence
 
-### 3.3 Agent de contrôle / Scanner
+### 3.3 Module de vérification de présence
 
-Responsable du contrôle d’accès sur site.
+Module de vérification par upload d'image QR code permettant de valider la présence d'un participant depuis l'application web.
 
-Actions principales :
+Fonctionnalités :
 
-- Scanner les QR codes (via import d’image ou caméra selon le support)
-- Valider les accès par zone
-- Détecter les tentatives de double utilisation
-- Consulter l’historique des passages
+- Upload d'image QR code via l'application web
+- Vérification côté serveur avec contrôle de la signature du QR code
+- Vérification de l'identité de l'utilisateur connecté
+- Contrôle de l'unicité du scan (pas de double utilisation)
+- Marquage automatique du participant comme "présent"
+- Activation de l'accès au chat en temps réel
 
 ## 4. Fonctionnalités fonctionnelles
 
