@@ -12,7 +12,7 @@ const LegalNotice = () => {
           </h1>
         </div>
         <p className="text-primary-gray">
-          Informations légales concernant Event Manager
+          Informations légales concernant EventManager
         </p>
       </div>
 

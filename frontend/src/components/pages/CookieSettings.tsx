@@ -212,7 +212,7 @@ const CookieSettings = () => {
             onClick={handleAcceptAll}
             className="flex-1 min-w-[200px] bg-gradient-to-r from-primary-purple to-primary-blue text-white py-3 px-6 rounded-xl font-medium hover:shadow-lg transition-all"
           >
-            Tout accepter
+             accepter
           </button>
           <button
             onClick={handleSave}
@@ -224,7 +224,7 @@ const CookieSettings = () => {
             onClick={handleRejectAll}
             className="flex-1 min-w-[200px] bg-gray-200 text-primary-dark py-3 px-6 rounded-xl font-medium hover:bg-gray-300 transition-all"
           >
-            Tout refuser
+             refuser
           </button>
         </div>
 

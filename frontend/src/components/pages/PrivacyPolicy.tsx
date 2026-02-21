@@ -120,7 +120,7 @@ const PrivacyPolicy: React.FC = () => {
             </h2>
           </div>
           <p className="text-primary-gray mb-3">
-            Conformément au RGPD, vous disposez des droits suivants :
+            Conformément au RGPD, vous disposez des droits suivants:
           </p>
           <ul className="list-disc list-inside text-primary-gray space-y-2 ml-4">
             <li><strong>Droit d'accès :</strong> obtenir une copie de vos données</li>
