@@ -26,22 +26,22 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ role = 'participant' }) => {
   const adminMenuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', active: true },
-    { icon: CalendarDays, label: 'Événements', active: false },
-    { icon: Users, label: 'Participants', active: false },
-    { icon: MapPin, label: 'Zones', active: false },
-    { icon: ClipboardCheck, label: 'Présences', active: false },
-    { icon: MessageCircle, label: 'Chats', active: false },
-    { icon: FileDown, label: 'Exports', active: false },
+    { icon: LayoutDashboard, label: 'Dashboard', to: '/' },
+    { icon: CalendarDays, label: 'Événements' },
+    { icon: Users, label: 'Participants' },
+    { icon: MapPin, label: 'Zones' },
+    { icon: ClipboardCheck, label: 'Présences' },
+    { icon: MessageCircle, label: 'Chats' },
+    { icon: FileDown, label: 'Exports' },
   ];
 
   const participantMenuItems = [
-    { icon: Home, label: 'Accueil', active: true },
-    { icon: CalendarDays, label: 'Événements disponibles', active: false },
-    { icon: Ticket, label: 'Mes participations', active: false },
-    { icon: QrCode, label: 'Mes QR Codes', active: false },
-    { icon: ScanLine, label: 'Vérifier ma présence', active: false },
-    { icon: MessageCircle, label: 'Chats', active: false },
+    { icon: Home, label: 'Accueil', to: '/' },
+    { icon: CalendarDays, label: 'Événements disponibles' },
+    { icon: Ticket, label: 'Mes participations' },
+    { icon: QrCode, label: 'Mes QR Codes' },
+    { icon: ScanLine, label: 'Vérifier ma présence' },
+    { icon: MessageCircle, label: 'Chats' },
   ];
 
   const menuItems = role === 'admin' ? adminMenuItems : participantMenuItems;
@@ -49,7 +49,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role = 'participant' }) => {
   return (
     <aside className="bg-primary-dark w-64 h-[calc(100vh-3rem)] flex flex-col rounded-l-3xl flex-none overflow-y-auto">
       <div className="h-16 flex items-center justify-center px-6">
-        <Logo size="large" variant="dark" />
+        <Logo size="large" variant="dark_text" />
       </div>
 
       <nav className="flex-1 px-3 py-6 overflow-y-auto">
@@ -67,13 +67,13 @@ const Sidebar: React.FC<SidebarProps> = ({ role = 'participant' }) => {
           </p>
           <ul className="space-y-1">
             <li>
-              <NavItem icon={Shield} label="Politique de confidentialité" />
+              <NavItem icon={Shield} label="Politique de confidentialité" to="/privacy" />
             </li>
             <li>
-              <NavItem icon={ScrollText} label="Mentions légales" />
+              <NavItem icon={ScrollText} label="Mentions légales" to="/legal" />
             </li>
             <li>
-              <NavItem icon={Cookie} label="Gestion des cookies" />
+              <NavItem icon={Cookie} label="Gestion des cookies" to="/cookies" />
             </li>
           </ul>
         </div>
