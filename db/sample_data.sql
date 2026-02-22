@@ -13,8 +13,7 @@ INSERT INTO users (email, password_hash, first_name, last_name, role, is_active,
 ('organiser@eventmanager.fr', @pwd, 'Bob', 'Dupont', 'ADMIN', TRUE, NOW()),
 ('participant1@eventmanager.fr', @pwd, 'Charlie', 'Durand', 'PARTICIPANT', TRUE, NOW()),
 ('participant2@eventmanager.fr', @pwd, 'Diana', 'Leroy', 'PARTICIPANT', TRUE, NOW()),
-('participant3@eventmanager.fr', @pwd, 'Éric', 'Moreau', 'PARTICIPANT', TRUE, NOW()),
-('scanner1@eventmanager.fr', @pwd, 'Frank', 'Bernard', 'SCANNER', TRUE, NOW());
+('participant3@eventmanager.fr', @pwd, 'Éric', 'Moreau', 'PARTICIPANT', TRUE, NOW());
 
 -- =============================================
 -- EVENTS
@@ -65,9 +64,9 @@ INSERT INTO zone_access (participation_id, zone_id) VALUES
 -- =============================================
 
 INSERT INTO access_logs (participation_id, zone_id, scanned_by, scanned_at, is_valid, ip_address) VALUES
-(1, 1, 6, '2026-04-15 08:45:00', TRUE, '192.168.1.10'),
-(2, 1, 6, '2026-04-15 08:50:00', TRUE, '192.168.1.10'),
-(1, 2, 6, '2026-04-15 10:05:00', TRUE, '192.168.1.11');
+(1, 1, 1, '2026-04-15 08:45:00', TRUE, '192.168.1.10'),
+(2, 1, 1, '2026-04-15 08:50:00', TRUE, '192.168.1.10'),
+(1, 2, 1, '2026-04-15 10:05:00', TRUE, '192.168.1.11');
 
 -- =============================================
 -- MESSAGES

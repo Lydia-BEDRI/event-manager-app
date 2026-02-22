@@ -4,10 +4,10 @@ import Sidebar from '../organisms/Sidebar';
 
 interface LayoutProps {
   children: React.ReactNode;
-  role?: 'admin' | 'participant';
+  role?: 'ADMIN' | 'PARTICIPANT';
 }
 
-const Layout: React.FC<LayoutProps> = ({ children, role = 'participant' }) => {
+const Layout: React.FC<LayoutProps> = ({ children, role = 'PARTICIPANT' }) => {
 return (
     <div className="min-h-screen bg-primary-dark p-6 pl-0 flex">
       <Sidebar role={role} />
