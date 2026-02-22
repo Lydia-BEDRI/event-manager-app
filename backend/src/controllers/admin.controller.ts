@@ -6,10 +6,15 @@ const parseNumbers = (obj: any): any => {
   if (Array.isArray(obj)) {
     return obj.map(parseNumbers);
   }
+  if (obj instanceof Date) {
+    return obj;
+  }
   if (obj && typeof obj === 'object') {
     const parsed: any = {};
     for (const [key, value] of Object.entries(obj)) {
-      if (typeof value === 'string' && !isNaN(Number(value))) {
+      if (value instanceof Date) {
+        parsed[key] = value;
+      } else if (typeof value === 'string' && !isNaN(Number(value)) && value.trim() !== '') {
         parsed[key] = Number(value);
       } else if (value && typeof value === 'object') {
         parsed[key] = parseNumbers(value);

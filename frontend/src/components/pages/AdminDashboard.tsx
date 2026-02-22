@@ -72,9 +72,9 @@ const AdminDashboard: React.FC = () => {
 
   const eventStatusData = [
     { name: 'Publiés', value: Number(stats.events.published_events) || 0, color: '#10b981' },
-    { name: 'En cours', value: Number(stats.events.ongoing_events) || 0, color: '#3b82f6' },
+    { name: 'En cours', value: Number(stats.events.ongoing_events) || 0, color: '#6366f1' },
     { name: 'Brouillon', value: Number(stats.events.draft_events) || 0, color: '#f59e0b' },
-    { name: 'Terminés', value: Number(stats.events.completed_events) || 0, color: '#6366f1' },
+    { name: 'Terminés', value: Number(stats.events.completed_events) || 0, color: '#4F46E5' },
     { name: 'Annulés', value: Number(stats.events.cancelled_events) || 0, color: '#ef4444' },
   ].filter(item => item.value > 0);
 
@@ -95,18 +95,18 @@ const AdminDashboard: React.FC = () => {
     Visites: zone.total_visits
   }));
 
-  const actionsByTypeData = stats.actionsByType.slice(0, 8).map(action => ({
-    action: action.action,
-    count: action.count
-  }));
-
   const formatDate = (dateString: string) => {
+    if (!dateString) return 'Date non disponible';
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Date invalide';
     return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
   const formatTime = (dateString: string) => {
+    if (!dateString) return 'Date non disponible';
     const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Date invalide';
+    
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
@@ -124,6 +124,8 @@ const AdminDashboard: React.FC = () => {
     const labels: Record<string, string> = {
       'CREATE': 'Création',
       'REGISTER': 'Inscription',
+      'LOGIN': 'Connexion',
+      'LOGOUT': 'Déconnexion',
       'APPROVE_PARTICIPATION': 'Approbation',
       'UPDATE': 'Modification',
       'DELETE': 'Suppression',
@@ -131,6 +133,11 @@ const AdminDashboard: React.FC = () => {
     };
     return labels[action] || action;
   };
+
+  const actionsByTypeData = stats.actionsByType.slice(0, 8).map(action => ({
+    action: getActionLabel(action.action),
+    count: action.count
+  }));
 
   const getEventTrend = () => {
     if (stats.events.events_this_month > 0) {
@@ -274,7 +281,14 @@ const AdminDashboard: React.FC = () => {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#fff', 
+                    border: '1px solid #e5e7eb', 
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }} 
+                />
               </PieChart>
             </ResponsiveContainer>
           )}
@@ -308,7 +322,14 @@ const AdminDashboard: React.FC = () => {
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#fff', 
+                    border: '1px solid #e5e7eb', 
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }} 
+                />
               </PieChart>
             </ResponsiveContainer>
           )}
@@ -326,8 +347,15 @@ const AdminDashboard: React.FC = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="hour" />
                 <YAxis />
-                <Tooltip />
-                <Bar dataKey="Scans" fill="#6366f1" />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#fff', 
+                    border: '1px solid #e5e7eb', 
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }} 
+                />
+                <Bar dataKey="Scans" fill="#6366f1" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -347,10 +375,17 @@ const AdminDashboard: React.FC = () => {
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="zone" />
                 <YAxis />
-                <Tooltip />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#fff', 
+                    border: '1px solid #e5e7eb', 
+                    borderRadius: '8px',
+                    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  }} 
+                />
                 <Legend />
-                <Bar dataKey="Visiteurs" fill="#8b5cf6" />
-                <Bar dataKey="Visites" fill="#ec4899" />
+                <Bar dataKey="Visiteurs" fill="#6366f1" radius={[8, 8, 0, 0]} />
+                <Bar dataKey="Visites" fill="#14b8a6" radius={[8, 8, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -371,8 +406,15 @@ const AdminDashboard: React.FC = () => {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis type="number" />
               <YAxis dataKey="action" type="category" width={150} />
-              <Tooltip />
-              <Bar dataKey="count" fill="#10b981" />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: '#fff', 
+                  border: '1px solid #e5e7eb', 
+                  borderRadius: '8px',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }} 
+              />
+              <Bar dataKey="count" fill="#10b981" radius={[0, 8, 8, 0]} />
             </BarChart>
           </ResponsiveContainer>
         ) : (
@@ -402,13 +444,13 @@ const AdminDashboard: React.FC = () => {
                   <h3 className="font-semibold text-primary-dark mb-1">{event.name}</h3>
                   <p className="text-sm text-primary-gray mb-2">
                     <MapPin className="inline-block mr-1 text-primary-gray" size={14} />
-                    {event.location} • {formatDate(event.start_date)}
+                    {event.location} <span className="mx-1.5 text-gray-400">|</span> {formatDate(event.start_date)}
                   </p>
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-gray-600">
                       {event.approved_count} / {event.capacity} participants
                     </span>
-                    <span className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                    <span className="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-medium">
                       {Math.round((event.approved_count / event.capacity) * 100)}% rempli
                     </span>
                   </div>
@@ -440,7 +482,7 @@ const AdminDashboard: React.FC = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-primary-dark">
-                      {getActionLabel(activity.action)} • {activity.entity_type}
+                      {getActionLabel(activity.action)} <span className="mx-1.5 text-gray-400">|</span> {activity.entity_type}
                     </p>
                     {activity.email && (
                       <p className="text-xs text-primary-gray truncate">
@@ -498,15 +540,15 @@ const AdminDashboard: React.FC = () => {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Aujourd'hui</span>
-              <span className="font-semibold text-blue-600">{stats.messages.messages_today}</span>
+              <span className="font-semibold text-indigo-600">{stats.messages.messages_today}</span>
             </div>
           </div>
         </div>
 
         <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Download className="text-blue-600" size={20} />
+            <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+              <Download className="text-indigo-600" size={20} />
             </div>
             <h3 className="font-medium text-primary-dark">Exports CSV</h3>
           </div>
@@ -521,7 +563,7 @@ const AdminDashboard: React.FC = () => {
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">En cours</span>
-              <span className="font-semibold text-blue-600">{stats.exports.processing_exports}</span>
+              <span className="font-semibold text-indigo-600">{stats.exports.processing_exports}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-gray-600">Échoués</span>
@@ -588,7 +630,7 @@ const AdminDashboard: React.FC = () => {
                         {request.first_name} {request.last_name}
                       </p>
                       <p className="text-xs text-gray-600">
-                        {request.event_name} • {formatTime(request.created_at)}
+                        {request.event_name} <span className="mx-1.5 text-gray-400">|</span> {formatTime(request.created_at)}
                       </p>
                     </div>
                     <button className="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-medium hover:bg-yellow-700 transition-colors">

@@ -32,9 +32,43 @@ const AppRoutes: React.FC = () => {
       <Route path="/register" element={isAuthenticated ? <Navigate to="/" replace /> : <RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/privacy" element={<PrivacyPolicy />} />
-      <Route path="/legal" element={<LegalNotice />} />
-      <Route path="/cookies" element={<CookieSettings />} />
+      
+      <Route
+        path="/privacy"
+        element={
+          isAuthenticated ? (
+            <Layout role={userRole || 'PARTICIPANT'}>
+              <PrivacyPolicy />
+            </Layout>
+          ) : (
+            <PrivacyPolicy />
+          )
+        }
+      />
+      <Route
+        path="/legal"
+        element={
+          isAuthenticated ? (
+            <Layout role={userRole || 'PARTICIPANT'}>
+              <LegalNotice />
+            </Layout>
+          ) : (
+            <LegalNotice />
+          )
+        }
+      />
+      <Route
+        path="/cookies"
+        element={
+          isAuthenticated ? (
+            <Layout role={userRole || 'PARTICIPANT'}>
+              <CookieSettings />
+            </Layout>
+          ) : (
+            <CookieSettings />
+          )
+        }
+      />
 
       {/* Routes protégées */}
       <Route
