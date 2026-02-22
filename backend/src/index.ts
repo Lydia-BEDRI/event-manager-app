@@ -2,6 +2,7 @@ import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import dotenv from 'dotenv';
+import authRoutes from './routes/auth.routes';
 
 dotenv.config();
 
@@ -30,6 +31,9 @@ app.get('/', (_req: Request, res: Response) => {
     version: '1.0.0'
   });
 });
+
+// Routes
+app.use('/api/auth', authRoutes);
 
 app.use((_req: Request, res: Response) => {
   res.status(404).json({
