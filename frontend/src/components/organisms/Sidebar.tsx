@@ -19,12 +19,26 @@ import {
 } from 'lucide-react';
 import Logo from '../atoms/Logo';
 import NavItem from '../molecules/NavItem';
+import { useAuth } from '../../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface SidebarProps {
-  role?: 'admin' | 'participant';
+  role?: 'ADMIN' | 'PARTICIPANT';
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ role = 'participant' }) => {
+const Sidebar: React.FC<SidebarProps> = ({ role = 'PARTICIPANT' }) => {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+    }
+  };
+
   const adminMenuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', to: '/' },
     { icon: CalendarDays, label: 'Événements' },
@@ -44,7 +58,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role = 'participant' }) => {
     { icon: MessageCircle, label: 'Chats' },
   ];
 
-  const menuItems = role === 'admin' ? adminMenuItems : participantMenuItems;
+  const menuItems = role === 'ADMIN' ? adminMenuItems : participantMenuItems;
 
   return (
     <aside className="bg-primary-dark w-64 h-[calc(100vh-3rem)] flex flex-col rounded-l-3xl flex-none overflow-y-auto">
@@ -80,9 +94,12 @@ const Sidebar: React.FC<SidebarProps> = ({ role = 'participant' }) => {
       </nav>
 
       <div className="p-3">
-        <NavItem icon={Settings} label={role === 'admin' ? 'Paramètres' : 'Mon profil'} />
+        <NavItem icon={Settings} label={role === 'ADMIN' ? 'Paramètres' : 'Mon profil'} />
         <div className="mt-1">
-          <button className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-primary-gray hover:bg-red-500/10 hover:text-red-400 transition-all text-left">
+          <button 
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-primary-gray hover:bg-red-500/10 hover:text-red-400 transition-all text-left"
+          >
             <LogOut size={20} />
             <span>Déconnexion</span>
           </button>

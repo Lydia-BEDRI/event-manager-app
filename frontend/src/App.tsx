@@ -2,7 +2,8 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Layout from './components/templates/Layout';
-import Dashboard from './components/pages/Dashboard';
+import AdminDashboard from './components/pages/AdminDashboard';
+import ParticipantDashboard from './components/pages/ParticipantDashboard';
 import PrivacyPolicy from './components/pages/PrivacyPolicy';
 import LegalNotice from './components/pages/LegalNotice';
 import CookieSettings from './components/pages/CookieSettings';
@@ -15,7 +16,14 @@ import ProtectedRoute from './components/organisms/ProtectedRoute';
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
 
-  const userRole = (user?.role?.toLowerCase() === 'admin' ? 'admin' : 'participant') as 'admin' | 'participant';
+  const userRole = user?.role?.toUpperCase() as 'ADMIN' | 'PARTICIPANT' | undefined;
+
+  const getDashboardComponent = () => {
+    if (userRole === 'ADMIN') {
+      return <AdminDashboard />;
+    }
+    return <ParticipantDashboard />;
+  };
 
   return (
     <Routes>
@@ -33,8 +41,8 @@ const AppRoutes: React.FC = () => {
         path="/"
         element={
           <ProtectedRoute>
-            <Layout role={userRole}>
-              <Dashboard />
+            <Layout role={userRole || 'PARTICIPANT'}>
+              {getDashboardComponent()}
             </Layout>
           </ProtectedRoute>
         }
