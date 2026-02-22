@@ -46,7 +46,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role = 'PARTICIPANT' }) => {
     { icon: MapPin, label: 'Zones' },
     { icon: ClipboardCheck, label: 'Présences' },
     { icon: MessageCircle, label: 'Chats' },
-    { icon: FileDown, label: 'Exports' },
+    { icon: FileDown, label: 'Exports', to: '/exports' },
   ];
 
   const participantMenuItems = [

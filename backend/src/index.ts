@@ -4,6 +4,7 @@ import helmet from 'helmet';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.routes';
 import adminRoutes from './routes/admin.routes';
+import exportRoutes from './routes/export.routes';
 
 dotenv.config();
 
@@ -36,6 +37,7 @@ app.get('/', (_req: Request, res: Response) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/export', exportRoutes);
 
 app.use((_req: Request, res: Response) => {
   res.status(404).json({

@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import Layout from './components/templates/Layout';
 import AdminDashboard from './components/pages/AdminDashboard';
 import ParticipantDashboard from './components/pages/ParticipantDashboard';
+import ExportPage from './components/pages/ExportPage';
 import PrivacyPolicy from './components/pages/PrivacyPolicy';
 import LegalNotice from './components/pages/LegalNotice';
 import CookieSettings from './components/pages/CookieSettings';
@@ -77,6 +78,18 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute>
             <Layout role={userRole || 'PARTICIPANT'}>
               {getDashboardComponent()}
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Route Exports (Admin uniquement) */}
+      <Route
+        path="/exports"
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <Layout role="ADMIN">
+              <ExportPage />
             </Layout>
           </ProtectedRoute>
         }
