@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { getAllEvents } from '../../services/event.service';
 import { Event } from '../../types/event.types';
 import EventCard from '../molecules/EventCard';
+import Button  from '../atoms/Button';
+import { Plus } from 'lucide-react';
 
 const EventsPage= () => {
   const [events, setEvents] = useState<Event[]>([]);
@@ -48,9 +50,16 @@ const EventsPage= () => {
     <div className="p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-primary-dark">Événements disponibles</h1>
+        <Button 
+          variant="primary" 
+          icon={Plus}
+          onClick={() => navigate('/events/create')}
+        >
+          Créer un événement
+        </Button>
       </div>
+      
 
-      {/* Liste des événements */}
       {events.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-500">Aucun événement trouvé</p>
