@@ -43,7 +43,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role = 'PARTICIPANT' }) => {
     { icon: LayoutDashboard, label: 'Dashboard', to: '/' },
     { icon: CalendarDays, label: 'Événements', to: '/events' },
     { icon: Users, label: 'Participants' },
-    { icon: MapPin, label: 'Zones' },
+    { icon: MapPin, label: 'Zones', to: '/zones' },
     { icon: ClipboardCheck, label: 'Présences' },
     { icon: MessageCircle, label: 'Chats' },
     { icon: FileDown, label: 'Exports', to: '/exports' },

@@ -12,7 +12,7 @@ import { authorize } from '../middlewares/authorize';
 const router = express.Router();
 
 
-router.get('/', authenticate, getAllZones);
+router.get('/', authenticate, authorize('ADMIN'), getAllZones);
 router.post('/:eventId/zones', authenticate, authorize('ADMIN'), createZone);
 router.get('/:eventId/zones', authenticate, getEventZones);
 router.put('/:eventId/zones/:zoneId', authenticate, authorize('ADMIN'), updateZone);

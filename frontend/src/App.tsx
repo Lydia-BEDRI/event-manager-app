@@ -14,6 +14,7 @@ import RegisterPage from './components/pages/RegisterPage';
 import ForgotPasswordPage from './components/pages/ForgotPasswordPage';
 import ResetPasswordPage from './components/pages/ResetPasswordPage';
 import ProtectedRoute from './components/organisms/ProtectedRoute';
+import ZonesPage from './components/pages/ZonesPage';
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
@@ -107,6 +108,13 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
+       <Route path="/zones" element={
+        <ProtectedRoute allowedRoles={['ADMIN']}>
+          <Layout role={ 'ADMIN'}>
+            <ZonesPage />
+          </Layout>
+          </ProtectedRoute>
+        } />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />
