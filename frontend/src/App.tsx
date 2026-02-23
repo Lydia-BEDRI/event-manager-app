@@ -5,6 +5,7 @@ import Layout from './components/templates/Layout';
 import AdminDashboard from './components/pages/AdminDashboard';
 import ParticipantDashboard from './components/pages/ParticipantDashboard';
 import ExportPage from './components/pages/ExportPage';
+import EventsPage from './components/pages/EventsPage';
 import PrivacyPolicy from './components/pages/PrivacyPolicy';
 import LegalNotice from './components/pages/LegalNotice';
 import CookieSettings from './components/pages/CookieSettings';
@@ -90,6 +91,18 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute allowedRoles={['ADMIN']}>
             <Layout role="ADMIN">
               <ExportPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Route Events */}
+      <Route
+        path="/events"
+        element={
+          <ProtectedRoute>
+            <Layout role={userRole || 'PARTICIPANT'}>
+              <EventsPage />
             </Layout>
           </ProtectedRoute>
         }

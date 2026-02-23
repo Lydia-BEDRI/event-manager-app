@@ -451,3 +451,4 @@ export async function getDashboardStats(_req: Request, res: Response): Promise<v
     res.status(500).json({ error: 'Erreur serveur lors de la récupération des statistiques.' });
   }
 }
+
