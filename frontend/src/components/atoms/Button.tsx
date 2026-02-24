@@ -8,6 +8,7 @@ interface ButtonProps {
   icon?: LucideIcon;
   className?: string;
   type?: 'button' | 'submit' | 'reset';
+  disabled?: boolean;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -17,6 +18,7 @@ const Button: React.FC<ButtonProps> = ({
   icon: Icon,
   className = '',
   type = 'button',
+  disabled = false,
 }) => {
   const variants = {
     primary: 'bg-primary-accent hover:bg-[#0098C7] text-primary-white',
@@ -28,7 +30,8 @@ const Button: React.FC<ButtonProps> = ({
     <button
       type={type}
       onClick={onClick}
-      className={`flex items-center justify-center gap-2 font-medium px-6 py-3 rounded-2xl transition duration-200 ${variants[variant]} ${className}`}
+      disabled={disabled}
+      className={`flex items-center justify-center gap-2 font-medium px-6 py-3 rounded-2xl transition duration-200 ${variants[variant]} ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
       {Icon && <Icon size={20} />}
       {children}

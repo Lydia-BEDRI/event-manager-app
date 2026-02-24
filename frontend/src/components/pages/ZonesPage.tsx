@@ -61,7 +61,6 @@ const ZonesPage = () => {
 
   return (
     <div className="p-8">
-      {/* Header */}
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-3">
           <div className="p-3 bg-gradient-to-br from-primary-purple to-purple-600 rounded-xl shadow-lg">
@@ -83,7 +82,6 @@ const ZonesPage = () => {
         </div>
       </div>
 
-      {/* Liste des zones */}
       {zones.length === 0 ? (
         <div className="text-center py-20">
           <div className="bg-gray-100 rounded-full p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">

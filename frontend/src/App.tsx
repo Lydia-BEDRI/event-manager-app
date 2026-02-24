@@ -15,6 +15,7 @@ import ForgotPasswordPage from './components/pages/ForgotPasswordPage';
 import ResetPasswordPage from './components/pages/ResetPasswordPage';
 import ProtectedRoute from './components/organisms/ProtectedRoute';
 import ZonesPage from './components/pages/ZonesPage';
+import CreateEventPage from './components/pages/CreateEventPage';
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
@@ -30,12 +31,12 @@ const AppRoutes: React.FC = () => {
 
   return (
     <Routes>
-      {/* Routes publiques */}
       <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />} />
       <Route path="/register" element={isAuthenticated ? <Navigate to="/" replace /> : <RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
-      
+      <Route path="/events" element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
+      <Route path="/events/create" element={<ProtectedRoute><CreateEventPage /></ProtectedRoute>} />
       <Route
         path="/privacy"
         element={

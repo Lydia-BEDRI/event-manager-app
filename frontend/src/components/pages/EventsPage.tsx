@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllEvents } from '../../services/event.service';
+import { deleteEvent, getAllEvents } from '../../services/event.service';
 import { Event } from '../../types/event.types';
 import EventCard from '../molecules/EventCard';
 import Button  from '../atoms/Button';
@@ -29,7 +29,24 @@ const EventsPage= () => {
       setLoading(false);
     }
   };
+const handleDeleteEvent = async (eventId: number) => {
+    console.log('Tentative de suppression de l\'événement:', eventId);
+    
+    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet événement ? Cette action est irréversible.')) {
+      console.log('Suppression annulée par l\'utilisateur');
+      return;
+    }
 
+    try {
+      console.log('Appel de deleteEvent avec l\'ID:', eventId);
+      await deleteEvent(eventId);
+      console.log('Événement supprimé avec succès');
+      await loadEvents();
+    } catch (err: any) {
+      console.error('Erreur lors de la suppression:', err);
+      alert(err.message || 'Erreur lors de la suppression');
+    }
+  };
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -71,6 +88,7 @@ const EventsPage= () => {
               key={event.id}
               event={event}
               onClick={() => navigate(`/events/${event.id}`)}
+              onDelete={() => handleDeleteEvent(event.id)}
             />
           ))}
         </div>

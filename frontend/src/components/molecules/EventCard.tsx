@@ -6,9 +6,10 @@ import Badge from '../atoms/Badge';
 interface EventCardProps {
   event: Event;
   onClick?: () => void;
+  onDelete?: () => void;
 }
 
-const EventCard = ({ event, onClick }: EventCardProps) => {
+const EventCard = ({ event, onClick, onDelete }: EventCardProps) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
       day: '2-digit',
@@ -40,6 +41,12 @@ const EventCard = ({ event, onClick }: EventCardProps) => {
         return 'bg-white border-gray-200';
     }
   };
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete();
+    }
+  };
 
   return (
     <div
@@ -50,18 +57,54 @@ const EventCard = ({ event, onClick }: EventCardProps) => {
         cursor-pointer border-2 transform hover:-translate-y-1
         ${getStatusColor(event.status)}
       `}
-    >
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex-1">
-          <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-primary-purple transition-colors">
-            {event.name}
-          </h3>
-          <Badge status={event.status} />
-        </div>
-        <div className="ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
-          <ArrowRight className="text-primary-purple" size={24} />
-        </div>
+    >    
+      <div className="relative flex justify-between items-start mb-4 group">
+
+  <div className="flex-1">
+    <h3 className="text-xl font-semibold text-gray-900 group-hover:text-primary-purple transition-colors duration-200">
+      {event.name}
+    </h3>
+
+    <div className="mt-2">
+      <Badge status={event.status} />
+    </div>
+  </div>
+
+    <div className="flex items-center gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+
+      <button
+        onClick={onClick}
+        className="p-2 rounded-lg bg-blue-500/10 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200"
+        title="Modifier l'événement"
+      >
+        ✏️
+      </button>
+
+      <button
+        onClick={handleDelete}
+        className="p-2 rounded-lg bg-red-500/10 text-red-600 hover:bg-red-600 hover:text-white transition-all duration-200"
+        title="Supprimer l'événement"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          className="h-4 w-4"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+
+      <div className="ml-1 text-primary-purple">
+        <ArrowRight size={22} />
       </div>
+
+    </div>
+
+</div>
 
       {event.description && (
         <p className="text-gray-600 text-sm mb-6 line-clamp-2 leading-relaxed">
@@ -111,7 +154,7 @@ const EventCard = ({ event, onClick }: EventCardProps) => {
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div 
-                className="bg-gradient-to-r from-purple-600 to-primary-purple h-2 rounded-full transition-all duration-300"
+                className="bg-blue-900 h-2 rounded-full transition-all duration-300"
                 style={{ width: '45%' }}
               />
             </div>
