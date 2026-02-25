@@ -39,6 +39,12 @@ export interface Participant {
 
 export type ParticipantStatus = Participant['status'];
 
+export interface ZoneInput {
+  name: string;
+  description?: string;
+  capacity: number;
+}
+
 export interface CreateEventDto {
   name: string;
   description?: string;
@@ -47,6 +53,7 @@ export interface CreateEventDto {
   end_date: string;
   capacity: number;
   status?: EventStatus;
+  zones?: ZoneInput[]; // ← Zones sélectionnées
 }
 
 export interface UpdateEventDto extends Partial<CreateEventDto> {}

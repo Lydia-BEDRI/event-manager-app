@@ -1,14 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createEvent } from '../../services/event.service';
-import { CreateEventDto } from '../../types/event.types';
+import { getAllZones } from '../../services/zone.service';
+import { CreateEventDto, ZoneInput } from '../../types/event.types';
 import Button from '../atoms/Button';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Plus } from 'lucide-react';
 
 const CreateEventPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [loadingZones, setLoadingZones] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [availableZones, setAvailableZones] = useState<ZoneInput[]>([]);
+  const [selectedZones, setSelectedZones] = useState<ZoneInput[]>([]);
+  const [showZonesList, setShowZonesList] = useState(false);
   const [formData, setFormData] = useState<CreateEventDto>({
     name: '',
     description: '',
@@ -17,7 +22,24 @@ const CreateEventPage = () => {
     end_date: '',
     capacity: 0,
     status: 'DRAFT',
+    zones: [],
   });
+
+  useEffect(() => {
+    loadAvailableZones();
+  }, []);
+
+  const loadAvailableZones = async () => {
+    try {
+      setLoadingZones(true);
+      const zones = await getAllZones();
+      setAvailableZones(zones);
+    } catch (err) {
+      console.error('Erreur lors du chargement des zones:', err);
+    } finally {
+      setLoadingZones(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); 
@@ -25,8 +47,21 @@ const CreateEventPage = () => {
     try {
       setLoading(true);
       setError(null);
-      
-      await createEvent(formData);
+
+      if (selectedZones.length > 0) {
+        const totalZonesCapacity = selectedZones.reduce((sum, zone) => sum + zone.capacity, 0);
+        
+        if (formData.capacity > totalZonesCapacity) {
+          setError(`La capacité de l'événement (${formData.capacity}) ne peut pas être supérieure à la somme des capacités des zones (${totalZonesCapacity})`);
+          setLoading(false);
+          return;
+        }
+      }
+
+      await createEvent({
+        ...formData,
+        zones: selectedZones
+      });
       
       navigate('/events');
     } catch (err: any) {
@@ -36,6 +71,23 @@ const CreateEventPage = () => {
       setLoading(false);
     }
   };
+
+  const toggleZoneSelection = (zone: ZoneInput) => {
+    setSelectedZones(prev => {
+      const isSelected = prev.some(z => z.name === zone.name && z.capacity === zone.capacity);
+      if (isSelected) {
+        return prev.filter(z => !(z.name === zone.name && z.capacity === zone.capacity));
+      } else {
+        return [...prev, zone];
+      }
+    });
+  };
+
+  const isZoneSelected = (zone: ZoneInput) => {
+    return selectedZones.some(z => z.name === zone.name && z.capacity === zone.capacity);
+  };
+
+  const totalZonesCapacity = selectedZones.reduce((sum, zone) => sum + zone.capacity, 0);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -174,6 +226,106 @@ const CreateEventPage = () => {
                   <option value="CANCELLED">Annulé</option>
                 </select>
               </div>
+            </div>
+
+            {/* SECTION ZONES */}
+            <div className="border-t pt-6 mt-6">
+              <div className="flex justify-between items-center mb-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">Zones d'accès</h3>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Sélectionnez les zones pour votre événement
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  icon={Plus}
+                  onClick={() => setShowZonesList(!showZonesList)}
+                  disabled={loadingZones}
+                >
+                  {showZonesList ? 'Masquer' : 'Ajouter des zones'}
+                </Button>
+              </div>
+
+              {selectedZones.length > 0 && (
+                <div className={`mb-4 px-4 py-3 rounded-xl ${
+                  totalZonesCapacity > formData.capacity || formData.capacity > totalZonesCapacity
+                    ? 'bg-red-50 border border-red-200 text-red-700' 
+                    : 'bg-green-50 border border-green-200 text-green-700'
+                }`}>
+                  <p className="text-sm font-medium">
+
+                    {formData.capacity > totalZonesCapacity && (
+                      <span className="ml-2">⚠️ L'événement est trop grand par rapport aux zones !</span>
+                    )}
+                   
+                  </p>
+                </div>
+              )}
+
+              {/* Liste des zones disponibles */}
+              {showZonesList && (
+                <div className="mb-4 bg-gray-50 rounded-xl p-4 border border-gray-200 max-h-64 overflow-y-auto">
+                  {loadingZones ? (
+                    <p className="text-gray-500 text-center">Chargement des zones...</p>
+                  ) : availableZones.length === 0 ? (
+                    <p className="text-gray-500 text-center">Aucune zone disponible</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {availableZones.map((zone, index) => (
+                        <label
+                          key={index}
+                          className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200 hover:border-primary-purple cursor-pointer transition-all"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isZoneSelected(zone)}
+                            onChange={() => toggleZoneSelection(zone)}
+                            className="w-5 h-5 text-primary-purple rounded focus:ring-primary-purple"
+                          />
+                          <div className="flex-1">
+                            <p className="font-semibold text-gray-900">{zone.name}</p>
+                            {zone.description && (
+                              <p className="text-sm text-gray-600">{zone.description}</p>
+                            )}
+                          </div>
+                          <span className="text-sm font-medium text-gray-700 bg-gray-100 px-3 py-1 rounded-lg">
+                            {zone.capacity} pers.
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Zones sélectionnées */}
+              {selectedZones.length > 0 ? (
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-gray-700 mb-2">
+                    Zones sélectionnées ({selectedZones.length})
+                  </p>
+                  {selectedZones.map((zone, index) => (
+                    <div key={index} className="flex items-center justify-between bg-purple-50 rounded-lg p-3 border border-purple-200">
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900">{zone.name}</p>
+                        {zone.description && (
+                          <p className="text-sm text-gray-600">{zone.description}</p>
+                        )}
+                      </div>
+                      <span className="text-sm font-medium text-primary-purple bg-white px-3 py-1 rounded-lg">
+                        {zone.capacity} pers.
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p>Aucune zone sélectionnée</p>
+                  <p className="text-sm mt-1">Cliquez sur "Ajouter des zones" pour commencer</p>
+                </div>
+              )}
             </div>
           </div>
 

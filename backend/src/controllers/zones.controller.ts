@@ -2,13 +2,11 @@ import { Request, Response } from 'express';
 import pool from '../config/database';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 
-// Créer une zone pour un événement
 export const createZone = async (req: Request, res: Response) => {
   try {
     const { eventId } = req.params;
     const { name, description, capacity } = req.body;
 
-    // Vérifier que l'événement existe
     const [events] = await pool.query<RowDataPacket[]>(
       'SELECT id, capacity FROM events WHERE id = ?',
       [eventId]
@@ -18,20 +16,17 @@ export const createZone = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Événement non trouvé' });
     }
 
-    // Vérifier que la capacité de la zone n'excède pas celle de l'événement
     if (capacity > events[0].capacity) {
       return res.status(400).json({ 
         message: `La capacité de la zone (${capacity}) ne peut pas dépasser celle de l'événement (${events[0].capacity})` 
       });
     }
 
-    // Créer la zone
     const [result] = await pool.query<ResultSetHeader>(
       'INSERT INTO zones (event_id, name, description, capacity) VALUES (?, ?, ?, ?)',
       [eventId, name, description || null, capacity]
     );
 
-    // Récupérer la zone créée
     const [newZone] = await pool.query<RowDataPacket[]>(
       'SELECT * FROM zones WHERE id = ?',
       [result.insertId]
@@ -45,22 +40,38 @@ export const createZone = async (req: Request, res: Response) => {
 };
 export const getAllZones = async (req: Request, res: Response) => {
   try {
-    const query = ` SELECT z.id, z.name, z.description, z.capacity, z.created_at, e.name AS event_name
+    const query = `SELECT z.id, z.name, z.description, z.capacity, z.created_at, z.event_id, e.name AS event_name
                     FROM zones z
-                    JOIN events e ON z.event_id = e.id
-                    ORDER BY z.created_at ASC`;
+                    LEFT JOIN events e ON z.event_id = e.id
+                    ORDER BY z.created_at DESC`;
   
-  const [zones] = await pool.query<RowDataPacket[]>(query);
+    const [zones] = await pool.query<RowDataPacket[]>(query);
 
-  res.json(zones);
+    res.json(zones);
   } catch (error) {
     console.error('Error fetching zones:', error);
     res.status(500).json({ message: 'Erreur serveur', error });
   }
 };
 
+export const getDistinctZones = async (req: Request, res: Response) => {
+  try {
+    // Récupère les zones uniques par nom/description/capacité (templates)
+    const query = `SELECT DISTINCT name, description, capacity
+                   FROM zones
+                   GROUP BY name, description, capacity
+                   ORDER BY name ASC`;
+  
+    const [zones] = await pool.query<RowDataPacket[]>(query);
 
-// Récupérer toutes les zones d'un événement
+    res.json(zones);
+  } catch (error) {
+    console.error('Error fetching distinct zones:', error);
+    res.status(500).json({ message: 'Erreur serveur', error });
+  }
+};
+
+
 export const getEventZones = async (req: Request, res: Response) => {
   try {
     const { eventId } = req.params;
@@ -77,13 +88,11 @@ export const getEventZones = async (req: Request, res: Response) => {
   }
 };
 
-// Mettre à jour une zone
 export const updateZone = async (req: Request, res: Response) => {
   try {
     const { eventId, zoneId } = req.params;
     const { name, description, capacity } = req.body;
 
-    // Vérifier que la zone existe et appartient à l'événement
     const [zones] = await pool.query<RowDataPacket[]>(
       'SELECT * FROM zones WHERE id = ? AND event_id = ?',
       [zoneId, eventId]
@@ -93,7 +102,6 @@ export const updateZone = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Zone non trouvée' });
     }
 
-    // Vérifier la capacité si elle est modifiée
     if (capacity) {
       const [events] = await pool.query<RowDataPacket[]>(
         'SELECT capacity FROM events WHERE id = ?',
@@ -107,7 +115,6 @@ export const updateZone = async (req: Request, res: Response) => {
       }
     }
 
-    // Construire la requête de mise à jour
     const updates: string[] = [];
     const values: any[] = [];
 
@@ -135,7 +142,6 @@ export const updateZone = async (req: Request, res: Response) => {
       values
     );
 
-    // Récupérer la zone mise à jour
     const [updatedZone] = await pool.query<RowDataPacket[]>(
       'SELECT * FROM zones WHERE id = ?',
       [zoneId]
@@ -148,12 +154,10 @@ export const updateZone = async (req: Request, res: Response) => {
   }
 };
 
-// Supprimer une zone
 export const deleteZone = async (req: Request, res: Response) => {
   try {
     const { eventId, zoneId } = req.params;
 
-    // Vérifier que la zone existe et appartient à l'événement
     const [zones] = await pool.query<RowDataPacket[]>(
       'SELECT * FROM zones WHERE id = ? AND event_id = ?',
       [zoneId, eventId]
@@ -163,7 +167,6 @@ export const deleteZone = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Zone non trouvée' });
     }
 
-    // Supprimer la zone
     await pool.query('DELETE FROM zones WHERE id = ?', [zoneId]);
 
     res.json({ message: 'Zone supprimée avec succès' });

@@ -2,7 +2,7 @@ import React from 'react';
 import { Calendar, MapPin, Users, Clock, ArrowRight } from 'lucide-react';
 import { Event } from '../../types/event.types';
 import Badge from '../atoms/Badge';
-
+import {getEventZones} from '../../services/zone.service';
 interface EventCardProps {
   event: Event;
   onClick?: () => void;

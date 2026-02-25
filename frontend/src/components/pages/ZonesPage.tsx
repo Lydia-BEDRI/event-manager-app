@@ -61,25 +61,25 @@ const ZonesPage = () => {
 
   return (
     <div className="p-8">
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-3">
+      <div className="flex justify-between items-center mb-8">
+        <div className="flex items-center gap-3">
           <div className="p-3 bg-gradient-to-br from-primary-purple to-purple-600 rounded-xl shadow-lg">
             <MapPin className="text-white" size={32} />
           </div>
-          <div className='flex justify-between items-center w-full'>
-            <h1 className="text-3xl font-bold text-primary-dark space">Zones d'accès</h1>
+          <div>
+            <h1 className="text-3xl font-bold text-primary-dark">Zones d'accès</h1>
             <p className="text-gray-600 mt-1">
-              Gérez toutes les zones de vos événements ({zones.length} zone{zones.length > 1 ? 's' : ''})
+              {zones.length} zone{zones.length > 1 ? 's' : ''} au total
             </p>
-            <Button 
-                variant="primary" 
-                icon={Plus}
-                onClick={() => navigate('/zones/create')}
-                >
-                Ajouter une zone
-            </Button>
           </div>
         </div>
+        <Button 
+          variant="primary" 
+          icon={Plus}
+          onClick={() => navigate('/zones/create')}
+        >
+          Créer une zone
+        </Button>
       </div>
 
       {zones.length === 0 ? (
