@@ -56,7 +56,7 @@ export const getAllZones = async (req: Request, res: Response) => {
 
 export const getDistinctZones = async (req: Request, res: Response) => {
   try {
-    // Récupère les zones uniques par nom/description/capacité (templates)
+    // recuperer les zones (sans doublons) par nom/description/capacité
     const query = `SELECT DISTINCT name, description, capacity
                    FROM zones
                    GROUP BY name, description, capacity

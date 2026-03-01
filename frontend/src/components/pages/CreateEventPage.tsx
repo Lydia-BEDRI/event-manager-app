@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createEvent } from '../../services/event.service';
-import { getAllZones } from '../../services/zone.service';
+import { getDistinctZones } from '../../services/zone.service';
 import { CreateEventDto, ZoneInput } from '../../types/event.types';
 import Button from '../atoms/Button';
 import { ArrowLeft, Save, Plus } from 'lucide-react';
@@ -32,10 +32,14 @@ const CreateEventPage = () => {
   const loadAvailableZones = async () => {
     try {
       setLoadingZones(true);
-      const zones = await getAllZones();
+      const zones = await getDistinctZones();
       setAvailableZones(zones);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Erreur lors du chargement des zones:', err);
+      if (err.message?.includes('Token manquant')) {
+        setError('Session expirée. Veuillez vous reconnecter.');
+        setTimeout(() => navigate('/login'), 2000);
+      }
     } finally {
       setLoadingZones(false);
     }
@@ -228,7 +232,6 @@ const CreateEventPage = () => {
               </div>
             </div>
 
-            {/* SECTION ZONES */}
             <div className="border-t pt-6 mt-6">
               <div className="flex justify-between items-center mb-4">
                 <div>
@@ -264,7 +267,6 @@ const CreateEventPage = () => {
                 </div>
               )}
 
-              {/* Liste des zones disponibles */}
               {showZonesList && (
                 <div className="mb-4 bg-gray-50 rounded-xl p-4 border border-gray-200 max-h-64 overflow-y-auto">
                   {loadingZones ? (
@@ -300,7 +302,6 @@ const CreateEventPage = () => {
                 </div>
               )}
 
-              {/* Zones sélectionnées */}
               {selectedZones.length > 0 ? (
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-gray-700 mb-2">
@@ -329,7 +330,6 @@ const CreateEventPage = () => {
             </div>
           </div>
 
-          {/* Boutons */}
           <div className="flex gap-4 mt-8 pt-6 border-t border-gray-200">
             <Button
               type="submit"

@@ -22,9 +22,14 @@ const EventsPage= () => {
       const data = await getAllEvents();
       setEvents(data);
       setError(null);
-    } catch (err) {
-      setError('Erreur lors du chargement des événements');
+    } catch (err: any) {
       console.error(err);
+      if (err.message?.includes('Token manquant')) {
+        setError('Session expirée. Redirection vers la page de connexion...');
+        setTimeout(() => navigate('/login'), 2000);
+      } else {
+        setError('Erreur lors du chargement des événements');
+      }
     } finally {
       setLoading(false);
     }
@@ -87,7 +92,7 @@ const handleDeleteEvent = async (eventId: number) => {
             <EventCard
               key={event.id}
               event={event}
-              onClick={() => navigate(`/events/${event.id}`)}
+              onClick={() => navigate(`/events/${event.id}/edit`)}
               onDelete={() => handleDeleteEvent(event.id)}
             />
           ))}

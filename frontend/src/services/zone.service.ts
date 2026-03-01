@@ -2,21 +2,39 @@ import { api } from './api';
 import { Zone, CreateZoneDto } from '../types/zone.types';
 
 export const getAllZones = async () => {
-  const token = localStorage.getItem('accessToken') || '';
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
+    throw new Error('Token manquant. Veuillez vous reconnecter.');
+  }
   return await api.get<Zone[]>('/zones', token);
 };
 
 export const getDistinctZones = async () => {
-  const token = localStorage.getItem('accessToken') || '';
-  return await api.get<Omit<Zone, 'id' | 'event_id' | 'event_name' | 'created_at'>[]>('/zones/distinct', token);
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
+    throw new Error('Token manquant. Veuillez vous reconnecter.');
+  }
+  return await api.get<ZoneInput[]>('/zones/distinct', token);
 };
 
 export const getEventZones = async (eventId: number) => {
-  const token = localStorage.getItem('accessToken') || '';
-  return await api.get<Zone[]>(`/zones/${eventId}/zones`, token);
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
+    throw new Error('Token manquant. Veuillez vous reconnecter.');
+  }
+  return await api.get<Zone[]>(`/zones/event/${eventId}`, token);
 };
 
 export const createZone = async (eventId: number, data: CreateZoneDto) => {
-  const token = localStorage.getItem('accessToken') || '';
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
+    throw new Error('Token manquant. Veuillez vous reconnecter.');
+  }
   return await api.post<Zone>(`/zones/${eventId}/zones`, data, token);
 };
+
+interface ZoneInput {
+  name: string;
+  description?: string;
+  capacity: number;
+}

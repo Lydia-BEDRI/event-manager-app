@@ -16,6 +16,7 @@ import ResetPasswordPage from './components/pages/ResetPasswordPage';
 import ProtectedRoute from './components/organisms/ProtectedRoute';
 import ZonesPage from './components/pages/ZonesPage';
 import CreateEventPage from './components/pages/CreateEventPage';
+import EditEventPage from './components/pages/EditEventPage';
 import CreateZonePage from './components/pages/CreateZonePage';
 
 const AppRoutes: React.FC = () => {
@@ -36,8 +37,6 @@ const AppRoutes: React.FC = () => {
       <Route path="/register" element={isAuthenticated ? <Navigate to="/" replace /> : <RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/events" element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
-      <Route path="/events/create" element={<ProtectedRoute><CreateEventPage /></ProtectedRoute>} />
       <Route
         path="/privacy"
         element={
@@ -100,6 +99,26 @@ const AppRoutes: React.FC = () => {
       />
 
       {/* Route Events */}
+      <Route
+        path="/events/create"
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <Layout role="ADMIN">
+              <CreateEventPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/events/:id/edit"
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <Layout role="ADMIN">
+              <EditEventPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/events"
         element={

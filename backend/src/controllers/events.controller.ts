@@ -136,6 +136,88 @@ export const createEvent = async (req: Request, res: Response) => {
   }
 };
 
+export const updateEvent = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { name, description, location, start_date, end_date, capacity, status } = req.body;
+
+    const [events] = await pool.query<RowDataPacket[]>(
+      'SELECT * FROM events WHERE id = ?',
+      [id]
+    );
+
+    if (events.length === 0) {
+      return res.status(404).json({ message: 'Événement non trouvé' });
+    }
+
+    if (start_date && end_date && new Date(end_date) <= new Date(start_date)) {
+      return res.status(400).json({ 
+        message: 'La date de fin doit être postérieure à la date de début' 
+      });
+    }
+
+    if (capacity !== undefined && capacity <= 0) {
+      return res.status(400).json({ 
+        message: 'La capacité doit être supérieure à 0' 
+      });
+    }
+
+    const updates: string[] = [];
+    const values: any[] = [];
+
+    if (name !== undefined) {
+      updates.push('name = ?');
+      values.push(name);
+    }
+    if (description !== undefined) {
+      updates.push('description = ?');
+      values.push(description);
+    }
+    if (location !== undefined) {
+      updates.push('location = ?');
+      values.push(location);
+    }
+    if (start_date !== undefined) {
+      updates.push('start_date = ?');
+      values.push(start_date);
+    }
+    if (end_date !== undefined) {
+      updates.push('end_date = ?');
+      values.push(end_date);
+    }
+    if (capacity !== undefined) {
+      updates.push('capacity = ?');
+      values.push(capacity);
+    }
+    if (status !== undefined) {
+      updates.push('status = ?');
+      values.push(status);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ message: 'Aucune donnée à mettre à jour' });
+    }
+
+    updates.push('updated_at = NOW()');
+    values.push(id);
+
+    await pool.query(
+      `UPDATE events SET ${updates.join(', ')} WHERE id = ?`,
+      values
+    );
+
+    const [updatedEvent] = await pool.query<RowDataPacket[]>(
+      'SELECT * FROM events WHERE id = ?',
+      [id]
+    );
+
+    res.json(updatedEvent[0]);
+  } catch (error) {
+    console.error('Error updating event:', error);
+    res.status(500).json({ message: 'Erreur serveur', error });
+  }
+};
+
 export const deleteEvent = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;

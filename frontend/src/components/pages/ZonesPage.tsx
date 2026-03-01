@@ -22,9 +22,14 @@ const ZonesPage = () => {
       const data = await getAllZones();
       setZones(data);
       setError(null);
-    } catch (err) {
-      setError('Erreur lors du chargement des zones');
+    } catch (err: any) {
       console.error(err);
+      if (err.message?.includes('Token manquant')) {
+        setError('Session expirée. Redirection vers la page de connexion...');
+        setTimeout(() => navigate('/login'), 2000);
+      } else {
+        setError('Erreur lors du chargement des zones');
+      }
     } finally {
       setLoading(false);
     }
