@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Logo from '../atoms/Logo';
+import { Mail, AlertTriangle } from 'lucide-react';
 
 const ForgotPasswordPage: React.FC = () => {
   const { forgotPassword } = useAuth();
@@ -38,7 +39,7 @@ const ForgotPasswordPage: React.FC = () => {
           </div>
           <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 text-center space-y-4">
             <div className="w-14 h-14 bg-emerald-50 rounded-full flex items-center justify-center mx-auto">
-              <span className="text-2xl">📧</span>
+              <Mail className="text-emerald-600" size={28} />
             </div>
             <h2 className="text-xl font-heading font-bold text-gray-800">Email envoyé</h2>
             <p className="text-gray-600 text-sm">
@@ -84,7 +85,7 @@ const ForgotPasswordPage: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-5">
           {error && (
             <div className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
-              <span className="mt-0.5">⚠</span>
+              <AlertTriangle className="flex-shrink-0 mt-0.5" size={16} />
               <span>{error}</span>
             </div>
           )}

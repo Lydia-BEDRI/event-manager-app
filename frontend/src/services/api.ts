@@ -1,47 +1,128 @@
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
-
-interface ApiOptions {
-  method?: string;
-  body?: Record<string, unknown>;
-  token?: string;
-}
-
-async function request<T>(endpoint: string, options: ApiOptions = {}): Promise<T> {
-  const { method = 'GET', body, token } = options;
-
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    method,
-    headers,
-    body: body ? JSON.stringify(body) : undefined,
-  });
-
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw { status: response.status, ...data };
-  }
-
-  return data as T;
-}
+const BASE_URL = 'http://localhost:5000/api';
 
 export const api = {
-  get: <T>(endpoint: string, token?: string) =>
-    request<T>(endpoint, { token }),
+  get: async <T>(endpoint: string, token?: string): Promise<T> => {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
 
-  post: <T>(endpoint: string, body: Record<string, unknown>, token?: string) =>
-    request<T>(endpoint, { method: 'POST', body, token }),
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
 
-  patch: <T>(endpoint: string, body: Record<string, unknown>, token?: string) =>
-    request<T>(endpoint, { method: 'PATCH', body, token }),
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      method: 'GET',
+      headers,
+    });
 
-  delete: <T>(endpoint: string, token?: string) =>
-    request<T>(endpoint, { method: 'DELETE', token }),
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Erreur API');
+    }
+
+    return response.json();
+  },
+
+  post: async <T>(endpoint: string, body: unknown, token?: string): Promise<T> => { // ← Changé ici
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Erreur API');
+    }
+
+    return response.json();
+  },
+
+  put: async <T>(endpoint: string, body: unknown, token?: string): Promise<T> => { // ← Changé ici
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Erreur API');
+    }
+
+    return response.json();
+  },
+
+  patch: async <T>(endpoint: string, body: unknown, token?: string): Promise<T> => { // ← Changé ici
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      method: 'PATCH',
+      headers,
+      body: JSON.stringify(body),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Erreur API');
+    }
+
+    return response.json();
+  },
+
+  delete: async <T>(endpoint: string, token?: string): Promise<T> => {
+    console.log('API DELETE appelé:', endpoint);
+    console.log('Token fourni:', token ? 'Oui' : 'Non');
+    
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+    };
+
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
+    console.log('Headers envoyés:', headers);
+    const url = `${BASE_URL}${endpoint}`;
+    console.log('URL complète:', url);
+
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers,
+    });
+
+    console.log('Statut de la réponse:', response.status);
+
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('Erreur API:', error);
+      throw new Error(error.message || 'Erreur API');
+    }
+
+    const result = await response.json();
+    console.log('Réponse API:', result);
+    return result;
+  },
 };

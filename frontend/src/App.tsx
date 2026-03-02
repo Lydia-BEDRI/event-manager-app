@@ -5,6 +5,7 @@ import Layout from './components/templates/Layout';
 import AdminDashboard from './components/pages/AdminDashboard';
 import ParticipantDashboard from './components/pages/ParticipantDashboard';
 import ExportPage from './components/pages/ExportPage';
+import EventsPage from './components/pages/EventsPage';
 import PrivacyPolicy from './components/pages/PrivacyPolicy';
 import LegalNotice from './components/pages/LegalNotice';
 import CookieSettings from './components/pages/CookieSettings';
@@ -13,6 +14,12 @@ import RegisterPage from './components/pages/RegisterPage';
 import ForgotPasswordPage from './components/pages/ForgotPasswordPage';
 import ResetPasswordPage from './components/pages/ResetPasswordPage';
 import ProtectedRoute from './components/organisms/ProtectedRoute';
+import ZonesPage from './components/pages/ZonesPage';
+import CreateEventPage from './components/pages/CreateEventPage';
+import EditEventPage from './components/pages/EditEventPage';
+import CreateZonePage from './components/pages/CreateZonePage';
+import EditZonePage from './components/pages/EditZonePage';
+import ParticipantsPage from './components/pages/ParticipantsPage';
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
@@ -28,12 +35,10 @@ const AppRoutes: React.FC = () => {
 
   return (
     <Routes>
-      {/* Routes publiques */}
       <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />} />
       <Route path="/register" element={isAuthenticated ? <Navigate to="/" replace /> : <RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
-      
       <Route
         path="/privacy"
         element={
@@ -94,6 +99,66 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         }
       />
+
+      {/* Route Events */}
+      <Route
+        path="/events/create"
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <Layout role="ADMIN">
+              <CreateEventPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/events/:id/edit"
+        element={
+          <ProtectedRoute allowedRoles={['ADMIN']}>
+            <Layout role="ADMIN">
+              <EditEventPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/events"
+        element={
+          <ProtectedRoute>
+            <Layout role={userRole || 'PARTICIPANT'}>
+              <EventsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+       <Route path="/zones" element={
+        <ProtectedRoute allowedRoles={['ADMIN']}>
+          <Layout role={ 'ADMIN'}>
+            <ZonesPage />
+          </Layout>
+          </ProtectedRoute>
+        } />
+       <Route path="/zones/create" element={
+        <ProtectedRoute allowedRoles={['ADMIN']}>
+          <Layout role={ 'ADMIN'}>
+            <CreateZonePage />
+          </Layout>
+          </ProtectedRoute>
+        } />
+       <Route path="/zones/:zoneId/edit" element={
+        <ProtectedRoute allowedRoles={['ADMIN']}>
+          <Layout role={ 'ADMIN'}>
+            <EditZonePage />
+          </Layout>
+          </ProtectedRoute>
+        } />
+       <Route path="/participants" element={
+        <ProtectedRoute allowedRoles={['ADMIN']}>
+          <Layout role={ 'ADMIN'}>
+            <ParticipantsPage />
+          </Layout>
+          </ProtectedRoute>
+        } />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

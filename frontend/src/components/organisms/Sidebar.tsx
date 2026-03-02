@@ -41,9 +41,9 @@ const Sidebar: React.FC<SidebarProps> = ({ role = 'PARTICIPANT' }) => {
 
   const adminMenuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', to: '/' },
-    { icon: CalendarDays, label: 'Événements' },
-    { icon: Users, label: 'Participants' },
-    { icon: MapPin, label: 'Zones' },
+    { icon: CalendarDays, label: 'Événements', to: '/events' },
+    { icon: Users, label: 'Participants', to: '/participants' },
+    { icon: MapPin, label: 'Zones', to: '/zones' },
     { icon: ClipboardCheck, label: 'Présences' },
     { icon: MessageCircle, label: 'Chats' },
     { icon: FileDown, label: 'Exports', to: '/exports' },
