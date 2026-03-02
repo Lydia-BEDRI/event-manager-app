@@ -1,5 +1,5 @@
 import React from 'react';
-import { MapPin, Users, Calendar, ArrowRight, Trash2, Pencil } from 'lucide-react';
+import {Users, Calendar, ArrowRight, Trash2, Pencil } from 'lucide-react';
 import { Zone } from '../../types/zone.types';
 
 interface ZoneCardProps {
@@ -39,9 +39,9 @@ const ZoneCard = ({ zone, onClick, onEdit, onDelete }: ZoneCardProps) => {
     >
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3 flex-1">
-          <div className="p-3 bg-gradient-to-br from-primary-purple to-purple-600 rounded-xl shadow-lg">
+          {/* <div className="p-3 bg-gradient-to-br from-primary-purple to-purple-600 rounded-xl shadow-lg">
             <MapPin className="text-white" size={24} />
-          </div>
+          </div> */}
           <div className="flex-1 min-w-0">
             <h3 className="text-xl font-bold text-gray-900 group-hover:text-primary-purple transition-colors truncate">
               {zone.name}

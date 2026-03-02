@@ -4,7 +4,7 @@ import { getEventById, updateEvent } from '../../services/event.service';
 import { getEventZones } from '../../services/zone.service';
 import { Event, ZoneInput } from '../../types/event.types';
 import Button from '../atoms/Button';
-import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2, AlertTriangle } from 'lucide-react';
 
 const EditEventPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -309,7 +309,10 @@ const EditEventPage = () => {
             if (totalZoneCapacity < formData.capacity) {
               return (
                 <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-xl">
-                  <p className="font-semibold">⚠️ Attention</p>
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle size={18} className="flex-shrink-0" />
+                    <p className="font-semibold">Attention</p>
+                  </div>
                   <p className="text-sm mt-1">
                     La capacité totale des zones ({totalZoneCapacity}) est inférieure à la capacité de l'événement ({formData.capacity}).
                     Il reste {formData.capacity - totalZoneCapacity} places non attribuées.
@@ -358,9 +361,10 @@ const EditEventPage = () => {
                   </span>
                 </div>
                 {zones.length > 0 && formData.capacity > getTotalZonesCapacity() && (
-                  <p className="text-xs text-red-600 mt-2">
-                    ⚠️ La capacité de l'événement doit être ≤ à la somme des zones
-                  </p>
+                  <div className="flex items-center gap-2 text-xs text-red-600 mt-2">
+                    <AlertTriangle size={14} className="flex-shrink-0" />
+                    <p>La capacité de l'événement doit être ≤ à la somme des zones</p>
+                  </div>
                 )}
               </div>
             </div>

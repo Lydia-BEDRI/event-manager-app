@@ -4,7 +4,7 @@ import { createEvent } from '../../services/event.service';
 import { getDistinctZones } from '../../services/zone.service';
 import { CreateEventDto, ZoneInput } from '../../types/event.types';
 import Button from '../atoms/Button';
-import { ArrowLeft, Save, Plus } from 'lucide-react';
+import { ArrowLeft, Save, Plus, AlertTriangle } from 'lucide-react';
 
 const CreateEventPage = () => {
   const navigate = useNavigate();
@@ -245,7 +245,10 @@ const CreateEventPage = () => {
                 <>
                   {totalZonesCapacity < formData.capacity && (
                     <div className="mb-4 px-4 py-3 rounded-xl bg-yellow-50 border border-yellow-200 text-yellow-800">
-                      <p className="text-sm font-semibold">⚠️ Attention</p>
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle size={18} className="flex-shrink-0" />
+                        <p className="text-sm font-semibold">Attention</p>
+                      </div>
                       <p className="text-sm mt-1">
                         La capacité totale des zones ({totalZonesCapacity}) est inférieure à la capacité de l'événement ({formData.capacity}).
                         Il reste {formData.capacity - totalZonesCapacity} places non attribuées.

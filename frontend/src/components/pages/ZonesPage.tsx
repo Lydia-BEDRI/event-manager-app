@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllZones, deleteZone } from '../../services/zone.service';
 import { Zone } from '../../types/zone.types';
@@ -86,9 +86,6 @@ const ZonesPage = () => {
     <div className="p-8">
       <div className="flex justify-between items-center mb-8">
         <div className="flex items-center gap-3">
-          <div className="p-3 bg-gradient-to-br from-primary-purple to-purple-600 rounded-xl shadow-lg">
-            <MapPin className="text-white" size={32} />
-          </div>
           <div>
             <h1 className="text-3xl font-bold text-primary-dark">Zones d'accès</h1>
             <p className="text-gray-600 mt-1">

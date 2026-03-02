@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, MapPin, Users, Clock, ArrowRight, MapPinned } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, ArrowRight, MapPinned, Pencil, Trash2 } from 'lucide-react';
 import { Event } from '../../types/event.types';
 import { Zone } from '../../types/zone.types';
 import Badge from '../atoms/Badge';
@@ -96,7 +96,7 @@ const EventCard = ({ event, onClick, onDelete }: EventCardProps) => {
             className="p-2 rounded-lg bg-blue-500/10 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200"
             title="Modifier l'événement"
           >
-            ✏️
+            <Pencil size={18} />
           </button>
 
           <button
@@ -104,17 +104,7 @@ const EventCard = ({ event, onClick, onDelete }: EventCardProps) => {
             className="p-2 rounded-lg bg-red-500/10 text-red-600 hover:bg-red-600 hover:text-white transition-all duration-200"
             title="Supprimer l'événement"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <Trash2 size={18} />
           </button>
 
           <div className="ml-1 text-primary-purple">

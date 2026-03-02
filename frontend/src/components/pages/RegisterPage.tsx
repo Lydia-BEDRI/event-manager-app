@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Logo from '../atoms/Logo';
-import { CalendarDays, Shield, Users, Eye, EyeOff, Check, Circle } from 'lucide-react';
+import { CalendarDays, Shield, Users, Eye, EyeOff, Check, Circle, AlertTriangle } from 'lucide-react';
 
 const RegisterPage: React.FC = () => {
   const { register } = useAuth();
@@ -141,7 +141,7 @@ const RegisterPage: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <div className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
-                <span className="mt-0.5">⚠</span>
+                <AlertTriangle className="flex-shrink-0 mt-0.5" size={16} />
                 <span>{error}</span>
               </div>
             )}
