@@ -7,6 +7,7 @@ import adminRoutes from './routes/admin.routes';
 import exportRoutes from './routes/export.routes';
 import eventRoutes from './routes/events.routes';
 import zoneRoutes from './routes/zones.routes';
+import participationsRoutes from './routes/participations.routes';
 
 
 dotenv.config();
@@ -43,6 +44,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/export', exportRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api/zones', zoneRoutes);
+app.use('/api/participations', participationsRoutes);
 app.use((_req: Request, res: Response) => {
   res.status(404).json({
     error: 'Route not found'

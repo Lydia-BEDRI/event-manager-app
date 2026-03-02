@@ -19,6 +19,7 @@ import CreateEventPage from './components/pages/CreateEventPage';
 import EditEventPage from './components/pages/EditEventPage';
 import CreateZonePage from './components/pages/CreateZonePage';
 import EditZonePage from './components/pages/EditZonePage';
+import ParticipantsPage from './components/pages/ParticipantsPage';
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
@@ -148,6 +149,13 @@ const AppRoutes: React.FC = () => {
         <ProtectedRoute allowedRoles={['ADMIN']}>
           <Layout role={ 'ADMIN'}>
             <EditZonePage />
+          </Layout>
+          </ProtectedRoute>
+        } />
+       <Route path="/participants" element={
+        <ProtectedRoute allowedRoles={['ADMIN']}>
+          <Layout role={ 'ADMIN'}>
+            <ParticipantsPage />
           </Layout>
           </ProtectedRoute>
         } />
