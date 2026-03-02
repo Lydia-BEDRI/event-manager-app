@@ -52,16 +52,6 @@ const CreateEventPage = () => {
       setLoading(true);
       setError(null);
 
-      if (selectedZones.length > 0) {
-        const totalZonesCapacity = selectedZones.reduce((sum, zone) => sum + zone.capacity, 0);
-        
-        if (formData.capacity > totalZonesCapacity) {
-          setError(`La capacité de l'événement (${formData.capacity}) ne peut pas être supérieure à la somme des capacités des zones (${totalZonesCapacity})`);
-          setLoading(false);
-          return;
-        }
-      }
-
       await createEvent({
         ...formData,
         zones: selectedZones
@@ -252,19 +242,17 @@ const CreateEventPage = () => {
               </div>
 
               {selectedZones.length > 0 && (
-                <div className={`mb-4 px-4 py-3 rounded-xl ${
-                  totalZonesCapacity > formData.capacity || formData.capacity > totalZonesCapacity
-                    ? 'bg-red-50 border border-red-200 text-red-700' 
-                    : 'bg-green-50 border border-green-200 text-green-700'
-                }`}>
-                  <p className="text-sm font-medium">
-
-                    {formData.capacity > totalZonesCapacity && (
-                      <span className="ml-2">⚠️ L'événement est trop grand par rapport aux zones !</span>
-                    )}
-                   
-                  </p>
-                </div>
+                <>
+                  {totalZonesCapacity < formData.capacity && (
+                    <div className="mb-4 px-4 py-3 rounded-xl bg-yellow-50 border border-yellow-200 text-yellow-800">
+                      <p className="text-sm font-semibold">⚠️ Attention</p>
+                      <p className="text-sm mt-1">
+                        La capacité totale des zones ({totalZonesCapacity}) est inférieure à la capacité de l'événement ({formData.capacity}).
+                        Il reste {formData.capacity - totalZonesCapacity} places non attribuées.
+                      </p>
+                    </div>
+                  )}
+                </>
               )}
 
               {showZonesList && (

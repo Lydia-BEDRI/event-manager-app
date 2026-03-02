@@ -8,18 +8,12 @@ export const createZone = async (req: Request, res: Response) => {
     const { name, description, capacity } = req.body;
 
     const [events] = await pool.query<RowDataPacket[]>(
-      'SELECT id, capacity FROM events WHERE id = ?',
+      'SELECT id FROM events WHERE id = ?',
       [eventId]
     );
 
     if (events.length === 0) {
       return res.status(404).json({ message: 'Événement non trouvé' });
-    }
-
-    if (capacity > events[0].capacity) {
-      return res.status(400).json({ 
-        message: `La capacité de la zone (${capacity}) ne peut pas dépasser celle de l'événement (${events[0].capacity})` 
-      });
     }
 
     const [result] = await pool.query<ResultSetHeader>(
@@ -100,19 +94,6 @@ export const updateZone = async (req: Request, res: Response) => {
 
     if (zones.length === 0) {
       return res.status(404).json({ message: 'Zone non trouvée' });
-    }
-
-    if (capacity) {
-      const [events] = await pool.query<RowDataPacket[]>(
-        'SELECT capacity FROM events WHERE id = ?',
-        [eventId]
-      );
-
-      if (capacity > events[0].capacity) {
-        return res.status(400).json({ 
-          message: `La capacité de la zone (${capacity}) ne peut pas dépasser celle de l'événement (${events[0].capacity})` 
-        });
-      }
     }
 
     const updates: string[] = [];

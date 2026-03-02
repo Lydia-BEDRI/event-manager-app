@@ -1,5 +1,5 @@
 import { api } from './api';
-import { Zone, CreateZoneDto } from '../types/zone.types';
+import { Zone, CreateZoneDto, UpdateZoneDto } from '../types/zone.types';
 
 export const getAllZones = async () => {
   const token = localStorage.getItem('accessToken');
@@ -39,6 +39,23 @@ export const deleteZone = async (eventId: number, zoneId: number) => {
     throw new Error('Token manquant. Veuillez vous reconnecter.');
   }
   return await api.delete(`/zones/${eventId}/zones/${zoneId}`, token);
+};
+
+export const updateZone = async (eventId: number, zoneId: number, data: UpdateZoneDto) => {
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
+    throw new Error('Token manquant. Veuillez vous reconnecter.');
+  }
+  return await api.put<Zone>(`/zones/${eventId}/zones/${zoneId}`, data, token);
+};
+
+export const getZoneById = async (zoneId: number) => {
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
+    throw new Error('Token manquant. Veuillez vous reconnecter.');
+  }
+  const zones = await api.get<Zone[]>('/zones', token);
+  return zones.find(zone => zone.id === zoneId);
 };
 
 interface ZoneInput {

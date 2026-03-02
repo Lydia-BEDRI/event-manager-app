@@ -49,6 +49,10 @@ const ZonesPage = () => {
     }
   };
 
+  const handleEditZone = (zone: Zone) => {
+    navigate(`/zones/${zone.id}/edit`);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -118,6 +122,7 @@ const ZonesPage = () => {
               key={zone.id}
               zone={zone}
               onClick={() => navigate(`/events/${zone.event_id}`)}
+              onEdit={() => handleEditZone(zone)}
               onDelete={() => handleDeleteZone(zone)}
             />
           ))}

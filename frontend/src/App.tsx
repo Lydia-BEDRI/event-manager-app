@@ -18,6 +18,7 @@ import ZonesPage from './components/pages/ZonesPage';
 import CreateEventPage from './components/pages/CreateEventPage';
 import EditEventPage from './components/pages/EditEventPage';
 import CreateZonePage from './components/pages/CreateZonePage';
+import EditZonePage from './components/pages/EditZonePage';
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, user } = useAuth();
@@ -140,6 +141,13 @@ const AppRoutes: React.FC = () => {
         <ProtectedRoute allowedRoles={['ADMIN']}>
           <Layout role={ 'ADMIN'}>
             <CreateZonePage />
+          </Layout>
+          </ProtectedRoute>
+        } />
+       <Route path="/zones/:zoneId/edit" element={
+        <ProtectedRoute allowedRoles={['ADMIN']}>
+          <Layout role={ 'ADMIN'}>
+            <EditZonePage />
           </Layout>
           </ProtectedRoute>
         } />

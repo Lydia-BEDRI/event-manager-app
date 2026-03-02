@@ -1,20 +1,28 @@
 import React from 'react';
-import { MapPin, Users, Calendar, ArrowRight, Trash2 } from 'lucide-react';
+import { MapPin, Users, Calendar, ArrowRight, Trash2, Pencil } from 'lucide-react';
 import { Zone } from '../../types/zone.types';
 
 interface ZoneCardProps {
   zone: Zone;
   onClick?: () => void;
+  onEdit?: () => void;
   onDelete?: () => void;
 }
 
-const ZoneCard = ({ zone, onClick, onDelete }: ZoneCardProps) => {
+const ZoneCard = ({ zone, onClick, onEdit, onDelete }: ZoneCardProps) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
     });
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onEdit) {
+      onEdit();
+    }
   };
 
   const handleDelete = (e: React.MouseEvent) => {
@@ -47,6 +55,15 @@ const ZoneCard = ({ zone, onClick, onDelete }: ZoneCardProps) => {
           </div>
         </div>
         <div className="flex items-center gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
+          {onEdit && (
+            <button
+              onClick={handleEdit}
+              className="p-2 rounded-lg bg-blue-500/10 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200"
+              title="Modifier la zone"
+            >
+              <Pencil size={18} />
+            </button>
+          )}
           {onDelete && (
             <button
               onClick={handleDelete}

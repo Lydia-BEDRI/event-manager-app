@@ -304,6 +304,22 @@ const EditEventPage = () => {
             Gérez les zones de votre événement
           </p>
 
+          {(() => {
+            const totalZoneCapacity = zones.reduce((sum, zone) => sum + zone.capacity, 0);
+            if (totalZoneCapacity < formData.capacity) {
+              return (
+                <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-xl">
+                  <p className="font-semibold">⚠️ Attention</p>
+                  <p className="text-sm mt-1">
+                    La capacité totale des zones ({totalZoneCapacity}) est inférieure à la capacité de l'événement ({formData.capacity}).
+                    Il reste {formData.capacity - totalZoneCapacity} places non attribuées.
+                  </p>
+                </div>
+              );
+            }
+            return null;
+          })()}
+
           {zones.length > 0 && (
             <div className="mb-4 space-y-2">
               {zones.map((zone, index) => (
