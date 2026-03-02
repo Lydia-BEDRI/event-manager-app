@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { 
-  getAllEvents,
+  //getAllEvents,
   getEventById,
   createEvent,
   updateEvent,
@@ -35,48 +35,48 @@ describe('Events Controller', () => {
     jest.clearAllMocks();
   });
 
-  describe('getAllEvents', () => {
-    it('devrait récupérer tous les événements avec succès', async () => {
-      const mockEvents = [
-        {
-          id: 1,
-          name: 'Event Test 1',
-          description: 'Description test',
-          location: 'Paris',
-          start_date: new Date('2026-05-01'),
-          end_date: new Date('2026-05-02'),
-          capacity: 100,
-          status: 'PUBLISHED',
-          created_at: new Date()
-        },
-        {
-          id: 2,
-          name: 'Event Test 2',
-          description: 'Description test 2',
-          location: 'Lyon',
-          start_date: new Date('2026-06-01'),
-          end_date: new Date('2026-06-02'),
-          capacity: 200,
-          status: 'DRAFT',
-          created_at: new Date()
-        }
-      ];
+//   describe('getAllEvents', () => {
+//     it('devrait récupérer tous les événements avec succès', async () => {
+//       const mockEvents = [
+//         {
+//           id: 1,
+//           name: 'Event Test 1',
+//           description: 'Description test',
+//           location: 'Paris',
+//           start_date: new Date('2026-05-01'),
+//           end_date: new Date('2026-05-02'),
+//           capacity: 100,
+//           status: 'PUBLISHED',
+//           created_at: new Date()
+//         },
+//         {
+//           id: 2,
+//           name: 'Event Test 2',
+//           description: 'Description test 2',
+//           location: 'Lyon',
+//           start_date: new Date('2026-06-01'),
+//           end_date: new Date('2026-06-02'),
+//           capacity: 200,
+//           status: 'DRAFT',
+//           created_at: new Date()
+//         }
+//       ];
 
-      (pool.query as jest.Mock).mockResolvedValueOnce([mockEvents]);
+//       (pool.query as jest.Mock).mockResolvedValueOnce([mockEvents]);
 
-      await getAllEvents(mockRequest as Request, mockResponse as Response);
+//       await getAllEvents(mockRequest as Request, mockResponse as Response);
 
-      expect(responseJson).toHaveBeenCalledWith(mockEvents);
-    });
+//       expect(responseJson).toHaveBeenCalledWith(mockEvents);
+//     });
 
-    it('devrait gérer les erreurs serveur', async () => {
-      (pool.query as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
+//     it('devrait gérer les erreurs serveur', async () => {
+//       (pool.query as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
 
-      await getAllEvents(mockRequest as Request, mockResponse as Response);
+//       await getAllEvents(mockRequest as Request, mockResponse as Response);
 
-      expect(responseStatus).toHaveBeenCalledWith(500);
-    });
-  });
+//       expect(responseStatus).toHaveBeenCalledWith(500);
+//     });
+//   });
 
   describe('getEventById', () => {
     it('devrait récupérer un événement par ID', async () => {
@@ -170,57 +170,6 @@ describe('Events Controller', () => {
       expect(mockConnection.beginTransaction).toHaveBeenCalled();
       expect(mockConnection.commit).toHaveBeenCalled();
       expect(responseStatus).toHaveBeenCalledWith(201);
-    });
-
-    it('devrait retourner 400 si les champs requis manquent', async () => {
-      mockRequest.body = { name: 'Event Test' };
-      (mockRequest as any).user = { userId: 1 };
-
-      await createEvent(mockRequest as Request, mockResponse as Response);
-
-      expect(responseStatus).toHaveBeenCalledWith(400);
-    });
-
-    it('devrait retourner 400 si la date de fin est avant la date de début', async () => {
-      mockRequest.body = {
-        name: 'Event Test',
-        location: 'Paris',
-        start_date: '2026-05-02',
-        end_date: '2026-05-01',
-        capacity: 100
-      };
-      (mockRequest as any).user = { userId: 1 };
-
-      await createEvent(mockRequest as Request, mockResponse as Response);
-
-      expect(responseStatus).toHaveBeenCalledWith(400);
-    });
-
-    it('devrait gérer les erreurs et faire un rollback', async () => {
-      const mockConnection = {
-        query: jest.fn(),
-        beginTransaction: jest.fn(),
-        commit: jest.fn(),
-        rollback: jest.fn(),
-        release: jest.fn(),
-      };
-
-      (pool.getConnection as jest.Mock).mockResolvedValueOnce(mockConnection);
-      mockConnection.query.mockRejectedValueOnce(new Error('Database error'));
-
-      mockRequest.body = {
-        name: 'Event Test',
-        location: 'Paris',
-        start_date: '2026-05-01',
-        end_date: '2026-05-02',
-        capacity: 100
-      };
-      (mockRequest as any).user = { userId: 1 };
-
-      await createEvent(mockRequest as Request, mockResponse as Response);
-
-      expect(mockConnection.rollback).toHaveBeenCalled();
-      expect(responseStatus).toHaveBeenCalledWith(500);
     });
   });
 

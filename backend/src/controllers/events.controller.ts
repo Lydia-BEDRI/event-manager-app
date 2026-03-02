@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import pool from '../config/database';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 
-export const getAllEvents = async (req: Request, res: Response) => {
+export const getAllEvents = async (_req: Request, res: Response) => {
   try {
     const query = `
       SELECT id, name, description, location, start_date, end_date, capacity, status, created_at 
@@ -12,10 +12,10 @@ export const getAllEvents = async (req: Request, res: Response) => {
 
     const [events] = await pool.query<RowDataPacket[]>(query);
 
-    res.json(events);
+    return res.json(events);
   } catch (error) {
     console.error('Error fetching events:', error);
-    res.status(500).json({ message: 'Erreur serveur', error });
+    return res.status(500).json({ message: 'Erreur serveur', error });
   }
 };
 
@@ -32,10 +32,10 @@ export const getEventById = async (req: Request, res: Response) => {
       return res.status(404).json({ message: 'Événement non trouvé' });
     }
 
-    res.json(events[0]);
+    return res.json(events[0]);
   } catch (error) {
     console.error('Error fetching event:', error);
-    res.status(500).json({ message: 'Erreur serveur', error });
+    return res.status(500).json({ message: 'Erreur serveur', error });
   }
 };
 
@@ -122,7 +122,7 @@ export const createEvent = async (req: Request, res: Response) => {
       [eventId]
     );
 
-    res.status(201).json({
+    return res.status(201).json({
       ...newEvent[0],
       zones: eventZones
     });
@@ -130,7 +130,7 @@ export const createEvent = async (req: Request, res: Response) => {
   } catch (error) {
     await connection.rollback();
     console.error('Error creating event:', error);
-    res.status(500).json({ message: 'Erreur serveur', error });
+    return res.status(500).json({ message: 'Erreur serveur', error });
   } finally {
     connection.release();
   }
@@ -264,14 +264,14 @@ export const updateEvent = async (req: Request, res: Response) => {
       [id]
     );
 
-    res.json({
+    return res.json({
       ...updatedEvent[0],
       zones: eventZones
     });
   } catch (error) {
     await connection.rollback();
     console.error('Error updating event:', error);
-    res.status(500).json({ message: 'Erreur serveur', error });
+    return res.status(500).json({ message: 'Erreur serveur', error });
   } finally {
     connection.release();
   }
@@ -293,8 +293,8 @@ export const deleteEvent = async (req: Request, res: Response) => {
       [id]
     );
 
-    res.json({ message: 'Événement supprimé avec succès' });
+    return res.json({ message: 'Événement supprimé avec succès' });
   } catch (error) {
-    res.status(500).json({ message: 'Erreur serveur', error });
+    return res.status(500).json({ message: 'Erreur serveur', error });
   }
 };

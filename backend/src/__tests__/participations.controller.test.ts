@@ -92,8 +92,7 @@ describe('Participations Controller', () => {
       await getAllParticipations(mockRequest as Request, mockResponse as Response);
 
       expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('SELECT'),
-        undefined
+        expect.stringContaining('SELECT')
       );
       expect(responseJson).toHaveBeenCalledWith(mockParticipations);
     });

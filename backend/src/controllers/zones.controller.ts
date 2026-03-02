@@ -26,13 +26,13 @@ export const createZone = async (req: Request, res: Response) => {
       [result.insertId]
     );
 
-    res.status(201).json(newZone[0]);
+    return res.status(201).json(newZone[0]);
   } catch (error) {
     console.error('Error creating zone:', error);
-    res.status(500).json({ message: 'Erreur serveur', error });
+    return res.status(500).json({ message: 'Erreur serveur', error });
   }
 };
-export const getAllZones = async (req: Request, res: Response) => {
+export const getAllZones = async (_req: Request, res: Response) => {
   try {
     const query = `SELECT z.id, z.name, z.description, z.capacity, z.created_at, z.event_id, e.name AS event_name
                     FROM zones z
@@ -41,14 +41,14 @@ export const getAllZones = async (req: Request, res: Response) => {
   
     const [zones] = await pool.query<RowDataPacket[]>(query);
 
-    res.json(zones);
+    return res.json(zones);
   } catch (error) {
     console.error('Error fetching zones:', error);
-    res.status(500).json({ message: 'Erreur serveur', error });
+    return res.status(500).json({ message: 'Erreur serveur', error });
   }
 };
 
-export const getDistinctZones = async (req: Request, res: Response) => {
+export const getDistinctZones = async (_req: Request, res: Response) => {
   try {
     // recuperer les zones (sans doublons) par nom/description/capacité
     const query = `SELECT DISTINCT name, description, capacity
@@ -58,10 +58,10 @@ export const getDistinctZones = async (req: Request, res: Response) => {
   
     const [zones] = await pool.query<RowDataPacket[]>(query);
 
-    res.json(zones);
+    return res.json(zones);
   } catch (error) {
     console.error('Error fetching distinct zones:', error);
-    res.status(500).json({ message: 'Erreur serveur', error });
+    return res.status(500).json({ message: 'Erreur serveur', error });
   }
 };
 
@@ -128,10 +128,10 @@ export const updateZone = async (req: Request, res: Response) => {
       [zoneId]
     );
 
-    res.json(updatedZone[0]);
+    return res.json(updatedZone[0]);
   } catch (error) {
     console.error('Error updating zone:', error);
-    res.status(500).json({ message: 'Erreur serveur', error });
+    return res.status(500).json({ message: 'Erreur serveur', error });
   }
 };
 
@@ -150,9 +150,9 @@ export const deleteZone = async (req: Request, res: Response) => {
 
     await pool.query('DELETE FROM zones WHERE id = ?', [zoneId]);
 
-    res.json({ message: 'Zone supprimée avec succès' });
+    return res.json({ message: 'Zone supprimée avec succès' });
   } catch (error) {
     console.error('Error deleting zone:', error);
-    res.status(500).json({ message: 'Erreur serveur', error });
+    return res.status(500).json({ message: 'Erreur serveur', error });
   }
 };
