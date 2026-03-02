@@ -33,6 +33,14 @@ export const createZone = async (eventId: number, data: CreateZoneDto) => {
   return await api.post<Zone>(`/zones/${eventId}/zones`, data, token);
 };
 
+export const deleteZone = async (eventId: number, zoneId: number) => {
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
+    throw new Error('Token manquant. Veuillez vous reconnecter.');
+  }
+  return await api.delete(`/zones/${eventId}/zones/${zoneId}`, token);
+};
+
 interface ZoneInput {
   name: string;
   description?: string;

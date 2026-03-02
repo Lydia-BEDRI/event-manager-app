@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { createZone } from '../../services/zone.service';
 import { getAllEvents } from '../../services/event.service';
 import { CreateZoneDto } from '../../types/zone.types';
@@ -9,15 +9,12 @@ import { ArrowLeft, Save } from 'lucide-react';
 
 const CreateZonePage = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const eventIdFromParams = searchParams.get('eventId');
-
   const [loading, setLoading] = useState(false);
   const [loadingEvents, setLoadingEvents] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
   const [formData, setFormData] = useState<CreateZoneDto & { event_id: string }>({
-    event_id: eventIdFromParams || '',
+    event_id: '',
     name: '',
     description: '',
     capacity: 0,
@@ -34,6 +31,7 @@ const CreateZonePage = () => {
       setEvents(data);
     } catch (err) {
       console.error('Erreur lors du chargement des événements:', err);
+      setError('Erreur lors du chargement des événements');
     } finally {
       setLoadingEvents(false);
     }
@@ -67,16 +65,13 @@ const CreateZonePage = () => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: name === 'capacity' || name === 'event_id' ? (parseInt(value) || 0).toString() : value
+      [name]: name === 'capacity' ? parseInt(value) || 0 : name === 'event_id' ? value : value
     }));
   };
 
-  const selectedEvent = events.find(e => e.id.toString() === formData.event_id);
-
   return (
     <div className="p-8">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
+      <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
           <button
             onClick={() => navigate('/zones')}
@@ -87,50 +82,40 @@ const CreateZonePage = () => {
           <h1 className="text-3xl font-bold text-primary-dark">Créer une zone</h1>
         </div>
 
-        {/* Formulaire */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6">
               {error}
             </div>
           )}
 
-          <div className="space-y-6">
-            {/* Sélection de l'événement */}
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Événement *
               </label>
               {loadingEvents ? (
-                <div className="text-gray-500">Chargement des événements...</div>
+                <div className="text-gray-500">Chargement...</div>
               ) : (
                 <select
                   name="event_id"
                   value={formData.event_id}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent transition-all"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent"
                 >
                   <option value="">Sélectionnez un événement</option>
                   {events.map((event) => (
                     <option key={event.id} value={event.id}>
-                      {event.name} - {event.location}
+                      {event.name}
                     </option>
                   ))}
                 </select>
               )}
-              {selectedEvent && (
-                <div className="mt-2 p-3 bg-purple-50 rounded-lg border border-purple-200">
-                  <p className="text-sm text-gray-600">
-                    <span className="font-semibold">Capacité de l'événement :</span> {selectedEvent.capacity} participants
-                  </p>
-                </div>
-              )}
             </div>
 
-            {/* Nom de la zone */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Nom de la zone *
               </label>
               <input
@@ -139,30 +124,28 @@ const CreateZonePage = () => {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent transition-all"
-                placeholder="Ex: Salle principale, Stand VIP..."
+                placeholder="Ex: Zone VIP"
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent"
               />
             </div>
 
-            {/* Description */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
                 Description
               </label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                rows={4}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent transition-all resize-none"
-                placeholder="Décrivez la zone..."
+                rows={3}
+                placeholder="Description de la zone..."
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent resize-none"
               />
             </div>
 
-            {/* Capacité */}
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Capacité maximale *
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Capacité *
               </label>
               <input
                 type="number"
@@ -171,27 +154,20 @@ const CreateZonePage = () => {
                 onChange={handleChange}
                 required
                 min="1"
-                max={selectedEvent?.capacity || undefined}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent transition-all"
-                placeholder="Ex: 50"
+                placeholder="Ex: 100"
+                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent"
               />
-              {selectedEvent && (
-                <p className="mt-2 text-xs text-gray-500">
-                  Maximum autorisé : {selectedEvent.capacity} participants
-                </p>
-              )}
             </div>
           </div>
 
-          {/* Boutons */}
-          <div className="flex gap-4 mt-8 pt-6 border-t border-gray-200">
+          <div className="flex gap-4 mt-6">
             <Button
               type="submit"
               variant="primary"
               icon={Save}
               disabled={loading || !formData.event_id}
             >
-              {loading ? 'Création...' : 'Créer la zone'}
+              {loading ? 'Création...' : 'Créer'}
             </Button>
             <Button
               type="button"

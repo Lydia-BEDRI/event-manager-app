@@ -1,19 +1,27 @@
 import React from 'react';
-import { MapPin, Users, Calendar, ArrowRight } from 'lucide-react';
+import { MapPin, Users, Calendar, ArrowRight, Trash2 } from 'lucide-react';
 import { Zone } from '../../types/zone.types';
 
 interface ZoneCardProps {
   zone: Zone;
   onClick?: () => void;
+  onDelete?: () => void;
 }
 
-const ZoneCard = ({ zone, onClick }: ZoneCardProps) => {
+const ZoneCard = ({ zone, onClick, onDelete }: ZoneCardProps) => {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
     });
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete();
+    }
   };
 
   return (
@@ -38,7 +46,16 @@ const ZoneCard = ({ zone, onClick }: ZoneCardProps) => {
             )}
           </div>
         </div>
-        <div className="ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
+          {onDelete && (
+            <button
+              onClick={handleDelete}
+              className="p-2 rounded-lg bg-red-500/10 text-red-600 hover:bg-red-600 hover:text-white transition-all duration-200"
+              title="Supprimer la zone"
+            >
+              <Trash2 size={18} />
+            </button>
+          )}
           <ArrowRight className="text-primary-purple" size={24} />
         </div>
       </div>

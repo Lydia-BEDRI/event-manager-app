@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllZones } from '../../services/zone.service';
+import { getAllZones, deleteZone } from '../../services/zone.service';
 import { Zone } from '../../types/zone.types';
 import ZoneCard from '../molecules/ZoneCard';
 import { MapPin, Plus } from 'lucide-react';
@@ -32,6 +32,20 @@ const ZonesPage = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteZone = async (zone: Zone) => {
+    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer la zone "${zone.name}" ?`)) {
+      return;
+    }
+
+    try {
+      await deleteZone(zone.event_id, zone.id);
+      await loadZones();
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || 'Erreur lors de la suppression de la zone');
     }
   };
 
@@ -104,6 +118,7 @@ const ZonesPage = () => {
               key={zone.id}
               zone={zone}
               onClick={() => navigate(`/events/${zone.event_id}`)}
+              onDelete={() => handleDeleteZone(zone)}
             />
           ))}
         </div>

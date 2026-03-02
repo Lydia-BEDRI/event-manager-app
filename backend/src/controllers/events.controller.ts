@@ -137,11 +137,13 @@ export const createEvent = async (req: Request, res: Response) => {
 };
 
 export const updateEvent = async (req: Request, res: Response) => {
+  const connection = await pool.getConnection();
+  
   try {
     const { id } = req.params;
-    const { name, description, location, start_date, end_date, capacity, status } = req.body;
+    const { name, description, location, start_date, end_date, capacity, status, zones } = req.body;
 
-    const [events] = await pool.query<RowDataPacket[]>(
+    const [events] = await connection.query<RowDataPacket[]>(
       'SELECT * FROM events WHERE id = ?',
       [id]
     );
@@ -161,6 +163,33 @@ export const updateEvent = async (req: Request, res: Response) => {
         message: 'La capacité doit être supérieure à 0' 
       });
     }
+
+    // Validation des zones si présentes
+    if (zones && Array.isArray(zones) && zones.length > 0) {
+      const totalZonesCapacity = zones.reduce((sum: number, zone: any) => sum + (zone.capacity || 0), 0);
+
+      if (capacity !== undefined && capacity > totalZonesCapacity) {
+        return res.status(400).json({ 
+          message: `La capacité de l'événement (${capacity}) ne peut pas être supérieure à la somme des capacités des zones (${totalZonesCapacity})` 
+        });
+      }
+
+      for (const zone of zones) {
+        if (!zone.name || !zone.capacity) {
+          return res.status(400).json({ 
+            message: 'Chaque zone doit avoir un nom et une capacité' 
+          });
+        }
+
+        if (zone.capacity <= 0) {
+          return res.status(400).json({ 
+            message: `La capacité de la zone "${zone.name}" doit être supérieure à 0` 
+          });
+        }
+      }
+    }
+
+    await connection.beginTransaction();
 
     const updates: string[] = [];
     const values: any[] = [];
@@ -194,27 +223,57 @@ export const updateEvent = async (req: Request, res: Response) => {
       values.push(status);
     }
 
-    if (updates.length === 0) {
-      return res.status(400).json({ message: 'Aucune donnée à mettre à jour' });
+    if (updates.length > 0) {
+      updates.push('updated_at = NOW()');
+      values.push(id);
+
+      await connection.query(
+        `UPDATE events SET ${updates.join(', ')} WHERE id = ?`,
+        values
+      );
     }
 
-    updates.push('updated_at = NOW()');
-    values.push(id);
+    // Gérer la mise à jour des zones si présentes
+    if (zones !== undefined) {
+      // Supprimer les anciennes zones
+      await connection.query('DELETE FROM zones WHERE event_id = ?', [id]);
 
-    await pool.query(
-      `UPDATE events SET ${updates.join(', ')} WHERE id = ?`,
-      values
-    );
+      // Ajouter les nouvelles zones
+      if (Array.isArray(zones) && zones.length > 0) {
+        await Promise.all(
+          zones.map(zone => 
+            connection.query<ResultSetHeader>(
+              `INSERT INTO zones (event_id, name, description, capacity, created_at) 
+               VALUES (?, ?, ?, ?, NOW())`,
+              [id, zone.name, zone.description || null, zone.capacity]
+            )
+          )
+        );
+      }
+    }
 
-    const [updatedEvent] = await pool.query<RowDataPacket[]>(
+    await connection.commit();
+
+    const [updatedEvent] = await connection.query<RowDataPacket[]>(
       'SELECT * FROM events WHERE id = ?',
       [id]
     );
 
-    res.json(updatedEvent[0]);
+    const [eventZones] = await connection.query<RowDataPacket[]>(
+      'SELECT * FROM zones WHERE event_id = ?',
+      [id]
+    );
+
+    res.json({
+      ...updatedEvent[0],
+      zones: eventZones
+    });
   } catch (error) {
+    await connection.rollback();
     console.error('Error updating event:', error);
     res.status(500).json({ message: 'Erreur serveur', error });
+  } finally {
+    connection.release();
   }
 };
 

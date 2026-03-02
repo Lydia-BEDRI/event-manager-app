@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getEventById, updateEvent } from '../../services/event.service';
-import { Event } from '../../types/event.types';
+import { getEventZones } from '../../services/zone.service';
+import { Event, ZoneInput } from '../../types/event.types';
 import Button from '../atoms/Button';
-import { ArrowLeft, Save } from 'lucide-react';
+import { ArrowLeft, Save, Plus, Trash2 } from 'lucide-react';
 
 const EditEventPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -22,6 +23,13 @@ const EditEventPage = () => {
     status: 'DRAFT' as Event['status'],
   });
 
+  const [zones, setZones] = useState<ZoneInput[]>([]);
+  const [newZone, setNewZone] = useState<ZoneInput>({
+    name: '',
+    description: '',
+    capacity: 0
+  });
+
   useEffect(() => {
     loadEventData();
   }, [id]);
@@ -36,7 +44,6 @@ const EditEventPage = () => {
       setLoadingData(true);
       const event = await getEventById(Number(id));
       
-      // Convertir les dates au format datetime-local
       const startDate = new Date(event.start_date).toISOString().slice(0, 16);
       const endDate = new Date(event.end_date).toISOString().slice(0, 16);
 
@@ -49,6 +56,17 @@ const EditEventPage = () => {
         capacity: event.capacity,
         status: event.status,
       });
+
+      try {
+        const eventZones = await getEventZones(Number(id));
+        setZones(eventZones.map(z => ({
+          name: z.name,
+          description: z.description,
+          capacity: z.capacity
+        })));
+      } catch (zoneErr) {
+        console.error('Erreur lors du chargement des zones:', zoneErr);
+      }
 
       setError(null);
     } catch (err: any) {
@@ -72,6 +90,14 @@ const EditEventPage = () => {
     }));
   };
 
+  const removeZone = (index: number) => {
+    setZones(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const getTotalZonesCapacity = () => {
+    return zones.reduce((sum, zone) => sum + zone.capacity, 0);
+  };
+
   const validateForm = (): string | null => {
     if (!formData.name.trim()) return 'Le nom est requis';
     if (!formData.location.trim()) return 'Le lieu est requis';
@@ -81,6 +107,13 @@ const EditEventPage = () => {
     
     if (new Date(formData.end_date) <= new Date(formData.start_date)) {
       return 'La date de fin doit être après la date de début';
+    }
+
+    if (zones.length > 0) {
+      const totalZonesCapacity = getTotalZonesCapacity();
+      if (formData.capacity > totalZonesCapacity) {
+        return `La capacité de l'événement (${formData.capacity}) ne peut pas dépasser la somme des capacités des zones (${totalZonesCapacity})`;
+      }
     }
 
     return null;
@@ -104,7 +137,10 @@ const EditEventPage = () => {
       setLoading(true);
       setError(null);
 
-      await updateEvent(Number(id), formData);
+      await updateEvent(Number(id), {
+        ...formData,
+        zones: zones.length > 0 ? zones : undefined
+      });
       navigate('/events');
     } catch (err: any) {
       setError(err.message || 'Erreur lors de la modification de l\'événement');
@@ -146,7 +182,6 @@ const EditEventPage = () => {
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Informations de base */}
         <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">Informations générales</h2>
           
@@ -263,7 +298,59 @@ const EditEventPage = () => {
           </div>
         </div>
 
-        {/* Boutons d'action */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-900 mb-4">Zones de l'événement</h2>
+          <p className="text-sm text-gray-600 mb-4">
+            Gérez les zones de votre événement
+          </p>
+
+          {zones.length > 0 && (
+            <div className="mb-4 space-y-2">
+              {zones.map((zone, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
+                >
+                  <div className="flex-1">
+                    <p className="font-semibold text-gray-900">{zone.name}</p>
+                    {zone.description && (
+                      <p className="text-sm text-gray-600">{zone.description}</p>
+                    )}
+                    <p className="text-sm text-gray-500 mt-1">
+                      Capacité: {zone.capacity} personnes
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => removeZone(index)}
+                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              ))}
+
+              <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-gray-700">Capacité totale des zones:</span>
+                  <span className="font-semibold text-blue-900">{getTotalZonesCapacity()}</span>
+                </div>
+                <div className="flex justify-between items-center text-sm mt-2">
+                  <span className="text-gray-700">Capacité de l'événement:</span>
+                  <span className={`font-semibold ${formData.capacity <= getTotalZonesCapacity() ? 'text-green-600' : 'text-red-600'}`}>
+                    {formData.capacity}
+                  </span>
+                </div>
+                {zones.length > 0 && formData.capacity > getTotalZonesCapacity() && (
+                  <p className="text-xs text-red-600 mt-2">
+                    ⚠️ La capacité de l'événement doit être ≤ à la somme des zones
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="flex gap-4">
           <Button
             type="button"
