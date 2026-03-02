@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { 
-  //getAllEvents,
+  getAllEvents,
   getEventById,
   createEvent,
   updateEvent,
@@ -35,48 +35,48 @@ describe('Events Controller', () => {
     jest.clearAllMocks();
   });
 
-//   describe('getAllEvents', () => {
-//     it('devrait récupérer tous les événements avec succès', async () => {
-//       const mockEvents = [
-//         {
-//           id: 1,
-//           name: 'Event Test 1',
-//           description: 'Description test',
-//           location: 'Paris',
-//           start_date: new Date('2026-05-01'),
-//           end_date: new Date('2026-05-02'),
-//           capacity: 100,
-//           status: 'PUBLISHED',
-//           created_at: new Date()
-//         },
-//         {
-//           id: 2,
-//           name: 'Event Test 2',
-//           description: 'Description test 2',
-//           location: 'Lyon',
-//           start_date: new Date('2026-06-01'),
-//           end_date: new Date('2026-06-02'),
-//           capacity: 200,
-//           status: 'DRAFT',
-//           created_at: new Date()
-//         }
-//       ];
+  describe('getAllEvents', () => {
+    it('devrait récupérer tous les événements avec succès', async () => {
+      const mockEvents = [
+        {
+          id: 1,
+          name: 'Event Test 1',
+          description: 'Description test',
+          location: 'Paris',
+          start_date: new Date('2026-05-01'),
+          end_date: new Date('2026-05-02'),
+          capacity: 100,
+          status: 'PUBLISHED',
+          created_at: new Date()
+        },
+        {
+          id: 2,
+          name: 'Event Test 2',
+          description: 'Description test 2',
+          location: 'Lyon',
+          start_date: new Date('2026-06-01'),
+          end_date: new Date('2026-06-02'),
+          capacity: 200,
+          status: 'DRAFT',
+          created_at: new Date()
+        }
+      ];
 
-//       (pool.query as jest.Mock).mockResolvedValueOnce([mockEvents]);
+      (pool.query as jest.Mock).mockResolvedValueOnce([mockEvents]);
 
-//       await getAllEvents(mockRequest as Request, mockResponse as Response);
+      await getAllEvents(mockRequest as Request, mockResponse as Response);
 
-//       expect(responseJson).toHaveBeenCalledWith(mockEvents);
-//     });
+      expect(responseJson).toHaveBeenCalledWith(mockEvents);
+    });
 
-//     it('devrait gérer les erreurs serveur', async () => {
-//       (pool.query as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
+    it('devrait gérer les erreurs serveur', async () => {
+      (pool.query as jest.Mock).mockRejectedValueOnce(new Error('Database error'));
 
-//       await getAllEvents(mockRequest as Request, mockResponse as Response);
+      await getAllEvents(mockRequest as Request, mockResponse as Response);
 
-//       expect(responseStatus).toHaveBeenCalledWith(500);
-//     });
-//   });
+      expect(responseStatus).toHaveBeenCalledWith(500);
+    });
+  });
 
   describe('getEventById', () => {
     it('devrait récupérer un événement par ID', async () => {
