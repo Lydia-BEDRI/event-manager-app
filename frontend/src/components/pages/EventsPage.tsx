@@ -69,9 +69,12 @@ const handleDeleteEvent = async (eventId: number) => {
   }
 
   return (
-    <div className="p-8">
+    <div className="min-h-screen bg-gradient-to-br from-primary-white to-primary-light/30 p-4 sm:p-8">
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-primary-dark">Événements disponibles</h1>
+        <div>
+          <h1 className="font-heading text-3xl font-bold text-primary-dark">Événements disponibles</h1>
+          <p className="text-primary-gray mt-2">{events.length} événement{events.length > 1 ? 's' : ''} au total</p>
+        </div>
         <Button 
           variant="primary" 
           icon={Plus}

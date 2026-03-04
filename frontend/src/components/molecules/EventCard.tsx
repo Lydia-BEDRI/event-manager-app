@@ -74,122 +74,146 @@ const EventCard = ({ event, onClick, onDelete }: EventCardProps) => {
     <div
       onClick={onClick}
       className={`
-        group relative overflow-hidden rounded-2xl p-6 
-        shadow-sm hover:shadow-xl transition-all duration-300 
-        cursor-pointer border-2 transform hover:-translate-y-1
+        group relative overflow-hidden rounded-2xl p-6 sm:p-7
+        shadow-md hover:shadow-2xl transition-all duration-500 ease-out
+        cursor-pointer border border-primary-gray/20 backdrop-blur-sm
+        transform hover:-translate-y-1 hover:scale-[1.01]
         ${getStatusColor(event.status)}
       `}
     >
-      <div className="relative flex justify-between items-start mb-4 group">
-        <div className="flex-1">
-          <h3 className="text-xl font-semibold text-gray-900 group-hover:text-primary-purple transition-colors duration-200">
-            {event.name}
-          </h3>
-          <div className="mt-2">
-            <Badge status={event.status} />
-          </div>
-        </div>
-
-        <div className="flex items-center gap-2 ml-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <button
-            onClick={onClick}
-            className="p-2 rounded-lg bg-blue-500/10 text-blue-600 hover:bg-blue-600 hover:text-white transition-all duration-200"
-            title="Modifier l'événement"
-          >
-            <Pencil size={18} />
-          </button>
-
-          <button
-            onClick={handleDelete}
-            className="p-2 rounded-lg bg-red-500/10 text-red-600 hover:bg-red-600 hover:text-white transition-all duration-200"
-            title="Supprimer l'événement"
-          >
-            <Trash2 size={18} />
-          </button>
-
-          <div className="ml-1 text-primary-purple">
-            <ArrowRight size={22} />
-          </div>
-        </div>
-      </div>
-
-      {event.description && (
-        <p className="text-gray-600 text-sm mb-6 line-clamp-2 leading-relaxed">
-          {event.description}
-        </p>
-      )}
-
-      <div className="space-y-3">
-        <div className="flex items-start gap-3 bg-white/50 rounded-lg p-3 backdrop-blur-sm">
-          <Calendar className="text-primary-purple flex-shrink-0 mt-0.5" size={18} />
+      <div className="relative z-10 flex flex-col gap-5">
+        <div className="flex justify-between items-start gap-4">
           <div className="flex-1 min-w-0">
-            <p className="text-xs text-gray-500 mb-1">Période</p>
-            <p className="text-sm font-semibold text-gray-900">
-              {formatDate(event.start_date)} - {formatDate(event.end_date)}
-            </p>
-            <div className="flex items-center gap-2 mt-1 text-xs text-gray-600">
-              <Clock size={14} />
-              <span>{formatTime(event.start_date)}</span>
+            <h3 className="font-heading text-xl sm:text-2xl font-bold text-primary-dark leading-tight break-normal mb-3">
+              {event.name}
+            </h3>
+            <div className="flex items-center gap-3">
+              <Badge status={event.status} />
             </div>
           </div>
-        </div>
 
-        <div className="flex items-center gap-3 bg-white/50 rounded-lg p-3 backdrop-blur-sm">
-          <MapPin className="text-primary-purple flex-shrink-0" size={18} />
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-gray-500 mb-1">Lieu</p>
-            <p className="text-sm font-semibold text-gray-900 truncate">{event.location}</p>
+          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-4 group-hover:translate-x-0 self-start">
+            <button
+              onClick={onClick}
+              className="p-2.5 rounded-lg bg-gradient-to-br from-primary-accent/10 to-primary-accent/20 text-primary-accent hover:from-primary-accent hover:to-primary-accent hover:text-white transition-all duration-300 shadow-sm hover:shadow-md hover:scale-110 active:scale-95"
+              title="Modifier l'événement"
+              aria-label="Modifier l'événement"
+            >
+              <Pencil size={18} />
+            </button>
+
+            <button
+              onClick={handleDelete}
+              className="p-2.5 rounded-lg bg-gradient-to-br from-red-500/10 to-red-500/20 text-red-600 hover:from-red-600 hover:to-red-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md hover:scale-110 active:scale-95"
+              title="Supprimer l'événement"
+              aria-label="Supprimer l'événement"
+            >
+              <Trash2 size={18} />
+            </button>
+
+            <ArrowRight className="text-primary-purple transform group-hover:translate-x-1 transition-transform duration-300" size={22} />
           </div>
         </div>
 
-        <div className="flex items-center gap-3 bg-white/50 rounded-lg p-3 backdrop-blur-sm">
-          <Users className="text-primary-purple flex-shrink-0" size={18} />
-          <div className="flex-1 min-w-0">
-            <p className="text-xs text-gray-500 mb-1">Capacité</p>
-            <p className="text-sm font-semibold text-gray-900">
-              {event.capacity} participants max
-            </p>
-          </div>
-        </div>
+        {event.description && (
+          <p className="text-primary-dark/70 text-sm leading-relaxed font-normal px-3 py-2 bg-white/40 rounded-lg border border-primary-gray/10">
+            {event.description}
+          </p>
+        )}
 
-        {zones.length > 0 && (
-          <div className="flex items-start gap-3 bg-white/50 rounded-lg p-3 backdrop-blur-sm">
-            <MapPinned className="text-primary-purple flex-shrink-0 mt-0.5" size={18} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="sm:col-span-2 flex items-start gap-3 bg-gradient-to-br from-white/90 to-primary-light/50 rounded-xl p-4 border border-primary-gray/10 shadow-sm">
+            <div className="p-2.5 bg-gradient-to-br from-primary-purple to-primary-accent rounded-lg shadow-md flex-shrink-0">
+              <Calendar className="text-white" size={20} />
+            </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-500 mb-2">Zones ({zones.length})</p>
+              <p className="text-xs font-bold text-primary-gray uppercase tracking-wider mb-1.5">Période</p>
+              <p className="text-sm font-bold text-primary-dark break-normal mb-1">
+                {formatDate(event.start_date)} - {formatDate(event.end_date)}
+              </p>
+              <div className="flex items-center gap-1.5 text-xs text-primary-dark/60 font-medium">
+                <Clock size={14} className="text-primary-accent flex-shrink-0" />
+                <span>{formatTime(event.start_date)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 bg-gradient-to-br from-white/90 to-primary-light/50 rounded-xl p-4 border border-primary-gray/10 shadow-sm">
+            <div className="p-2.5 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg shadow-md flex-shrink-0">
+              <MapPin className="text-white" size={20} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-primary-gray uppercase tracking-wider mb-1.5">Lieu</p>
+              <p className="text-sm font-bold text-primary-dark break-normal">{event.location}</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 bg-gradient-to-br from-white/90 to-primary-light/50 rounded-xl p-4 border border-primary-gray/10 shadow-sm">
+            <div className="p-2.5 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg shadow-md flex-shrink-0">
+              <Users className="text-white" size={20} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-bold text-primary-gray uppercase tracking-wider mb-1.5">Capacité</p>
+              <div className="flex items-baseline gap-1.5">
+                <p className="font-heading text-lg font-bold text-primary-dark">{event.capacity}</p>
+                <span className="text-xs font-medium text-primary-gray">participants</span>
+              </div>
+            </div>
+          </div>
+
+          {zones.length > 0 && (
+            <div className="sm:col-span-2 bg-gradient-to-br from-white/90 to-primary-light/50 rounded-xl p-4 border border-primary-gray/10 shadow-sm">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="p-2.5 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg shadow-md">
+                  <MapPinned className="text-white" size={20} />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-primary-dark">Zones d'accès</p>
+                  <p className="text-xs font-medium text-primary-gray">{zones.length} zone{zones.length > 1 ? 's' : ''}</p>
+                </div>
+              </div>
               {loadingZones ? (
-                <p className="text-xs text-gray-400">Chargement...</p>
+                <div className="flex items-center justify-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-2 border-primary-accent border-t-transparent"></div>
+                </div>
               ) : (
-                <div className="space-y-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {zones.map((zone) => (
-                    <div key={zone.id} className="text-xs">
-                      <p className="font-semibold text-gray-900">{zone.name}</p>
+                    <div key={zone.id} className="bg-white/70 rounded-lg p-2.5 border border-primary-gray/10 hover:bg-white/90 transition-all duration-200">
+                      <p className="font-bold text-primary-dark text-xs mb-0.5 break-normal">{zone.name}</p>
                       {zone.description && (
-                        <p className="text-gray-600 mt-0.5">{zone.description}</p>
+                        <p className="text-primary-dark/60 text-xs mb-1 line-clamp-1 break-normal">{zone.description}</p>
                       )}
+                      <div className="flex items-center gap-1">
+                        <Users className="text-primary-accent" size={12} />
+                        <span className="text-xs font-semibold text-primary-accent">{zone.capacity}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
               )}
             </div>
+          )}
+        </div>
+
+        {event.status === 'PUBLISHED' && (
+          <div className="pt-4 border-t border-primary-gray/20">
+            <div className="flex justify-between items-center text-sm mb-2">
+              <span className="font-semibold text-primary-dark text-xs">Inscriptions</span>
+              <span className="font-bold text-primary-dark text-sm">45 <span className="text-primary-gray text-xs">/ {event.capacity}</span></span>
+            </div>
+            <div className="relative w-full bg-primary-light rounded-full h-2.5 overflow-hidden">
+              <div 
+                className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary-accent to-primary-purple rounded-full transition-all duration-700 ease-out"
+                style={{ width: '45%' }}
+              />
+            </div>
+            <p className="text-xs text-primary-gray mt-1.5 text-right">45% de remplissage</p>
           </div>
         )}
       </div>
-
-      {event.status === 'PUBLISHED' && (
-        <div className="mt-4 pt-4 border-t border-gray-200/50">
-          <div className="flex justify-between text-xs text-gray-600 mb-2">
-            <span>Inscriptions</span>
-            <span>45 / {event.capacity}</span>
-          </div>
-          <div className="w-full bg-gray-200 rounded-full h-2">
-            <div 
-              className="bg-blue-900 h-2 rounded-full transition-all duration-300"
-              style={{ width: '45%' }}
-            />
-          </div>
-        </div>
-      )}
+      
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 group-hover:opacity-100 transform -translate-x-full group-hover:translate-x-full transition-all duration-700 pointer-events-none" />
     </div>
   );
 };

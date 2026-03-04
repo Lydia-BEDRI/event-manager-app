@@ -83,15 +83,13 @@ const ZonesPage = () => {
   }
 
   return (
-    <div className="p-8">
+    <div className="min-h-screen bg-gradient-to-br from-primary-white to-primary-light/30 p-4 sm:p-8">
       <div className="flex justify-between items-center mb-8">
-        <div className="flex items-center gap-3">
-          <div>
-            <h1 className="text-3xl font-bold text-primary-dark">Zones d'accès</h1>
-            <p className="text-gray-600 mt-1">
-              {zones.length} zone{zones.length > 1 ? 's' : ''} au total
-            </p>
-          </div>
+        <div>
+          <h1 className="font-heading text-3xl font-bold text-primary-dark">Zones d'accès</h1>
+          <p className="text-primary-gray mt-2">
+            {zones.length} zone{zones.length > 1 ? 's' : ''} au total
+          </p>
         </div>
         <Button 
           variant="primary" 

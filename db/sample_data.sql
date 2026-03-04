@@ -1,3 +1,6 @@
+SET NAMES utf8mb4;
+SET CHARACTER SET utf8mb4;
+
 USE eventmanager;
 
 -- Mot de passe pour tous les users de test : "Test@12345678"

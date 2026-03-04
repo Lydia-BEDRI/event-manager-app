@@ -79,9 +79,10 @@ const EditZonePage = () => {
 
   if (loadingZone) {
     return (
-      <div className="p-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="text-center text-gray-500">Chargement...</div>
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary-white to-primary-light/30">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-3 border-primary-accent border-t-transparent mx-auto mb-4 shadow-lg"></div>
+          <p className="text-primary-gray font-medium">Chargement...</p>
         </div>
       </div>
     );
@@ -89,10 +90,10 @@ const EditZonePage = () => {
 
   if (!zone) {
     return (
-      <div className="p-8">
+      <div className="min-h-screen bg-gradient-to-br from-primary-white to-primary-light/30 p-4 sm:p-8">
         <div className="max-w-2xl mx-auto">
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl">
-            {error || 'Zone non trouvée'}
+          <div className="bg-red-50 border border-red-300 text-red-800 px-4 py-3 rounded-xl">
+            <p className="text-sm font-medium">{error || 'Zone non trouvée'}</p>
           </div>
           <Button
             variant="secondary"
@@ -107,35 +108,36 @@ const EditZonePage = () => {
   }
 
   return (
-    <div className="p-8">
+    <div className="min-h-screen bg-gradient-to-br from-primary-white to-primary-light/30 p-4 sm:p-8">
       <div className="max-w-2xl mx-auto">
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-4 mb-6">
           <button
             onClick={() => navigate('/zones')}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2.5 hover:bg-white/80 rounded-xl transition-all shadow-sm border border-primary-gray/10"
+            aria-label="Retour aux zones"
           >
-            <ArrowLeft size={24} />
+            <ArrowLeft size={22} className="text-primary-dark" />
           </button>
-          <h1 className="text-3xl font-bold text-primary-dark">Modifier la zone</h1>
+          <h1 className="font-heading text-2xl sm:text-3xl font-bold text-primary-dark">Modifier la zone</h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
+        <form onSubmit={handleSubmit} className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-md border border-primary-gray/10">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6">
-              {error}
+            <div className="bg-red-50 border border-red-300 text-red-800 px-4 py-3 rounded-xl mb-6">
+              <p className="text-sm font-medium">{error}</p>
             </div>
           )}
 
-          <div className="mb-6 p-4 bg-gray-50 rounded-xl">
-            <p className="text-sm text-gray-600">
-              Événement : <span className="font-medium text-gray-900">{zone.event_name}</span>
+          <div className="mb-6 p-4 bg-gradient-to-br from-primary-accent/5 to-primary-purple/5 rounded-xl border border-primary-accent/10">
+            <p className="text-sm text-primary-gray">
+              Événement : <span className="font-bold text-primary-dark">{zone.event_name}</span>
             </p>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nom de la zone *
+              <label className="block text-sm font-bold text-primary-dark mb-2">
+                Nom de la zone <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -144,27 +146,27 @@ const EditZonePage = () => {
                 onChange={handleChange}
                 required
                 placeholder="Ex: Zone VIP"
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent"
+                className="w-full px-4 py-3 border border-primary-gray/30 rounded-xl focus:ring-2 focus:ring-primary-accent focus:border-primary-accent transition-all bg-white"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-bold text-primary-dark mb-2">
                 Description
               </label>
               <textarea
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                rows={3}
+                rows={4}
                 placeholder="Description de la zone..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent resize-none"
+                className="w-full px-4 py-3 border border-primary-gray/30 rounded-xl focus:ring-2 focus:ring-primary-accent focus:border-primary-accent transition-all resize-none bg-white"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Capacité *
+              <label className="block text-sm font-bold text-primary-dark mb-2">
+                Capacité <span className="text-red-500">*</span>
               </label>
               <input
                 type="number"
@@ -174,12 +176,12 @@ const EditZonePage = () => {
                 required
                 min="1"
                 placeholder="Ex: 100"
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent"
+                className="w-full px-4 py-3 border border-primary-gray/30 rounded-xl focus:ring-2 focus:ring-primary-accent focus:border-primary-accent transition-all bg-white"
               />
             </div>
           </div>
 
-          <div className="flex gap-4 mt-6">
+          <div className="flex gap-4 mt-8 pt-6 border-t border-primary-gray/20">
             <Button
               type="submit"
               variant="primary"

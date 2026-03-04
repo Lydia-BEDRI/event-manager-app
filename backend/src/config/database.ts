@@ -13,6 +13,15 @@ const pool = mysql.createPool({
   connectionLimit: 10,
   queueLimit: 0,
   timezone: '+00:00',
+  charset: 'utf8mb4',
+  connectAttributes: {
+    program_name: 'eventmanager-backend',
+  },
+});
+
+pool.on('connection', (connection) => {
+  connection.query('SET NAMES utf8mb4');
+  connection.query('SET CHARACTER SET utf8mb4');
 });
 
 export default pool;
