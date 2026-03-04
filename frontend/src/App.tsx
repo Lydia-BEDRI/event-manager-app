@@ -20,6 +20,7 @@ import EditEventPage from './components/pages/EditEventPage';
 import CreateZonePage from './components/pages/CreateZonePage';
 import EditZonePage from './components/pages/EditZonePage';
 import ParticipantsPage from './components/pages/ParticipantsPage';
+import ProfilePage from './components/pages/ProfilePage';
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, user, isLoading } = useAuth();
@@ -175,6 +176,17 @@ const AppRoutes: React.FC = () => {
           </Layout>
           </ProtectedRoute>
         } />
+
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <Layout role={userRole || 'PARTICIPANT'}>
+              <ProfilePage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
 
       {/* redirige vers login si non authentifié */}
       <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />

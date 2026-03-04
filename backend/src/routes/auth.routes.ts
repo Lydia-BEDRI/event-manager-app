@@ -8,6 +8,7 @@ import {
   resetPassword,
   getMe,
   updateUserRole,
+  updateProfile,
 } from '../controllers/auth.controller';
 import {
   registerValidation,
@@ -29,5 +30,6 @@ router.post('/forgot-password', resetPasswordLimiter, forgotPasswordValidation, 
 router.post('/reset-password', resetPasswordValidation, resetPassword);
 router.get('/me', authenticate, getMe);
 router.patch('/role', authenticate, authorize('ADMIN'), updateUserRole);
+router.patch('/profile', authenticate, updateProfile);
 
 export default router;
