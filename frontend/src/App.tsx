@@ -22,7 +22,7 @@ import EditZonePage from './components/pages/EditZonePage';
 import ParticipantsPage from './components/pages/ParticipantsPage';
 
 const AppRoutes: React.FC = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading } = useAuth();
 
   const userRole = user?.role?.toUpperCase() as 'ADMIN' | 'PARTICIPANT' | undefined;
 
@@ -33,10 +33,18 @@ const AppRoutes: React.FC = () => {
     return <ParticipantDashboard />;
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-primary-dark flex items-center justify-center">
+        <div className="text-white text-lg">Chargement...</div>
+      </div>
+    );
+  }
+
   return (
     <Routes>
-      <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <LoginPage />} />
-      <Route path="/register" element={isAuthenticated ? <Navigate to="/" replace /> : <RegisterPage />} />
+      <Route path="/login" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
+      <Route path="/register" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
       <Route
@@ -78,13 +86,21 @@ const AppRoutes: React.FC = () => {
 
       {/* Routes protégées */}
       <Route
-        path="/"
+        path="/dashboard"
         element={
           <ProtectedRoute>
             <Layout role={userRole || 'PARTICIPANT'}>
               {getDashboardComponent()}
             </Layout>
           </ProtectedRoute>
+        }
+      />
+
+      {/* Route racine redirige vers dashboard si authentifié, sinon vers login */}
+      <Route
+        path="/"
+        element={
+          isAuthenticated ? <Navigate to="/dashboard" replace /> : <Navigate to="/login" replace />
         }
       />
 
@@ -160,8 +176,8 @@ const AppRoutes: React.FC = () => {
           </ProtectedRoute>
         } />
 
-      {/* Fallback */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      {/* redirige vers login si non authentifié */}
+      <Route path="*" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
     </Routes>
   );
 };
