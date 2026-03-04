@@ -30,6 +30,13 @@ export interface LoginData {
   password: string;
 }
 
+export interface UpdateProfileData {
+  firstName?: string;
+  lastName?: string;
+  currentPassword?: string;
+  newPassword?: string;
+}
+
 export const authService = {
   register: (data: RegisterData) =>
     api.post<AuthResponse>('/auth/register', data as unknown as Record<string, unknown>),
@@ -54,4 +61,7 @@ export const authService = {
 
   updateRole: (userId: number, role: string, token: string) =>
     api.patch<{ message: string }>('/auth/role', { userId, role }, token),
+
+  updateProfile: (data: UpdateProfileData, token: string) =>
+    api.patch<{ message: string; user: User }>('/auth/profile', data, token),
 };

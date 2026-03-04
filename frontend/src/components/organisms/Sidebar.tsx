@@ -94,7 +94,11 @@ const Sidebar: React.FC<SidebarProps> = ({ role = 'PARTICIPANT' }) => {
       </nav>
 
       <div className="p-3">
-        <NavItem icon={Settings} label={role === 'ADMIN' ? 'Paramètres' : 'Mon profil'} />
+        <NavItem 
+          icon={Settings} 
+          label={role === 'ADMIN' ? 'Paramètres' : 'Mon profil'} 
+          to={role === 'ADMIN' ? undefined : '/profile'} 
+        />
         <div className="mt-1">
           <button 
             onClick={handleLogout}

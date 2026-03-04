@@ -58,9 +58,21 @@ export async function register(req: Request, res: Response): Promise<void> {
       [userId, userId, req.ip]
     );
 
+    const [newUser] = await pool.query<RowDataPacket[]>(
+      'SELECT created_at FROM users WHERE id = ?',
+      [userId]
+    );
+
     res.status(201).json({
       message: 'Inscription réussie.',
-      user: { id: userId, email, firstName, lastName, role: 'PARTICIPANT' },
+      user: { 
+        id: userId, 
+        email, 
+        firstName, 
+        lastName, 
+        role: 'PARTICIPANT',
+        createdAt: newUser[0].created_at,
+      },
       accessToken,
       refreshToken,
     });
@@ -163,6 +175,7 @@ export async function login(req: Request, res: Response): Promise<void> {
         firstName: user.first_name,
         lastName: user.last_name,
         role: user.role,
+        createdAt: user.created_at,
       },
       accessToken,
       refreshToken,
@@ -421,6 +434,102 @@ export async function updateUserRole(req: AuthenticatedRequest, res: Response): 
     res.json({ message: `Rôle mis à jour : ${role}` });
   } catch (err) {
     console.error('Erreur update role:', err);
+    res.status(500).json({ error: 'Erreur serveur.' });
+  }
+}
+
+// PATCH /api/auth/profile
+export async function updateProfile(req: AuthenticatedRequest, res: Response): Promise<void> {
+  if (!req.user) {
+    res.status(401).json({ error: 'Non authentifié.' });
+    return;
+  }
+
+  const { firstName, lastName, currentPassword, newPassword } = req.body;
+
+  try {
+    const [rows] = await pool.query<RowDataPacket[]>(
+      'SELECT * FROM users WHERE id = ?',
+      [req.user.userId]
+    );
+
+    if (rows.length === 0) {
+      res.status(404).json({ error: 'Utilisateur introuvable.' });
+      return;
+    }
+
+    const user = rows[0];
+    const oldValues: any = {};
+    const newValues: any = {};
+
+    // Mise à jour du prénom
+    if (firstName && firstName !== user.first_name) {
+      oldValues.firstName = user.first_name;
+      newValues.firstName = firstName;
+      await pool.query('UPDATE users SET first_name = ? WHERE id = ?', [firstName, req.user.userId]);
+    }
+
+    // Mise à jour du nom
+    if (lastName && lastName !== user.last_name) {
+      oldValues.lastName = user.last_name;
+      newValues.lastName = lastName;
+      await pool.query('UPDATE users SET last_name = ? WHERE id = ?', [lastName, req.user.userId]);
+    }
+
+    // Mise à jour du mot de passe
+    if (currentPassword && newPassword) {
+      const passwordMatch = await bcrypt.compare(currentPassword, user.password_hash);
+      
+      if (!passwordMatch) {
+        res.status(401).json({ error: 'Mot de passe actuel incorrect.' });
+        return;
+      }
+
+      const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+      await pool.query(
+        'UPDATE users SET password_hash = ?, password_updated_at = NOW() WHERE id = ?',
+        [passwordHash, req.user.userId]
+      );
+
+      oldValues.password = '***';
+      newValues.password = '***';
+
+      // Révoquer tous les refresh tokens sauf celui en cours
+      await pool.query(
+        'UPDATE refresh_tokens SET revoked = TRUE WHERE user_id = ?',
+        [req.user.userId]
+      );
+    }
+
+    // Log de l'audit
+    if (Object.keys(newValues).length > 0) {
+      await pool.query(
+        `INSERT INTO audit_logs (user_id, action, entity_type, entity_id, old_values, new_values, ip_address)
+         VALUES (?, 'UPDATE_PROFILE', 'user', ?, ?, ?, ?)`,
+        [req.user.userId, req.user.userId, JSON.stringify(oldValues), JSON.stringify(newValues), req.ip]
+      );
+    }
+
+    // Récupérer les données mises à jour
+    const [updatedUser] = await pool.query<RowDataPacket[]>(
+      'SELECT id, email, first_name, last_name, role, avatar_url, created_at FROM users WHERE id = ?',
+      [req.user.userId]
+    );
+
+    res.json({
+      message: 'Profil mis à jour avec succès.',
+      user: {
+        id: updatedUser[0].id,
+        email: updatedUser[0].email,
+        firstName: updatedUser[0].first_name,
+        lastName: updatedUser[0].last_name,
+        role: updatedUser[0].role,
+        avatarUrl: updatedUser[0].avatar_url,
+        createdAt: updatedUser[0].created_at,
+      },
+    });
+  } catch (err) {
+    console.error('Erreur update profile:', err);
     res.status(500).json({ error: 'Erreur serveur.' });
   }
 }
