@@ -40,10 +40,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       try {
         const data = await authService.getMe(token);
+        if (!data.user || !data.user.id || !data.user.email || !data.user.role) {
+          console.error('Données utilisateur invalides:', data);
+          clearAuth();
+          setIsLoading(false);
+          return;
+        }
         setUser(data.user);
         setAccessToken(token);
-      } catch {
-        // Token invalide, essayer de rafraîchir
+      } catch (error) {
+        console.error('Erreur de chargement du profil:', error);
+        // token invalide, essayer de rafraîchir
         const refreshToken = localStorage.getItem('refreshToken');
         if (refreshToken) {
           try {
@@ -51,8 +58,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             localStorage.setItem('accessToken', refreshData.accessToken);
             setAccessToken(refreshData.accessToken);
             const userData = await authService.getMe(refreshData.accessToken);
+            
+            // vérifier à nouveau que les données sont valides
+            if (!userData.user || !userData.user.id || !userData.user.email || !userData.user.role) {
+              console.error('Données utilisateur invalides après rafraîchissement:', userData);
+              clearAuth();
+              setIsLoading(false);
+              return;
+            }
+            
             setUser(userData.user);
-          } catch {
+          } catch (refreshError) {
+            console.error('Erreur de rafraîchissement du token:', refreshError);
             clearAuth();
           }
         } else {

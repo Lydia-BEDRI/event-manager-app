@@ -22,8 +22,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles 
     return <Navigate to="/login" replace />;
   }
 
+  if (!user || !user.id || !user.email || !user.role) {
+    console.error('Utilisateur invalide dans ProtectedRoute:', user);
+    return <Navigate to="/login" replace />;
+  }
+
   if (allowedRoles && user && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;
