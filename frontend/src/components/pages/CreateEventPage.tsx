@@ -92,29 +92,31 @@ const CreateEventPage = () => {
   };
 
   return (
-    <div className="p-8">
+    <div className="min-h-screen bg-gradient-to-br from-primary-white to-primary-light/30 p-4 sm:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-4 mb-8">
+        <div className="flex items-center gap-4 mb-6">
           <button
             onClick={() => navigate('/events')}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2.5 hover:bg-white/80 rounded-xl transition-all shadow-sm border border-primary-gray/10"
+            aria-label="Retour aux événements"
           >
-            <ArrowLeft size={24} />
+            <ArrowLeft size={22} className="text-primary-dark" />
           </button>
-          <h1 className="text-3xl font-bold text-primary-dark">Créer un événement</h1>
+          <h1 className="font-heading text-2xl sm:text-3xl font-bold text-primary-dark">Créer un événement</h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl p-8 shadow-sm border border-gray-200">
+        <form onSubmit={handleSubmit} className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-md border border-primary-gray/10">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl mb-6">
-              {error}
+            <div className="bg-red-50 border border-red-300 text-red-800 px-4 py-3 rounded-xl mb-6 flex items-start gap-3">
+              <AlertTriangle size={20} className="flex-shrink-0 mt-0.5" />
+              <p className="text-sm font-medium">{error}</p>
             </div>
           )}
 
           <div className="space-y-6">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Nom de l'événement *
+              <label className="block text-sm font-bold text-primary-dark mb-2">
+                Nom de l'événement <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -122,13 +124,13 @@ const CreateEventPage = () => {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent transition-all"
+                className="w-full px-4 py-3 border border-primary-gray/30 rounded-xl focus:ring-2 focus:ring-primary-accent focus:border-primary-accent transition-all bg-white"
                 placeholder="Ex: Conférence Tech 2026"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
+              <label className="block text-sm font-bold text-primary-dark mb-2">
                 Description
               </label>
               <textarea
@@ -136,14 +138,14 @@ const CreateEventPage = () => {
                 value={formData.description}
                 onChange={handleChange}
                 rows={4}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent transition-all resize-none"
+                className="w-full px-4 py-3 border border-primary-gray/30 rounded-xl focus:ring-2 focus:ring-primary-accent focus:border-primary-accent transition-all resize-none bg-white"
                 placeholder="Décrivez votre événement..."
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Lieu *
+              <label className="block text-sm font-bold text-primary-dark mb-2">
+                Lieu <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -151,15 +153,15 @@ const CreateEventPage = () => {
                 value={formData.location}
                 onChange={handleChange}
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent transition-all"
+                className="w-full px-4 py-3 border border-primary-gray/30 rounded-xl focus:ring-2 focus:ring-primary-accent focus:border-primary-accent transition-all bg-white"
                 placeholder="Ex: Paris - La Défense"
               />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Date de début *
+                <label className="block text-sm font-bold text-primary-dark mb-2">
+                  Date de début <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="datetime-local"
@@ -167,13 +169,13 @@ const CreateEventPage = () => {
                   value={formData.start_date}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-primary-gray/30 rounded-xl focus:ring-2 focus:ring-primary-accent focus:border-primary-accent transition-all bg-white"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Date de fin *
+                <label className="block text-sm font-bold text-primary-dark mb-2">
+                  Date de fin <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="datetime-local"
@@ -181,15 +183,15 @@ const CreateEventPage = () => {
                   value={formData.end_date}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-primary-gray/30 rounded-xl focus:ring-2 focus:ring-primary-accent focus:border-primary-accent transition-all bg-white"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Capacité maximale *
+                <label className="block text-sm font-bold text-primary-dark mb-2">
+                  Capacité maximale <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="number"
@@ -198,20 +200,20 @@ const CreateEventPage = () => {
                   onChange={handleChange}
                   required
                   min="1"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-primary-gray/30 rounded-xl focus:ring-2 focus:ring-primary-accent focus:border-primary-accent transition-all bg-white"
                   placeholder="Ex: 200"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-primary-dark mb-2">
                   Statut
                 </label>
                 <select
                   name="status"
                   value={formData.status}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent transition-all"
+                  className="w-full px-4 py-3 border border-primary-gray/30 rounded-xl focus:ring-2 focus:ring-primary-accent focus:border-primary-accent transition-all bg-white"
                 >
                   <option value="DRAFT">Brouillon</option>
                   <option value="PUBLISHED">Publié</option>
@@ -222,11 +224,11 @@ const CreateEventPage = () => {
               </div>
             </div>
 
-            <div className="border-t pt-6 mt-6">
+            <div className="border-t border-primary-gray/20 pt-6 mt-6">
               <div className="flex justify-between items-center mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-900">Zones d'accès</h3>
-                  <p className="text-sm text-gray-500 mt-1">
+                  <h3 className="font-heading text-lg font-bold text-primary-dark">Zones d'accès</h3>
+                  <p className="text-sm text-primary-gray mt-1">
                     Sélectionnez les zones pour votre événement
                   </p>
                 </div>
@@ -259,31 +261,31 @@ const CreateEventPage = () => {
               )}
 
               {showZonesList && (
-                <div className="mb-4 bg-gray-50 rounded-xl p-4 border border-gray-200 max-h-64 overflow-y-auto">
+                <div className="mb-4 bg-primary-light/30 rounded-xl p-4 border border-primary-gray/20 max-h-64 overflow-y-auto">
                   {loadingZones ? (
-                    <p className="text-gray-500 text-center">Chargement des zones...</p>
+                    <p className="text-primary-gray text-center py-4">Chargement des zones...</p>
                   ) : availableZones.length === 0 ? (
-                    <p className="text-gray-500 text-center">Aucune zone disponible</p>
+                    <p className="text-primary-gray text-center py-4">Aucune zone disponible</p>
                   ) : (
                     <div className="space-y-2">
                       {availableZones.map((zone, index) => (
                         <label
                           key={index}
-                          className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200 hover:border-primary-purple cursor-pointer transition-all"
+                          className="flex items-center gap-3 p-3 bg-white rounded-xl border border-primary-gray/20 hover:border-primary-accent hover:shadow-sm cursor-pointer transition-all"
                         >
                           <input
                             type="checkbox"
                             checked={isZoneSelected(zone)}
                             onChange={() => toggleZoneSelection(zone)}
-                            className="w-5 h-5 text-primary-purple rounded focus:ring-primary-purple"
+                            className="w-5 h-5 text-primary-accent rounded focus:ring-primary-accent"
                           />
                           <div className="flex-1">
-                            <p className="font-semibold text-gray-900">{zone.name}</p>
+                            <p className="font-bold text-primary-dark">{zone.name}</p>
                             {zone.description && (
-                              <p className="text-sm text-gray-600">{zone.description}</p>
+                              <p className="text-sm text-primary-gray">{zone.description}</p>
                             )}
                           </div>
-                          <span className="text-sm font-medium text-gray-700 bg-gray-100 px-3 py-1 rounded-lg">
+                          <span className="text-sm font-semibold text-primary-dark bg-primary-light/50 px-3 py-1 rounded-lg">
                             {zone.capacity} pers.
                           </span>
                         </label>
@@ -295,33 +297,33 @@ const CreateEventPage = () => {
 
               {selectedZones.length > 0 ? (
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-gray-700 mb-2">
+                  <p className="text-sm font-bold text-primary-dark mb-3">
                     Zones sélectionnées ({selectedZones.length})
                   </p>
                   {selectedZones.map((zone, index) => (
-                    <div key={index} className="flex items-center justify-between bg-purple-50 rounded-lg p-3 border border-purple-200">
+                    <div key={index} className="flex items-center justify-between bg-gradient-to-br from-primary-accent/5 to-primary-purple/5 rounded-xl p-3 border border-primary-accent/20">
                       <div className="flex-1">
-                        <p className="font-semibold text-gray-900">{zone.name}</p>
+                        <p className="font-bold text-primary-dark">{zone.name}</p>
                         {zone.description && (
-                          <p className="text-sm text-gray-600">{zone.description}</p>
+                          <p className="text-sm text-primary-gray">{zone.description}</p>
                         )}
                       </div>
-                      <span className="text-sm font-medium text-primary-purple bg-white px-3 py-1 rounded-lg">
+                      <span className="text-sm font-bold text-primary-accent bg-white px-3 py-1 rounded-lg shadow-sm">
                         {zone.capacity} pers.
                       </span>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-gray-500">
-                  <p>Aucune zone sélectionnée</p>
+                <div className="text-center py-8 text-primary-gray">
+                  <p className="font-medium">Aucune zone sélectionnée</p>
                   <p className="text-sm mt-1">Cliquez sur "Ajouter des zones" pour commencer</p>
                 </div>
               )}
             </div>
           </div>
 
-          <div className="flex gap-4 mt-8 pt-6 border-t border-gray-200">
+          <div className="flex gap-4 mt-8 pt-6 border-t border-primary-gray/20">
             <Button
               type="submit"
               variant="primary"

@@ -152,52 +152,55 @@ const EditEventPage = () => {
 
   if (loadingData) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary-white to-primary-light/30">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-purple mx-auto mb-4"></div>
-          <p className="text-gray-500">Chargement de l'événement...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-3 border-primary-accent border-t-transparent mx-auto mb-4 shadow-lg"></div>
+          <p className="text-primary-gray font-medium">Chargement de l'événement...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <div className="mb-8">
-        <button
-          onClick={() => navigate('/events')}
-          className="flex items-center gap-2 text-gray-600 hover:text-primary-purple transition-colors mb-4"
-        >
-          <ArrowLeft size={20} />
-          Retour aux événements
-        </button>
-        <h1 className="text-3xl font-bold text-primary-dark">Modifier l'événement</h1>
-        <p className="text-gray-600 mt-2">Modifiez les informations de votre événement</p>
-      </div>
-
-      {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-600 rounded-xl">
-          {error}
+    <div className="min-h-screen bg-gradient-to-br from-primary-white to-primary-light/30 p-4 sm:p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="mb-6">
+          <button
+            onClick={() => navigate('/events')}
+            className="flex items-center gap-2 text-primary-gray hover:text-primary-accent transition-all mb-4 font-medium"
+            aria-label="Retour aux événements"
+          >
+            <ArrowLeft size={20} />
+            Retour aux événements
+          </button>
+          <h1 className="font-heading text-2xl sm:text-3xl font-bold text-primary-dark">Modifier l'événement</h1>
+          <p className="text-primary-gray mt-2">Modifiez les informations de votre événement</p>
         </div>
-      )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Informations générales</h2>
-          
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Nom de l'événement *
-              </label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleInputChange}
-                placeholder="Ex: Concert de Jazz 2024"
-                required
-                className="w-full px-4 py-2 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-purple focus:border-transparent"
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-300 text-red-800 rounded-xl flex items-start gap-3">
+            <AlertTriangle size={20} className="flex-shrink-0 mt-0.5" />
+            <p className="text-sm font-medium">{error}</p>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-md border border-primary-gray/10">
+            <h2 className="font-heading text-xl font-bold text-primary-dark mb-4">Informations générales</h2>
+            
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-bold text-primary-dark mb-2">
+                  Nom de l'événement <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleInputChange}
+                  placeholder="Ex: Concert de Jazz 2024"
+                  required
+                  className="w-full px-4 py-3 border border-primary-gray/30 rounded-xl focus:ring-2 focus:ring-primary-accent focus:border-primary-accent transition-all bg-white"
               />
             </div>
 
@@ -392,6 +395,7 @@ const EditEventPage = () => {
           </Button>
         </div>
       </form>
+      </div>
     </div>
   );
 };

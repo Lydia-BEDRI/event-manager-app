@@ -13,6 +13,7 @@ module.exports = {
           gray: '#A5A5A8',      // pour texte secondaire, labels, séparateurs
           white: '#fcfcfd',     // pour textes sur foncé, zones importantes
           accent: '#00BCF2',    // pour accent pour boutons, liens et éléments interactifs
+          purple: '#6366f1',    // couleur principale pour éléments interactifs
         },
       },
       fontFamily: {
