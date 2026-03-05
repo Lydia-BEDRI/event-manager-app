@@ -1,5 +1,5 @@
 import { api } from './api';
-import { Participation } from '../types/participation.types';
+import { Participation, ParticipantDashboardStats } from '../types/participation.types';
 
 export const getAllParticipations = async () => {
   const token = localStorage.getItem('accessToken');
@@ -15,4 +15,12 @@ export const getParticipationsByEvent = async (eventId: number) => {
     throw new Error('Token manquant. Veuillez vous reconnecter.');
   }
   return await api.get<Participation[]>(`/participations/event/${eventId}`, token);
+};
+
+export const getMyParticipantStats = async () => {
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
+    throw new Error('Token manquant. Veuillez vous reconnecter.');
+  }
+  return await api.get<ParticipantDashboardStats>('/participations/my-stats', token);
 };
