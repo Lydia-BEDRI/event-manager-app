@@ -239,7 +239,7 @@ const CreateEventPage = () => {
                   onClick={() => setShowZonesList(!showZonesList)}
                   disabled={loadingZones}
                 >
-                  {showZonesList ? 'Masquer' : 'Ajouter des zones'}
+                  {showZonesList ? 'Masquer' : ' outer des zones'}
                 </Button>
               </div>
 
@@ -323,7 +323,7 @@ const CreateEventPage = () => {
             </div>
           </div>
 
-          <div className="flex gap-4 mt-8 pt-6 border-t border-primary-gray/20">
+          <div className="flex justify-end gap-4 mt-8 pt-6 border-t border-primary-gray/20">
             <Button
               type="submit"
               variant="primary"

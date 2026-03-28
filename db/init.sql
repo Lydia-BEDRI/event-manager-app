@@ -115,9 +115,11 @@ CREATE TABLE zones (
     name VARCHAR(255) NOT NULL,
     description TEXT DEFAULT NULL,
     capacity INT UNSIGNED NOT NULL,
+    archived BOOLEAN NOT NULL DEFAULT FALSE,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_zones_event FOREIGN KEY (event_id) REFERENCES events(id) ON DELETE CASCADE,
-    INDEX idx_zones_event (event_id)
+    INDEX idx_zones_event (event_id),
+    INDEX idx_zones_archived (archived)
 ) ENGINE=InnoDB;
 
 -- =============================================

@@ -30,7 +30,7 @@ export const createZone = async (eventId: number, data: CreateZoneDto) => {
   if (!token) {
     throw new Error('Token manquant. Veuillez vous reconnecter.');
   }
-  return await api.post<Zone>(`/zones/${eventId}/zones`, data, token);
+  return await api.post<Zone>(`/zones/${eventId}`, data, token);
 };
 
 export const deleteZone = async (eventId: number, zoneId: number) => {
@@ -38,7 +38,7 @@ export const deleteZone = async (eventId: number, zoneId: number) => {
   if (!token) {
     throw new Error('Token manquant. Veuillez vous reconnecter.');
   }
-  return await api.delete(`/zones/${eventId}/zones/${zoneId}`, token);
+  return await api.delete(`/zones/${zoneId}`, token);
 };
 
 export const updateZone = async (eventId: number, zoneId: number, data: UpdateZoneDto) => {
@@ -46,7 +46,7 @@ export const updateZone = async (eventId: number, zoneId: number, data: UpdateZo
   if (!token) {
     throw new Error('Token manquant. Veuillez vous reconnecter.');
   }
-  return await api.put<Zone>(`/zones/${eventId}/zones/${zoneId}`, data, token);
+  return await api.put<Zone>(`/zones/${zoneId}`, data, token);
 };
 
 export const getZoneById = async (zoneId: number) => {

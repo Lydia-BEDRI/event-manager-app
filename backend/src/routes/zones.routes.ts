@@ -16,7 +16,7 @@ router.get('/distinct', authenticate, getDistinctZones);
 router.get('/event/:eventId', authenticate, getEventZones);
 // Routes admin
 router.get('/', authenticate, authorize('ADMIN'), getAllZones);
-router.post('/:eventId/zones', authenticate, authorize('ADMIN'), createZone);
-router.put('/:eventId/zones/:zoneId', authenticate, authorize('ADMIN'), updateZone);
-router.delete('/:eventId/zones/:zoneId', authenticate, authorize('ADMIN'), deleteZone);
+router.post('/:eventId', authenticate, authorize('ADMIN'), createZone);
+router.put('/:zoneId', authenticate, authorize('ADMIN'), updateZone);
+router.delete('/:zoneId', authenticate, authorize('ADMIN'), deleteZone);
 export default router;

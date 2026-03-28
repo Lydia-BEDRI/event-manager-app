@@ -31,16 +31,16 @@ INSERT INTO events (name, description, location, start_date, end_date, capacity,
 -- ZONES
 -- =============================================
 
-INSERT INTO zones (event_id, name, description, capacity) VALUES
-(1, 'Hall Principal', 'Accueil et keynotes', 200),
-(1, 'Salle Workshop A', 'Ateliers pratiques', 40),
-(1, 'Salle Workshop B', 'Ateliers pratiques', 40),
-(1, 'Espace Networking', 'Pause café et réseautage', 100),
-(2, 'Terrain Sportif', 'Activités extérieures', 50),
-(2, 'Salle de Réception', 'Déjeuner et remise de prix', 50),
-(3, 'Amphithéâtre', 'Présentations principales', 150),
-(3, 'Lab IA', 'Démos et ateliers IA', 30),
-(3, 'Espace Poster', 'Présentations poster', 60);
+INSERT INTO zones (event_id, name, description, capacity, archived) VALUES
+(1, 'Hall Principal', 'Accueil et keynotes', 200, TRUE),
+(1, 'Salle Workshop A', 'Ateliers pratiques', 40, FALSE),
+(1, 'Salle Workshop B', 'Ateliers pratiques', 40, FALSE),
+(1, 'Espace Networking', 'Pause café et réseautage', 100, FALSE),
+(2, 'Terrain Sportif', 'Activités extérieures', 50, FALSE),
+(2, 'Salle de Réception', 'Déjeuner et remise de prix', 50, FALSE),
+(3, 'Amphithéâtre', 'Présentations principales', 150, FALSE),
+(3, 'Lab IA', 'Démos et ateliers IA', 30, FALSE),
+(3, 'Espace Poster', 'Présentations poster', 60, FALSE);
 
 -- =============================================
 -- PARTICIPATIONS

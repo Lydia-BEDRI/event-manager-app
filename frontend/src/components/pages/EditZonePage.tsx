@@ -181,7 +181,7 @@ const EditZonePage = () => {
             </div>
           </div>
 
-          <div className="flex gap-4 mt-8 pt-6 border-t border-primary-gray/20">
+          <div className="flex flex justify-end gap-4 gap-4 mt-8 pt-6 border-t border-primary-gray/20">
             <Button
               type="submit"
               variant="primary"

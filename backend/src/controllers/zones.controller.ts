@@ -34,9 +34,10 @@ export const createZone = async (req: Request, res: Response) => {
 };
 export const getAllZones = async (_req: Request, res: Response) => {
   try {
-    const query = `SELECT z.id, z.name, z.description, z.capacity, z.created_at, z.event_id, e.name AS event_name
+    const query = `SELECT z.id, z.name, z.description, z.capacity, z.archived, z.created_at, z.event_id, e.name AS event_name
                     FROM zones z
                     LEFT JOIN events e ON z.event_id = e.id
+                    WHERE z.archived = FALSE
                     ORDER BY z.created_at DESC`;
   
     const [zones] = await pool.query<RowDataPacket[]>(query);
@@ -53,6 +54,7 @@ export const getDistinctZones = async (_req: Request, res: Response) => {
     // recuperer les zones (sans doublons) par nom/description/capacité
     const query = `SELECT DISTINCT name, description, capacity
                    FROM zones
+                   WHERE archived = FALSE
                    GROUP BY name, description, capacity
                    ORDER BY name ASC`;
   
@@ -71,7 +73,7 @@ export const getEventZones = async (req: Request, res: Response) => {
     const { eventId } = req.params;
 
     const [zones] = await pool.query<RowDataPacket[]>(
-      'SELECT * FROM zones WHERE event_id = ? ORDER BY created_at ASC',
+      'SELECT * FROM zones WHERE event_id = ? AND archived = FALSE ORDER BY created_at ASC',
       [eventId]
     );
 
@@ -84,12 +86,12 @@ export const getEventZones = async (req: Request, res: Response) => {
 
 export const updateZone = async (req: Request, res: Response) => {
   try {
-    const { eventId, zoneId } = req.params;
+    const { zoneId } = req.params;
     const { name, description, capacity } = req.body;
 
     const [zones] = await pool.query<RowDataPacket[]>(
-      'SELECT * FROM zones WHERE id = ? AND event_id = ?',
-      [zoneId, eventId]
+      'SELECT * FROM zones WHERE id = ?',
+      [zoneId]
     );
 
     if (zones.length === 0) {
@@ -116,10 +118,10 @@ export const updateZone = async (req: Request, res: Response) => {
       return res.status(400).json({ message: 'Aucune donnée à mettre à jour' });
     }
 
-    values.push(zoneId, eventId);
+    values.push(zoneId);
 
     await pool.query(
-      `UPDATE zones SET ${updates.join(', ')} WHERE id = ? AND event_id = ?`,
+      `UPDATE zones SET ${updates.join(', ')} WHERE id = ?`,
       values
     );
 
@@ -137,22 +139,25 @@ export const updateZone = async (req: Request, res: Response) => {
 
 export const deleteZone = async (req: Request, res: Response) => {
   try {
-    const { eventId, zoneId } = req.params;
+    const { zoneId } = req.params;
 
     const [zones] = await pool.query<RowDataPacket[]>(
-      'SELECT * FROM zones WHERE id = ? AND event_id = ?',
-      [zoneId, eventId]
+      'SELECT * FROM zones WHERE id = ?',
+      [zoneId]
     );
 
     if (zones.length === 0) {
       return res.status(404).json({ message: 'Zone non trouvée' });
     }
 
-    await pool.query('DELETE FROM zones WHERE id = ?', [zoneId]);
+    await pool.query(
+      'UPDATE zones SET archived = TRUE WHERE id = ?',
+      [zoneId]
+    );
 
-    return res.json({ message: 'Zone supprimée avec succès' });
+    return res.json({ message: 'Zone archivée avec succès' });
   } catch (error) {
-    console.error('Error deleting zone:', error);
+    console.error('Error archiving zone:', error);
     return res.status(500).json({ message: 'Erreur serveur', error });
   }
 };
