@@ -59,6 +59,20 @@ app.use((_req: Request, res: Response) => {
 
 initSocketServer(server);
 
+server.on("error", (error: NodeJS.ErrnoException) => {
+  if (error.code === "EADDRINUSE") {
+    console.error(
+      `Port ${PORT} is already in use. Stop the other process or change PORT.`,
+    );
+  } else if (error.code === "EACCES") {
+    console.error(`Port ${PORT} requires elevated privileges.`);
+  } else {
+    console.error("Server startup error:", error);
+  }
+
+  process.exitCode = 1;
+});
+
 server.listen(PORT, () => {
   console.log(`Server is running: http://localhost:${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/health`);
