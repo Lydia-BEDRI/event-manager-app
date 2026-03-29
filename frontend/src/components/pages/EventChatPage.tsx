@@ -36,7 +36,14 @@ const EventChatPage: React.FC = () => {
   const canModerate = user?.role === "ADMIN";
 
   const normalizeText = (value: string): string => {
-    if (!value || !/[ÃÂâ€™â€œâ€]/.test(value)) {
+    const looksMojibake =
+      value.includes("Ã") ||
+      value.includes("Â") ||
+      value.includes("â€™") ||
+      value.includes("â€œ") ||
+      value.includes("â€");
+
+    if (!value || !looksMojibake) {
       return value;
     }
 
