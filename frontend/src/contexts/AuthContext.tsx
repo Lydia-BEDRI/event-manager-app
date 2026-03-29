@@ -1,5 +1,17 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { authService, User, RegisterData, LoginData } from '../services/auth.service';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
+import {
+  authService,
+  User,
+  RegisterData,
+  LoginData,
+} from "../services/auth.service";
+import { ApiError } from "../services/api";
 
 interface AuthContextType {
   user: User | null;
@@ -16,24 +28,26 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [accessToken, setAccessToken] = useState<string | null>(
-    localStorage.getItem('accessToken')
+    localStorage.getItem("accessToken"),
   );
   const [isLoading, setIsLoading] = useState(true);
 
   const clearAuth = useCallback(() => {
     setUser(null);
     setAccessToken(null);
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
   }, []);
 
   // Charger le profil au démarrage si un token existe
   useEffect(() => {
     const loadUser = async () => {
-      const token = localStorage.getItem('accessToken');
+      const token = localStorage.getItem("accessToken");
       if (!token) {
         setIsLoading(false);
         return;
@@ -41,8 +55,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       try {
         const data = await authService.getMe(token);
-        if (!data.user || !data.user.id || !data.user.email || !data.user.role) {
-          console.error('Données utilisateur invalides:', data);
+        if (
+          !data.user ||
+          !data.user.id ||
+          !data.user.email ||
+          !data.user.role
+        ) {
+          console.error("Données utilisateur invalides:", data);
           clearAuth();
           setIsLoading(false);
           return;
@@ -50,27 +69,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(data.user);
         setAccessToken(token);
       } catch (error) {
-        console.error('Erreur de chargement du profil:', error);
+        const isUnauthorized =
+          error instanceof ApiError && error.status === 401;
+        if (!isUnauthorized) {
+          console.error("Erreur de chargement du profil:", error);
+        }
+
         // token invalide, essayer de rafraîchir
-        const refreshToken = localStorage.getItem('refreshToken');
+        const refreshToken = localStorage.getItem("refreshToken");
         if (refreshToken) {
           try {
             const refreshData = await authService.refresh(refreshToken);
-            localStorage.setItem('accessToken', refreshData.accessToken);
+            localStorage.setItem("accessToken", refreshData.accessToken);
             setAccessToken(refreshData.accessToken);
             const userData = await authService.getMe(refreshData.accessToken);
-            
+
             // vérifier à nouveau que les données sont valides
-            if (!userData.user || !userData.user.id || !userData.user.email || !userData.user.role) {
-              console.error('Données utilisateur invalides après rafraîchissement:', userData);
+            if (
+              !userData.user ||
+              !userData.user.id ||
+              !userData.user.email ||
+              !userData.user.role
+            ) {
+              console.error(
+                "Données utilisateur invalides après rafraîchissement:",
+                userData,
+              );
               clearAuth();
               setIsLoading(false);
               return;
             }
-            
+
             setUser(userData.user);
           } catch (refreshError) {
-            console.error('Erreur de rafraîchissement du token:', refreshError);
+            const refreshUnauthorized =
+              refreshError instanceof ApiError && refreshError.status === 401;
+            if (!refreshUnauthorized) {
+              console.error(
+                "Erreur de rafraîchissement du token:",
+                refreshError,
+              );
+            }
             clearAuth();
           }
         } else {
@@ -88,8 +127,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const response = await authService.login(data);
     setUser(response.user);
     setAccessToken(response.accessToken);
-    localStorage.setItem('accessToken', response.accessToken);
-    localStorage.setItem('refreshToken', response.refreshToken);
+    localStorage.setItem("accessToken", response.accessToken);
+    localStorage.setItem("refreshToken", response.refreshToken);
     return { passwordExpired: response.passwordExpired };
   };
 
@@ -97,12 +136,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const response = await authService.register(data);
     setUser(response.user);
     setAccessToken(response.accessToken);
-    localStorage.setItem('accessToken', response.accessToken);
-    localStorage.setItem('refreshToken', response.refreshToken);
+    localStorage.setItem("accessToken", response.accessToken);
+    localStorage.setItem("refreshToken", response.refreshToken);
   };
 
   const logout = async () => {
-    const refreshToken = localStorage.getItem('refreshToken');
+    const refreshToken = localStorage.getItem("refreshToken");
     try {
       if (refreshToken && accessToken) {
         await authService.logout(refreshToken, accessToken);
@@ -149,7 +188,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useAuth doit être utilisé dans un AuthProvider');
+    throw new Error("useAuth doit être utilisé dans un AuthProvider");
   }
   return context;
 }
