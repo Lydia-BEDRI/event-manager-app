@@ -117,7 +117,7 @@ const ParticipantsPage = () => {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="mb-8">
         <div className="flex items-center gap-3 mb-4">
           <div className="p-3 bg-gradient-to-br from-primary-purple to-purple-600 rounded-xl shadow-lg">
@@ -132,13 +132,13 @@ const ParticipantsPage = () => {
         </div>
 
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <Filter className="text-gray-400" size={20} />
             <label className="text-sm font-medium text-gray-700">Filtrer par événement :</label>
             <select
               value={selectedEventId}
               onChange={(e) => setSelectedEventId(e.target.value)}
-              className="flex-1 max-w-md px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent"
+              className="w-full sm:flex-1 sm:max-w-md px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent"
             >
               <option value="all">Tous les événements</option>
               {events.map((event) => (
@@ -164,8 +164,56 @@ const ParticipantsPage = () => {
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
+        <>
+          <div className="lg:hidden space-y-4">
+            {participations.map((participation) => (
+              <article
+                key={participation.id}
+                className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
+                      {participation.first_name[0]}{participation.last_name[0]}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="font-medium text-gray-900 truncate">
+                        {participation.first_name} {participation.last_name}
+                      </p>
+                      <p className="text-sm text-gray-500 truncate">{participation.email}</p>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0">{getStatusBadge(participation.status)}</div>
+                </div>
+
+                <div className="mt-4 space-y-2 text-sm text-gray-600">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="text-gray-400 flex-shrink-0" size={16} />
+                    <span className="font-medium text-gray-900 truncate">{participation.event_name}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="text-gray-400 flex-shrink-0" size={16} />
+                    <span className="truncate">{participation.event_location}</span>
+                  </div>
+                  <p>
+                    <span className="font-medium">Événement:</span> {formatDate(participation.event_start_date)}
+                  </p>
+                  <p>
+                    <span className="font-medium">Inscription:</span> {formatDate(participation.created_at)}
+                  </p>
+                  <p>
+                    <span className="font-medium">Approuvé par:</span>{' '}
+                    {participation.approved_by_first_name && participation.approved_by_last_name
+                      ? `${participation.approved_by_first_name} ${participation.approved_by_last_name}`
+                      : '-'}
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
+
+          <div className="hidden lg:block bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
@@ -238,8 +286,9 @@ const ParticipantsPage = () => {
                 ))}
               </tbody>
             </table>
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   );

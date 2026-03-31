@@ -22,7 +22,7 @@ const NavItem: React.FC<NavItemProps> = ({ icon: Icon, label, active = false, on
 
   if (to) {
     return (
-      <Link to={to} className={classes}>
+      <Link to={to} className={classes} onClick={onClick}>
         <Icon size={20} className="flex-shrink-0" />
         <span className="text-sm leading-tight">{label}</span>
       </Link>
