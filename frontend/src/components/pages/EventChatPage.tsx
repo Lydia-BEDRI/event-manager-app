@@ -11,6 +11,36 @@ import {
 } from "../../services/chat.service";
 import { getEventById } from "../../services/event.service";
 
+// Utility functions defined outside component to avoid dependency array issues
+const normalizeText = (value: string): string => {
+  const looksMojibake =
+    value.includes("Ã") ||
+    value.includes("Â") ||
+    value.includes("â€™") ||
+    value.includes("â€œ") ||
+    value.includes("â€");
+
+  if (!value || !looksMojibake) {
+    return value;
+  }
+
+  try {
+    const bytes = Uint8Array.from(value, (char) => char.charCodeAt(0));
+    return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
+  } catch {
+    return value;
+  }
+};
+
+const normalizeMessage = (message: ChatMessage): ChatMessage => ({
+  ...message,
+  authorName: normalizeText(message.authorName),
+  content: normalizeText(message.content),
+  moderatedByName: message.moderatedByName
+    ? normalizeText(message.moderatedByName)
+    : null,
+});
+
 const EventChatPage: React.FC = () => {
   const { eventId } = useParams();
   const navigate = useNavigate();
@@ -34,35 +64,6 @@ const EventChatPage: React.FC = () => {
   ).replace(/\/api\/?$/, "");
 
   const canModerate = user?.role === "ADMIN";
-
-  const normalizeText = (value: string): string => {
-    const looksMojibake =
-      value.includes("Ã") ||
-      value.includes("Â") ||
-      value.includes("â€™") ||
-      value.includes("â€œ") ||
-      value.includes("â€");
-
-    if (!value || !looksMojibake) {
-      return value;
-    }
-
-    try {
-      const bytes = Uint8Array.from(value, (char) => char.charCodeAt(0));
-      return new TextDecoder("utf-8", { fatal: false }).decode(bytes);
-    } catch {
-      return value;
-    }
-  };
-
-  const normalizeMessage = (message: ChatMessage): ChatMessage => ({
-    ...message,
-    authorName: normalizeText(message.authorName),
-    content: normalizeText(message.content),
-    moderatedByName: message.moderatedByName
-      ? normalizeText(message.moderatedByName)
-      : null,
-  });
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -317,7 +318,7 @@ const EventChatPage: React.FC = () => {
 
                     {message.isModerated && message.moderatedByName && (
                       <p className="mt-1 text-xs text-orange-600">
-                        Modéré par {message.moderatedByName}
+                        Modéré par l'administrateur {message.moderatedByName}
                       </p>
                     )}
 
