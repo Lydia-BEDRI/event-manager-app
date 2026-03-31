@@ -1,12 +1,12 @@
-import React from 'react';
-import { 
-  LayoutDashboard, 
-  CalendarDays, 
-  Users, 
-  MapPin, 
-  ClipboardCheck, 
-  MessageCircle, 
-  FileDown, 
+import React from "react";
+import {
+  LayoutDashboard,
+  CalendarDays,
+  Users,
+  MapPin,
+  ClipboardCheck,
+  MessageCircle,
+  FileDown,
   Settings,
   LogOut,
   Shield,
@@ -15,50 +15,50 @@ import {
   QrCode,
   Home,
   Ticket,
-  ScanLine
-} from 'lucide-react';
-import Logo from '../atoms/Logo';
-import NavItem from '../molecules/NavItem';
-import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+  ScanLine,
+} from "lucide-react";
+import Logo from "../atoms/Logo";
+import NavItem from "../molecules/NavItem";
+import { useAuth } from "../../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 interface SidebarProps {
-  role?: 'ADMIN' | 'PARTICIPANT';
+  role?: "ADMIN" | "PARTICIPANT";
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ role = 'PARTICIPANT' }) => {
+const Sidebar: React.FC<SidebarProps> = ({ role = "PARTICIPANT" }) => {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     try {
       await logout();
-      navigate('/login');
+      navigate("/login");
     } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
+      console.error("Erreur lors de la déconnexion:", error);
     }
   };
 
   const adminMenuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', to: '/' },
-    { icon: CalendarDays, label: 'Événements', to: '/events' },
-    { icon: Users, label: 'Participants', to: '/participants' },
-    { icon: MapPin, label: 'Zones', to: '/zones' },
-    { icon: ClipboardCheck, label: 'Présences' },
-    { icon: MessageCircle, label: 'Chats' },
-    { icon: FileDown, label: 'Exports', to: '/exports' },
+    { icon: LayoutDashboard, label: "Dashboard", to: "/" },
+    { icon: CalendarDays, label: "Événements", to: "/events" },
+    { icon: Users, label: "Participants", to: "/participants" },
+    { icon: MapPin, label: "Zones", to: "/zones" },
+    { icon: ClipboardCheck, label: "Présences" },
+    { icon: MessageCircle, label: "Chats", to: "/chats" },
+    { icon: FileDown, label: "Exports", to: "/exports" },
   ];
 
   const participantMenuItems = [
-    { icon: Home, label: 'Accueil', to: '/' },
-    { icon: CalendarDays, label: 'Événements disponibles' },
-    { icon: Ticket, label: 'Mes participations' },
-    { icon: QrCode, label: 'Mes QR Codes' },
-    { icon: ScanLine, label: 'Vérifier ma présence' },
-    { icon: MessageCircle, label: 'Chats' },
+    { icon: Home, label: "Accueil", to: "/" },
+    { icon: CalendarDays, label: "Événements disponibles" },
+    { icon: Ticket, label: "Mes participations" },
+    { icon: QrCode, label: "Mes QR Codes" },
+    { icon: ScanLine, label: "Vérifier ma présence" },
+    { icon: MessageCircle, label: "Chats", to: "/chats" },
   ];
 
-  const menuItems = role === 'ADMIN' ? adminMenuItems : participantMenuItems;
+  const menuItems = role === "ADMIN" ? adminMenuItems : participantMenuItems;
 
   return (
     <aside className="bg-primary-dark w-64 h-[calc(100vh-3rem)] flex flex-col rounded-l-3xl flex-none overflow-y-auto">
@@ -81,26 +81,34 @@ const Sidebar: React.FC<SidebarProps> = ({ role = 'PARTICIPANT' }) => {
           </p>
           <ul className="space-y-1">
             <li>
-              <NavItem icon={Shield} label="Politique de confidentialité" to="/privacy" />
+              <NavItem
+                icon={Shield}
+                label="Politique de confidentialité"
+                to="/privacy"
+              />
             </li>
             <li>
               <NavItem icon={ScrollText} label="Mentions légales" to="/legal" />
             </li>
             <li>
-              <NavItem icon={Cookie} label="Gestion des cookies" to="/cookies" />
+              <NavItem
+                icon={Cookie}
+                label="Gestion des cookies"
+                to="/cookies"
+              />
             </li>
           </ul>
         </div>
       </nav>
 
       <div className="p-3">
-        <NavItem 
-          icon={Settings} 
-          label={role === 'ADMIN' ? 'Paramètres' : 'Mon profil'} 
-          to={role === 'ADMIN' ? undefined : '/profile'} 
+        <NavItem
+          icon={Settings}
+          label={role === "ADMIN" ? "Paramètres" : "Mon profil"}
+          to={role === "ADMIN" ? undefined : "/profile"}
         />
         <div className="mt-1">
-          <button 
+          <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl text-primary-gray hover:bg-red-500/10 hover:text-red-400 transition-all text-left"
           >
