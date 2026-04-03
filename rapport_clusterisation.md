@@ -195,3 +195,50 @@ Docker Swarm redistribue automatiquement les containers sur les nodes disponible
 
 
 ## 8. Annexes
+
+### Schéma global de l’architecture EventManager
+
+```
+		+-------------------+
+		|      Master 1     |
+		|------------------|
+		|  Nginx (Reverse) |
+		|  Docker Swarm    |
+		+------------------+
+		       |
+	       -------------------
+	       |                 |
+	   Frontnet            Backnet
+	       |                 |
+       +-------+-------+     +---+---+--------+
+       | Frontend Pod  |     | Backend Pod(s) |
+       |  Worker 1     |     | Worker 1 & 2   |
+       +---------------+     +----------------+
+	       |                 |
+	       +-----------------+
+			|
+		     DBNet
+			|
+		   +----+-----+
+		   |   DB     |
+		   |  Worker2 |
+		   +----------+
+```
+
+### Réseaux et rôle des services
+
+| Réseau | Contenus / rôle |
+|--------|-----------------|
+| proxynet | Contient le reverse proxy Nginx, exposé à l’extérieur (ports 80/443) |
+| frontnet | Contient les conteneurs Frontend et Backend pour la communication interne sécurisée |
+| backnet | Contient uniquement le backend et DB pour la sécurité interne |
+| dbnet | Contient uniquement la base de données (MySQL) pour isolation complète |
+
+### Répartition Master / Worker (exemple)
+
+| Service | Master 1 | Worker 1 | Worker 2 |
+|---------|:--------:|:--------:|:--------:|
+| Nginx | ✓ |  |  |
+| Frontend |  | ✓ | ✓ |
+| Backend |  | ✓ | ✓ |
+| DB |  |  | ✓ |
