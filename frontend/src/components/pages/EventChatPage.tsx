@@ -244,16 +244,16 @@ const EventChatPage: React.FC = () => {
 
   return (
     <div className="space-y-4 h-full flex flex-col max-h-screen">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="font-heading text-2xl font-bold text-primary-dark">
+          <h1 className="font-heading text-xl sm:text-2xl font-bold text-primary-dark">
             {eventName || "Chat événementiel"}
           </h1>
           <p className="text-primary-gray text-sm">Salon #{numericEventId}</p>
         </div>
         <button
           onClick={() => navigate("/chats")}
-          className="px-4 py-2 rounded-xl border border-gray-300 text-primary-dark hover:bg-gray-50"
+          className="w-full sm:w-auto px-4 py-2 rounded-xl border border-gray-300 text-primary-dark hover:bg-gray-50"
         >
           Retour aux chats
         </button>
@@ -265,7 +265,7 @@ const EventChatPage: React.FC = () => {
         </div>
       )}
 
-      <div className="flex gap-4 flex-1 min-h-0">
+      <div className="flex flex-col xl:flex-row gap-4 flex-1 min-h-0">
         <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex-1 flex flex-col min-w-0 overflow-hidden">
           <div className="flex-1 overflow-y-auto space-y-3 min-h-0">
             {messages.length === 0 ? (
@@ -350,7 +350,7 @@ const EventChatPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="w-64 bg-white border border-gray-200 rounded-2xl p-4 flex flex-col">
+        <div className="w-full xl:w-64 bg-white border border-gray-200 rounded-2xl p-4 flex flex-col max-h-56 xl:max-h-none">
           <h2 className="font-semibold text-primary-dark mb-3">
             Membres ({members.length})
           </h2>
@@ -374,7 +374,7 @@ const EventChatPage: React.FC = () => {
 
       <form
         onSubmit={handleSend}
-        className="bg-white border border-gray-200 rounded-2xl p-3 flex gap-2"
+        className="bg-white border border-gray-200 rounded-2xl p-3 flex flex-col sm:flex-row gap-2"
       >
         <input
           value={input}
@@ -386,7 +386,7 @@ const EventChatPage: React.FC = () => {
         <button
           type="submit"
           disabled={sending || !input.trim()}
-          className="px-5 py-2 rounded-xl bg-primary-accent text-white disabled:opacity-50"
+          className="w-full sm:w-auto px-5 py-2 rounded-xl bg-primary-accent text-white disabled:opacity-50"
         >
           Envoyer
         </button>

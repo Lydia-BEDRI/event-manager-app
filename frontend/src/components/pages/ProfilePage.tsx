@@ -143,7 +143,7 @@ const ProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto">
         {/* entête */}
         <div className="mb-8">

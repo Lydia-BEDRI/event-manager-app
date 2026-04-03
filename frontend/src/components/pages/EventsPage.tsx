@@ -4,12 +4,13 @@ import { deleteEvent, getAllEvents } from '../../services/event.service';
 import { Event } from '../../types/event.types';
 import EventCard from '../molecules/EventCard';
 import Button  from '../atoms/Button';
-import { Plus } from 'lucide-react';
+import { MoreVertical, Plus } from 'lucide-react';
 
 const EventsPage= () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -69,16 +70,44 @@ const handleDeleteEvent = async (eventId: number) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-white to-primary-light/30 p-4 sm:p-8">
-      <div className="flex justify-between items-center mb-8">
+    <div className="min-h-dvh bg-gradient-to-br from-primary-white to-primary-light/30 p-4 sm:p-6 lg:p-8">
+      <div className="flex justify-between items-start sm:items-center mb-8 gap-3">
         <div>
           <h1 className="font-heading text-3xl font-bold text-primary-dark">Événements disponibles</h1>
           <p className="text-primary-gray mt-2">{events.length} événement{events.length > 1 ? 's' : ''} au total</p>
         </div>
+
+        <div className="relative sm:hidden">
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+            className="p-2 rounded-xl border border-gray-200 bg-white text-primary-dark"
+            aria-label="Actions"
+          >
+            <MoreVertical size={20} />
+          </button>
+          {mobileMenuOpen && (
+            <div className="absolute right-0 mt-2 w-52 bg-white rounded-xl border border-gray-200 shadow-lg z-20 p-1">
+              <button
+                type="button"
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  navigate('/events/create');
+                }}
+                className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm text-primary-dark hover:bg-gray-50"
+              >
+                <Plus size={16} />
+                Créer un événement
+              </button>
+            </div>
+          )}
+        </div>
+
         <Button 
           variant="primary" 
           icon={Plus}
           onClick={() => navigate('/events/create')}
+          className="hidden sm:flex"
         >
           Créer un événement
         </Button>

@@ -24,7 +24,7 @@ const RegisterPage: React.FC = () => {
     lowercase: /[a-z]/.test(form.password),
     uppercase: /[A-Z]/.test(form.password),
     digit: /\d/.test(form.password),
-    special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(form.password),
+    special: /[^A-Za-z0-9]/.test(form.password),
   };
 
   const isPasswordValid = Object.values(passwordChecks).every(Boolean);
