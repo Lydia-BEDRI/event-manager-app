@@ -99,3 +99,100 @@ EventManager est une application web destinée à la gestion d’événements in
    - Frontend : [http://localhost:3000](http://localhost:3000)
    - Backend : [http://localhost:5000](http://localhost:5000)
    - Health check : [http://localhost:5000/health](http://localhost:5000/health)
+
+## Déploiement de la stack
+
+### Copier le projet sur le master
+
+Depuis la machine locale ou depuis un repository central (GitHub) :
+
+```bash
+# Sur le master
+git clone https://github.com/Lydia-BEDRI/event-manager-app.git
+cd event-manager-app
+git checkout clusterisation
+```
+
+### Vérification des fichiers essentiels
+
+- `stack.yml` définit tous les services, réseaux et volumes.
+- `.env` contient les variables d’environnement liées à la base de données.
+- `nginx.conf` configure le reverse proxy pour le frontend et le backend.
+- `/db/init.sql` et `/db/sample_data.sql` contiennent le schéma et les données de test.
+
+Il est important de s’assurer que le fichier `.env` contient bien les valeurs suivantes :
+
+- `MYSQL_ROOT_PASSWORD`
+- `MYSQL_DATABASE`
+- `MYSQL_USER`
+- `MYSQL_PASSWORD`
+
+### Déploiement de la stack
+
+Sur le master, exécuter :
+
+```bash
+# Déployer la stack Docker Swarm
+docker stack deploy -c stack.yml eventmanager
+```
+
+`-c stack.yml` indique le fichier de configuration de la stack.
+
+`eventmanager` est le nom de la stack utilisé pour référencer les services.
+
+### Vérification des services
+
+Pour s’assurer que tous les services sont en ligne :
+
+```bash
+# Liste des services et leur statut
+docker service ls
+```
+
+Exemple d'output attendu :
+
+```text
+ID       NAME                    MODE        REPLICAS  IMAGE           PORTS
+xxxxx    eventmanager_db         replicated  1/1       mysql:8.0       -
+xxxxx    eventmanager_backend    replicated  2/2       backend:latest  -
+xxxxx    eventmanager_frontend   replicated  3/3       frontend:latest -
+xxxxx    eventmanager_nginx       replicated  1/1       nginx:alpine    80, 443
+```
+
+### Vérification de la réplication et de la tolérance
+
+Pour voir sur quels nœuds les conteneurs tournent :
+
+```bash
+docker service ps eventmanager_backend
+docker service ps eventmanager_frontend
+```
+
+Cela permet de vérifier la répartition sur le master et les workers.
+
+Il faut aussi contrôler que les réplicas sont bien en ligne et qu’aucun conteneur n’est en état `Pending`.
+
+Capture d'écran suggérée : affichage des réplicas avec `docker service ps` et `docker node ls`.
+
+### Vérification des logs
+
+Pour diagnostiquer un service en cas de problème :
+
+```bash
+docker service logs eventmanager_backend --tail 50
+docker service logs eventmanager_frontend --tail 50
+docker service logs eventmanager_nginx --tail 50
+```
+
+Ces commandes permettent de vérifier que le backend se connecte à la base, que le frontend démarre correctement, et que Nginx proxy bien les requêtes.
+
+### Accès à l'application
+
+- Frontend : http://<IP_MASTER>
+- Backend : http://<IP_MASTER>:5000
+- Health check : http://<IP_MASTER>:5000/health
+
+Si HTTPS est activé avec un certificat auto-signé :
+
+- https://<IP_MASTER>
+- Il faut accepter le certificat auto-signé dans le navigateur.

@@ -1,0 +1,80 @@
+version: "3.8"
+
+services:
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    volumes:
+      - eventmanager-db-data:/var/lib/mysql
+      - ./db:/docker-entrypoint-initdb.d  
+    networks:
+      - backnet
+      - dbnet
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == worker
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=db
+      - DB_PORT=3306
+      - DB_USER=${MYSQL_USER}
+      - DB_PASSWORD=${MYSQL_PASSWORD}
+      - DB_NAME=${MYSQL_DATABASE}
+    networks:
+      - frontnet
+      - backnet
+    deploy:
+      replicas: 2
+
+  frontend:
+    build:
+      context: ./frontend
+    networks:
+      - proxynet
+      - frontnet
+    deploy:
+      replicas: 3
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./certs:/etc/nginx/certs
+    networks:
+      - proxynet
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+
+networks:
+  proxynet:
+    driver: overlay
+
+  frontnet:
+    driver: overlay
+
+  backnet:
+    driver: overlay
+    internal: true 
+
+  dbnet:
+    driver: overlay
+    internal: true 
+
+volumes:
+  eventmanager-db-data:
