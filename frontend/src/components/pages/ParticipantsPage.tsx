@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllParticipations, getParticipationsByEvent } from '../../services/participation.service';
 import { getAllEvents } from '../../services/event.service';
 import { Participation } from '../../types/participation.types';
 import { Event } from '../../types/event.types';
-import { Users, Calendar, MapPin, CheckCircle, Clock, XCircle, Filter } from 'lucide-react';
+import { Users, Calendar, MapPin, CheckCircle, Clock, XCircle, Filter, Search, RotateCcw } from 'lucide-react';
 
 const ParticipantsPage = () => {
   const [participations, setParticipations] = useState<Participation[]>([]);
@@ -12,26 +12,21 @@ const ParticipantsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string>('all');
+  const [selectedStatus, setSelectedStatus] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<string>('newest');
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadEvents();
-  }, []);
-
-  useEffect(() => {
-    loadParticipations();
-  }, [selectedEventId]);
-
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     try {
       const data = await getAllEvents();
       setEvents(data);
     } catch (err: any) {
       console.error(err);
     }
-  };
+  }, []);
 
-  const loadParticipations = async () => {
+  const loadParticipations = useCallback(async () => {
     try {
       setLoading(true);
       let data;
@@ -53,7 +48,15 @@ const ParticipantsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate, selectedEventId]);
+
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
+
+  useEffect(() => {
+    loadParticipations();
+  }, [loadParticipations]);
 
   const getStatusBadge = (status: Participation['status']) => {
     switch (status) {
@@ -93,6 +96,48 @@ const ParticipantsPage = () => {
     });
   };
 
+  const filteredParticipations = useMemo(() => {
+    let filtered = [...participations];
+
+    if (selectedStatus !== 'all') {
+      filtered = filtered.filter((participation) => participation.status === selectedStatus);
+    }
+
+    const normalizedSearch = searchTerm.trim().toLowerCase();
+    if (normalizedSearch) {
+      filtered = filtered.filter((participation) => {
+        const fullName = `${participation.first_name} ${participation.last_name}`.toLowerCase();
+        return (
+          fullName.includes(normalizedSearch) ||
+          participation.email.toLowerCase().includes(normalizedSearch) ||
+          participation.event_name.toLowerCase().includes(normalizedSearch)
+        );
+      });
+    }
+
+    filtered.sort((a, b) => {
+      if (sortBy === 'oldest') {
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      }
+      if (sortBy === 'eventSoonest') {
+        return new Date(a.event_start_date).getTime() - new Date(b.event_start_date).getTime();
+      }
+      if (sortBy === 'eventLatest') {
+        return new Date(b.event_start_date).getTime() - new Date(a.event_start_date).getTime();
+      }
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+
+    return filtered;
+  }, [participations, searchTerm, selectedStatus, sortBy]);
+
+  const resetFilters = () => {
+    setSelectedEventId('all');
+    setSelectedStatus('all');
+    setSearchTerm('');
+    setSortBy('newest');
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -117,28 +162,55 @@ const ParticipantsPage = () => {
   }
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8">
+    <div className="space-y-6 sm:space-y-8">
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-3 bg-gradient-to-br from-primary-purple to-purple-600 rounded-xl shadow-lg">
-            <Users className="text-white" size={32} />
+        <div className="flex items-start sm:items-center gap-3 mb-4">
+          <div className="p-2.5 sm:p-3 bg-gradient-to-br from-primary-purple to-purple-600 rounded-xl shadow-lg flex-shrink-0">
+            <Users className="text-white" size={24} />
           </div>
-          <div>
-            <h1 className="text-3xl font-bold text-primary-dark">Participants</h1>
-            <p className="text-gray-600 mt-1">
-              {participations.length} participant{participations.length > 1 ? 's' : ''} au total
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-primary-dark">Participants</h1>
+            <p className="text-sm sm:text-base text-gray-600 mt-1">
+              {filteredParticipations.length} participant{filteredParticipations.length > 1 ? 's' : ''}
+              {participations.length !== filteredParticipations.length && (
+                <span> sur {participations.length}</span>
+              )}
             </p>
           </div>
         </div>
 
         <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <Filter className="text-gray-400" size={20} />
-            <label className="text-sm font-medium text-gray-700">Filtrer par événement :</label>
+          <div className="flex items-center justify-between gap-3 mb-3">
+            <div className="flex items-center gap-2 text-gray-700">
+              <Filter className="text-gray-400 flex-shrink-0" size={18} />
+              <p className="text-sm font-medium">Filtres participants</p>
+            </div>
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-primary-purple hover:text-purple-700"
+            >
+              <RotateCcw size={14} />
+              Réinitialiser
+            </button>
+          </div>
+
+          <div className="grid grid-cols-6 gap-3">
+            <div className="relative col-span-6">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Rechercher par nom, email ou événement"
+                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent"
+              />
+            </div>
+
             <select
               value={selectedEventId}
               onChange={(e) => setSelectedEventId(e.target.value)}
-              className="w-full sm:flex-1 sm:max-w-md px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent"
+              className="col-span-2 w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent"
             >
               <option value="all">Tous les événements</option>
               {events.map((event) => (
@@ -147,31 +219,53 @@ const ParticipantsPage = () => {
                 </option>
               ))}
             </select>
+
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="col-span-2 w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent"
+            >
+              <option value="all">Tous les statuts</option>
+              <option value="APPROVED">Approuvé</option>
+              <option value="PENDING">En attente</option>
+              <option value="REFUSED">Refusé</option>
+            </select>
+
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="col-span-2 w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent"
+            >
+              <option value="newest">Inscription: plus récent</option>
+              <option value="oldest">Inscription: plus ancien</option>
+              <option value="eventSoonest">Événement: plus proche</option>
+              <option value="eventLatest">Événement: plus lointain</option>
+            </select>
           </div>
         </div>
       </div>
 
-      {participations.length === 0 ? (
+      {filteredParticipations.length === 0 ? (
         <div className="text-center py-20">
           <div className="bg-gray-100 rounded-full p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
             <Users className="text-gray-400" size={48} />
           </div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">Aucun participant trouvé</h3>
           <p className="text-gray-500">
-            {selectedEventId === 'all' 
+            {participations.length === 0
               ? 'Aucune participation enregistrée pour le moment'
-              : 'Aucun participant pour cet événement'}
+              : 'Aucun participant ne correspond aux filtres sélectionnés'}
           </p>
         </div>
       ) : (
         <>
           <div className="lg:hidden space-y-4">
-            {participations.map((participation) => (
+            {filteredParticipations.map((participation) => (
               <article
                 key={participation.id}
                 className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm"
               >
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-col gap-3">
                   <div className="flex items-center gap-3 min-w-0">
                     <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
                       {participation.first_name[0]}{participation.last_name[0]}
@@ -180,20 +274,20 @@ const ParticipantsPage = () => {
                       <p className="font-medium text-gray-900 truncate">
                         {participation.first_name} {participation.last_name}
                       </p>
-                      <p className="text-sm text-gray-500 truncate">{participation.email}</p>
+                      <p className="text-sm text-gray-500 break-all">{participation.email}</p>
                     </div>
                   </div>
-                  <div className="flex-shrink-0">{getStatusBadge(participation.status)}</div>
+                  <div>{getStatusBadge(participation.status)}</div>
                 </div>
 
                 <div className="mt-4 space-y-2 text-sm text-gray-600">
                   <div className="flex items-center gap-2">
                     <Calendar className="text-gray-400 flex-shrink-0" size={16} />
-                    <span className="font-medium text-gray-900 truncate">{participation.event_name}</span>
+                    <span className="font-medium text-gray-900 break-words">{participation.event_name}</span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-start gap-2">
                     <MapPin className="text-gray-400 flex-shrink-0" size={16} />
-                    <span className="truncate">{participation.event_location}</span>
+                    <span className="break-words">{participation.event_location}</span>
                   </div>
                   <p>
                     <span className="font-medium">Événement:</span> {formatDate(participation.event_start_date)}
@@ -235,7 +329,7 @@ const ParticipantsPage = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {participations.map((participation) => (
+                {filteredParticipations.map((participation) => (
                   <tr key={participation.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
