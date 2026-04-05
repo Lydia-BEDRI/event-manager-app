@@ -39,7 +39,7 @@ const LoginPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-dvh flex">
       {/* Panneau gauche — Branding */}
       <div className="hidden lg:flex lg:w-[45%] bg-primary-dark relative overflow-hidden">
         <div className="absolute inset-0">

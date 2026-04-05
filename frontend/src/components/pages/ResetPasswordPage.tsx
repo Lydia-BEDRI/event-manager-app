@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Logo from '../atoms/Logo';
 import { Eye, EyeOff, Check, Circle, CheckCircle2, AlertTriangle } from 'lucide-react';
 
 const ResetPasswordPage: React.FC = () => {
   const { resetPassword } = useAuth();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tokenFromUrl = searchParams.get('token') || '';
   const isExpired = searchParams.get('expired') === 'true';
@@ -23,7 +22,7 @@ const ResetPasswordPage: React.FC = () => {
     lowercase: /[a-z]/.test(password),
     uppercase: /[A-Z]/.test(password),
     digit: /\d/.test(password),
-    special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+    special: /[^A-Za-z0-9]/.test(password),
   };
 
   const isPasswordValid = Object.values(passwordChecks).every(Boolean);
@@ -66,7 +65,7 @@ const ResetPasswordPage: React.FC = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div className="min-h-dvh bg-gray-50 flex items-center justify-center px-4">
         <div className="w-full max-w-md">
           <div className="flex justify-center mb-8">
             <Logo size="medium" variant="dark_text" />
@@ -92,7 +91,7 @@ const ResetPasswordPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-dvh bg-gray-50 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-10">
           <Logo size="medium" variant="dark_text" />
@@ -162,7 +161,7 @@ const ResetPasswordPage: React.FC = () => {
               </button>
             </div>
             {password.length > 0 && (
-              <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5">
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5">
                 <PasswordCheck ok={passwordChecks.length} label="12 caractères min." />
                 <PasswordCheck ok={passwordChecks.uppercase} label="Une majuscule" />
                 <PasswordCheck ok={passwordChecks.lowercase} label="Une minuscule" />

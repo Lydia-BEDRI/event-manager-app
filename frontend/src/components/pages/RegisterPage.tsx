@@ -24,7 +24,7 @@ const RegisterPage: React.FC = () => {
     lowercase: /[a-z]/.test(form.password),
     uppercase: /[A-Z]/.test(form.password),
     digit: /\d/.test(form.password),
-    special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(form.password),
+    special: /[^A-Za-z0-9]/.test(form.password),
   };
 
   const isPasswordValid = Object.values(passwordChecks).every(Boolean);
@@ -83,7 +83,7 @@ const RegisterPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen flex">
+    <div className="min-h-dvh flex">
       {/* Panneau gauche — Branding */}
       <div className="hidden lg:flex lg:w-[45%] bg-primary-dark relative overflow-hidden">
         <div className="absolute inset-0">
@@ -146,7 +146,7 @@ const RegisterPage: React.FC = () => {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-1.5">
                   Prénom
@@ -223,7 +223,7 @@ const RegisterPage: React.FC = () => {
                 </button>
               </div>
               {form.password.length > 0 && (
-                <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5">
+                <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5">
                   <PasswordCheck ok={passwordChecks.length} label="12 caractères min." />
                   <PasswordCheck ok={passwordChecks.uppercase} label="Une majuscule" />
                   <PasswordCheck ok={passwordChecks.lowercase} label="Une minuscule" />

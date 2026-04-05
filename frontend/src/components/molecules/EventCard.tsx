@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, MapPin, Users, Clock, ArrowRight, MapPinned, Pencil, Trash2 } from 'lucide-react';
+import { Calendar, MapPin, Users, Clock, ArrowRight, MapPinned, Pencil, Trash2, MoreVertical } from 'lucide-react';
 import { Event } from '../../types/event.types';
 import { Zone } from '../../types/zone.types';
 import Badge from '../atoms/Badge';
@@ -14,6 +14,7 @@ interface EventCardProps {
 const EventCard = ({ event, onClick, onDelete }: EventCardProps) => {
   const [zones, setZones] = useState<Zone[]>([]);
   const [loadingZones, setLoadingZones] = useState(false);
+  const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
 
   useEffect(() => {
     const loadZones = async () => {
@@ -70,6 +71,18 @@ const EventCard = ({ event, onClick, onDelete }: EventCardProps) => {
     }
   };
 
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onClick) {
+      onClick();
+    }
+  };
+
+  const toggleMobileActions = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setMobileActionsOpen((prev) => !prev);
+  };
+
   return (
     <div
       onClick={onClick}
@@ -92,10 +105,51 @@ const EventCard = ({ event, onClick, onDelete }: EventCardProps) => {
             </div>
           </div>
 
-          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-4 group-hover:translate-x-0 self-start">
+          <div className="relative sm:hidden">
             <button
-              onClick={onClick}
-              className="p-2.5 rounded-lg bg-gradient-to-br from-primary-accent/10 to-primary-accent/20 text-primary-accent hover:from-primary-accent hover:to-primary-accent hover:text-white transition-all duration-300 shadow-sm hover:shadow-md hover:scale-110 active:scale-95"
+              type="button"
+              onClick={toggleMobileActions}
+              className="h-10 w-10 inline-flex items-center justify-center rounded-xl bg-white/90 border border-primary-gray/20 text-primary-accent shadow-sm"
+              aria-label="Ouvrir les actions de l'événement"
+            >
+              <MoreVertical size={18} />
+            </button>
+
+            {mobileActionsOpen && (
+              <div
+                className="absolute right-0 mt-2 w-44 rounded-xl bg-white border border-primary-gray/20 shadow-lg z-20 p-1"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    handleEdit(e);
+                    setMobileActionsOpen(false);
+                  }}
+                  className="w-full h-10 px-3 inline-flex items-center gap-2 rounded-lg text-sm font-semibold text-primary-accent hover:bg-primary-light/40"
+                >
+                  <Pencil size={16} />
+                  Modifier
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    handleDelete(e);
+                    setMobileActionsOpen(false);
+                  }}
+                  className="w-full h-10 px-3 inline-flex items-center gap-2 rounded-lg text-sm font-semibold text-red-600 hover:bg-red-50"
+                >
+                  <Trash2 size={16} />
+                  Supprimer
+                </button>
+              </div>
+            )}
+          </div>
+
+          <div className="hidden sm:flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-3 group-hover:translate-x-0 self-start">
+            <button
+              onClick={handleEdit}
+              className="h-10 w-10 inline-flex items-center justify-center rounded-xl bg-gradient-to-br from-primary-accent/10 to-primary-accent/20 text-primary-accent hover:from-primary-accent hover:to-primary-accent hover:text-white transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent/50"
               title="Modifier l'événement"
               aria-label="Modifier l'événement"
             >
@@ -104,7 +158,7 @@ const EventCard = ({ event, onClick, onDelete }: EventCardProps) => {
 
             <button
               onClick={handleDelete}
-              className="p-2.5 rounded-lg bg-gradient-to-br from-red-500/10 to-red-500/20 text-red-600 hover:from-red-600 hover:to-red-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md hover:scale-110 active:scale-95"
+              className="h-10 w-10 inline-flex items-center justify-center rounded-xl bg-gradient-to-br from-red-500/10 to-red-500/20 text-red-600 hover:from-red-600 hover:to-red-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40"
               title="Supprimer l'événement"
               aria-label="Supprimer l'événement"
             >
@@ -124,10 +178,9 @@ const EventCard = ({ event, onClick, onDelete }: EventCardProps) => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="sm:col-span-2 flex items-start gap-3 bg-gradient-to-br from-white/90 to-primary-light/50 rounded-xl p-4 border border-primary-gray/10 shadow-sm">
             <div className="p-2.5 bg-gradient-to-br from-primary-purple to-primary-accent rounded-lg shadow-md flex-shrink-0">
-              <Calendar className="text-white" size={20} />
+              <Calendar className="text-white" size={18} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-primary-gray uppercase tracking-wider mb-1.5">Période</p>
               <p className="text-sm font-bold text-primary-dark break-normal mb-1">
                 {formatDate(event.start_date)} - {formatDate(event.end_date)}
               </p>
@@ -139,18 +192,17 @@ const EventCard = ({ event, onClick, onDelete }: EventCardProps) => {
           </div>
 
           <div className="flex items-center gap-3 bg-gradient-to-br from-white/90 to-primary-light/50 rounded-xl p-4 border border-primary-gray/10 shadow-sm">
-            <div className="p-2.5 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg shadow-md flex-shrink-0">
-              <MapPin className="text-white" size={20} />
+            <div className="p-2.5 bg-gradient-to-br from-primary-purple to-primary-accent rounded-lg shadow-md flex-shrink-0">
+              <MapPin className="text-white" size={18} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-bold text-primary-gray uppercase tracking-wider mb-1.5">Lieu</p>
               <p className="text-sm font-bold text-primary-dark break-normal">{event.location}</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3 bg-gradient-to-br from-white/90 to-primary-light/50 rounded-xl p-4 border border-primary-gray/10 shadow-sm">
-            <div className="p-2.5 bg-gradient-to-br from-green-500 to-emerald-500 rounded-lg shadow-md flex-shrink-0">
-              <Users className="text-white" size={20} />
+            <div className="p-2.5 bg-gradient-to-br from-primary-purple to-primary-accent rounded-lg shadow-md flex-shrink-0">
+              <Users className="text-white" size={18} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-xs font-bold text-primary-gray uppercase tracking-wider mb-1.5">Capacité</p>
@@ -164,8 +216,8 @@ const EventCard = ({ event, onClick, onDelete }: EventCardProps) => {
           {zones.length > 0 && (
             <div className="sm:col-span-2 bg-gradient-to-br from-white/90 to-primary-light/50 rounded-xl p-4 border border-primary-gray/10 shadow-sm">
               <div className="flex items-center gap-3 mb-3">
-                <div className="p-2.5 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg shadow-md">
-                  <MapPinned className="text-white" size={20} />
+                <div className="p-2.5 bg-gradient-to-br from-primary-purple to-primary-accent rounded-lg shadow-md">
+                  <MapPinned className="text-white" size={18} />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-primary-dark">Zones d'accès</p>

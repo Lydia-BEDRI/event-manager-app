@@ -16,11 +16,11 @@ const UserProfile: React.FC<UserProfileProps> = () => {
   return (
     <button 
       onClick={handleClick}
-      className="flex items-center gap-3 hover:bg-primary-gray/10 rounded-2xl px-3 py-2 transition-colors"
+      className="flex items-center hover:bg-primary-gray/10 rounded-2xl px-1.5 sm:px-3 py-1.5 sm:py-2 transition-colors"
       title="Mon profil"
     >
-      <div className="w-12 h-12 bg-primary-accent rounded-full flex items-center justify-center">
-        <User className="text-primary-white" size={24} />
+      <div className="w-9 h-9 sm:w-12 sm:h-12 bg-primary-accent rounded-full flex items-center justify-center">
+        <User className="text-primary-white" size={20} />
       </div>
     </button>
   );

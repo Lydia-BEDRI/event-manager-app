@@ -55,11 +55,11 @@ const ZoneCard = ({ zone, onClick, onEdit, onDelete }: ZoneCardProps) => {
               )}
             </div>
           </div>
-          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-4 group-hover:translate-x-0 self-start">
+          <div className="hidden sm:flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-3 group-hover:translate-x-0 self-start">
             {onEdit && (
               <button
                 onClick={handleEdit}
-                className="p-2.5 rounded-lg bg-gradient-to-br from-primary-accent/10 to-primary-accent/20 text-primary-accent hover:from-primary-accent hover:to-primary-accent hover:text-white transition-all duration-300 shadow-sm hover:shadow-md hover:scale-110 active:scale-95"
+                className="h-10 w-10 inline-flex items-center justify-center rounded-xl bg-gradient-to-br from-primary-accent/10 to-primary-accent/20 text-primary-accent hover:from-primary-accent hover:to-primary-accent hover:text-white transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent/50"
                 title="Modifier la zone"
                 aria-label="Modifier la zone"
               >
@@ -69,7 +69,7 @@ const ZoneCard = ({ zone, onClick, onEdit, onDelete }: ZoneCardProps) => {
             {onDelete && (
               <button
                 onClick={handleDelete}
-                className="p-2.5 rounded-lg bg-gradient-to-br from-red-500/10 to-red-500/20 text-red-600 hover:from-red-600 hover:to-red-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md hover:scale-110 active:scale-95"
+                className="h-10 w-10 inline-flex items-center justify-center rounded-xl bg-gradient-to-br from-red-500/10 to-red-500/20 text-red-600 hover:from-red-600 hover:to-red-600 hover:text-white transition-all duration-300 shadow-sm hover:shadow-md hover:scale-105 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40"
                 title="Supprimer la zone"
                 aria-label="Supprimer la zone"
               >
@@ -78,15 +78,40 @@ const ZoneCard = ({ zone, onClick, onEdit, onDelete }: ZoneCardProps) => {
             )}
             <ArrowRight className="text-primary-purple transform group-hover:translate-x-1 transition-transform duration-300" size={22} />
           </div>
-        </div>        {zone.description && (
+        </div>
+
+        <div className="sm:hidden grid grid-cols-2 gap-2">
+          {onEdit && (
+            <button
+              onClick={handleEdit}
+              className="h-10 px-3 inline-flex items-center justify-center gap-2 rounded-xl bg-primary-accent/10 text-primary-accent font-semibold text-sm border border-primary-accent/20 active:scale-[0.99]"
+              aria-label="Modifier la zone"
+            >
+              <Pencil size={16} />
+              Modifier
+            </button>
+          )}
+          {onDelete && (
+            <button
+              onClick={handleDelete}
+              className="h-10 px-3 inline-flex items-center justify-center gap-2 rounded-xl bg-red-50 text-red-600 font-semibold text-sm border border-red-200 active:scale-[0.99]"
+              aria-label="Supprimer la zone"
+            >
+              <Trash2 size={16} />
+              Supprimer
+            </button>
+          )}
+        </div>
+
+        {zone.description && (
           <p className="text-primary-dark/70 text-sm leading-relaxed font-normal px-3 py-2 bg-white/40 rounded-lg border border-primary-gray/10">
             {zone.description}
           </p>
         )}
 
         <div className="flex items-center gap-4 bg-gradient-to-br from-white/90 to-primary-light/50 backdrop-blur-sm rounded-xl p-4 border border-primary-gray/10 shadow-sm">
-          <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl shadow-md flex-shrink-0">
-            <Users className="text-white" size={24} />
+          <div className="p-3 bg-gradient-to-br from-primary-accent to-primary-purple rounded-xl shadow-md flex-shrink-0">
+            <Users className="text-white" size={20} />
           </div>
           <div className="flex-1">
             <p className="text-xs font-bold text-primary-gray uppercase tracking-wider mb-1">Capacité maximale</p>

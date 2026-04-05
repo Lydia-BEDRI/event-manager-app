@@ -83,18 +83,20 @@ const ZonesPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-white to-primary-light/30 p-4 sm:p-8">
-      <div className="flex justify-between items-center mb-8">
+    <div className="min-h-dvh bg-gradient-to-br from-primary-white to-primary-light/30 p-4 sm:p-6 lg:p-8">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-8 gap-4">
         <div>
           <h1 className="font-heading text-3xl font-bold text-primary-dark">Zones d'accès</h1>
           <p className="text-primary-gray mt-2">
             {zones.length} zone{zones.length > 1 ? 's' : ''} au total
           </p>
         </div>
-        <Button 
-          variant="primary" 
+
+        <Button
+          variant="primary"
           icon={Plus}
           onClick={() => navigate('/zones/create')}
+          className="w-full sm:w-auto justify-center"
         >
           Créer une zone
         </Button>
@@ -111,7 +113,7 @@ const ZonesPage = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-4 sm:gap-6">
           {zones.map((zone) => (
             <ZoneCard
               key={zone.id}

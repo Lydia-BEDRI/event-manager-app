@@ -70,7 +70,7 @@ const CreateZonePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-white to-primary-light/30 p-4 sm:p-8">
+    <div className="min-h-dvh bg-gradient-to-br from-primary-white to-primary-light/30 p-4 sm:p-6 lg:p-8">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-4 mb-6">
           <button

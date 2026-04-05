@@ -90,7 +90,7 @@ const EditZonePage = () => {
 
   if (!zone) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-white to-primary-light/30 p-4 sm:p-8">
+      <div className="min-h-dvh bg-gradient-to-br from-primary-white to-primary-light/30 p-4 sm:p-6 lg:p-8">
         <div className="max-w-2xl mx-auto">
           <div className="bg-red-50 border border-red-300 text-red-800 px-4 py-3 rounded-xl">
             <p className="text-sm font-medium">{error || 'Zone non trouvée'}</p>
@@ -108,7 +108,7 @@ const EditZonePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-white to-primary-light/30 p-4 sm:p-8">
+    <div className="min-h-dvh bg-gradient-to-br from-primary-white to-primary-light/30 p-4 sm:p-6 lg:p-8">
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center gap-4 mb-6">
           <button

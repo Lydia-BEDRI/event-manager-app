@@ -24,9 +24,15 @@ import { useNavigate } from "react-router-dom";
 
 interface SidebarProps {
   role?: "ADMIN" | "PARTICIPANT";
+  isMobileDrawer?: boolean;
+  onNavigate?: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ role = "PARTICIPANT" }) => {
+const Sidebar: React.FC<SidebarProps> = ({
+  role = "PARTICIPANT",
+  isMobileDrawer = false,
+  onNavigate,
+}) => {
   const { logout } = useAuth();
   const navigate = useNavigate();
 
@@ -34,6 +40,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role = "PARTICIPANT" }) => {
     try {
       await logout();
       navigate("/login");
+      onNavigate?.();
     } catch (error) {
       console.error("Erreur lors de la déconnexion:", error);
     }
@@ -59,9 +66,12 @@ const Sidebar: React.FC<SidebarProps> = ({ role = "PARTICIPANT" }) => {
   ];
 
   const menuItems = role === "ADMIN" ? adminMenuItems : participantMenuItems;
+  const asideClassName = isMobileDrawer
+    ? "bg-primary-dark w-full h-full flex flex-col overflow-y-auto"
+    : "bg-primary-dark w-full xl:w-64 h-auto xl:h-[calc(100vh-3rem)] flex flex-col rounded-none sm:rounded-t-3xl xl:rounded-l-3xl xl:rounded-t-none flex-none overflow-y-auto";
 
   return (
-    <aside className="bg-primary-dark w-64 h-[calc(100vh-3rem)] flex flex-col rounded-l-3xl flex-none overflow-y-auto">
+    <aside className={asideClassName}>
       <div className="h-16 flex items-center justify-center px-6">
         <Logo size="large" variant="dark_text" />
       </div>
@@ -70,7 +80,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role = "PARTICIPANT" }) => {
         <ul className="space-y-1">
           {menuItems.map((item, index) => (
             <li key={index}>
-              <NavItem {...item} />
+              <NavItem {...item} onClick={onNavigate} />
             </li>
           ))}
         </ul>
@@ -85,16 +95,18 @@ const Sidebar: React.FC<SidebarProps> = ({ role = "PARTICIPANT" }) => {
                 icon={Shield}
                 label="Politique de confidentialité"
                 to="/privacy"
+                onClick={onNavigate}
               />
             </li>
             <li>
-              <NavItem icon={ScrollText} label="Mentions légales" to="/legal" />
+              <NavItem icon={ScrollText} label="Mentions légales" to="/legal" onClick={onNavigate} />
             </li>
             <li>
               <NavItem
                 icon={Cookie}
                 label="Gestion des cookies"
                 to="/cookies"
+                onClick={onNavigate}
               />
             </li>
           </ul>
@@ -106,6 +118,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role = "PARTICIPANT" }) => {
           icon={Settings}
           label={role === "ADMIN" ? "Paramètres" : "Mon profil"}
           to={role === "ADMIN" ? undefined : "/profile"}
+          onClick={onNavigate}
         />
         <div className="mt-1">
           <button
