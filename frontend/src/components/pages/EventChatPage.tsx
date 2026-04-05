@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { io, Socket } from "socket.io-client";
+import { ArrowLeft, Info, Smile, Send, MoreVertical, UserRound, X } from "lucide-react";
+import EmojiPicker from "emoji-picker-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { ChatMember, ChatMessage } from "../../types/chat.types";
 import {
@@ -57,7 +59,11 @@ const EventChatPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
+  const [isMembersPanelOpen, setIsMembersPanelOpen] = useState(false);
+  const [openMessageMenuId, setOpenMessageMenuId] = useState<number | null>(null);
+  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const socketRef = useRef<Socket | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
   const bottomRef = useRef<HTMLDivElement | null>(null);
   const socketUrl = (
     process.env.REACT_APP_API_URL || "http://localhost:5000/api"
@@ -200,6 +206,29 @@ const EventChatPage: React.FC = () => {
     }
   };
 
+  const insertEmoji = (emoji: string) => {
+    setInput((currentValue) => {
+      const inputElement = inputRef.current;
+      if (!inputElement) {
+        return `${currentValue}${emoji}`;
+      }
+
+      const start = inputElement.selectionStart ?? currentValue.length;
+      const end = inputElement.selectionEnd ?? currentValue.length;
+      const nextValue = `${currentValue.slice(0, start)}${emoji}${currentValue.slice(end)}`;
+
+      requestAnimationFrame(() => {
+        inputElement.focus();
+        const nextCaretPosition = start + emoji.length;
+        inputElement.setSelectionRange(nextCaretPosition, nextCaretPosition);
+      });
+
+      return nextValue;
+    });
+
+    setIsEmojiPickerOpen(false);
+  };
+
   const handleDelete = async (message: ChatMessage) => {
     try {
       await deleteMyMessage(message.id);
@@ -243,20 +272,34 @@ const EventChatPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-4 h-full flex flex-col max-h-screen">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <h1 className="font-heading text-xl sm:text-2xl font-bold text-primary-dark">
+    <div className="relative h-full min-h-[calc(100dvh-12rem)] flex flex-col">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="order-1 flex items-center justify-between gap-2 w-full sm:order-2 sm:w-auto sm:justify-end">
+          <button
+            onClick={() => navigate("/chats")}
+            className="inline-flex h-10 w-10 sm:h-11 sm:w-auto sm:px-4 items-center justify-center gap-2 rounded-xl bg-primary-accent text-white border border-primary-accent hover:bg-primary-dark transition-all font-semibold shadow-sm flex-shrink-0"
+            aria-label="Retour aux chats"
+            title="Retour aux chats"
+          >
+            <ArrowLeft size={17} />
+            <span className="hidden sm:inline">Retour aux chats</span>
+          </button>
+          <button
+            onClick={() => setIsMembersPanelOpen(true)}
+            className="h-10 w-10 sm:h-11 sm:w-11 inline-flex items-center justify-center rounded-xl border border-primary-gray/30 bg-white text-primary-dark hover:bg-primary-light/30 transition-all flex-shrink-0"
+            aria-label="Afficher les membres du chat"
+            title="Membres du chat"
+          >
+            <Info size={18} />
+          </button>
+        </div>
+
+        <div className="order-2 space-y-1 sm:order-1">
+          <h1 className="font-heading text-lg sm:text-2xl font-bold text-primary-dark leading-tight">
             {eventName || "Chat événementiel"}
           </h1>
-          <p className="text-primary-gray text-sm">Salon #{numericEventId}</p>
+          <p className="text-primary-gray text-xs sm:text-sm">Salon #{numericEventId}</p>
         </div>
-        <button
-          onClick={() => navigate("/chats")}
-          className="w-full sm:w-auto px-4 py-2 rounded-xl border border-gray-300 text-primary-dark hover:bg-gray-50"
-        >
-          Retour aux chats
-        </button>
       </div>
 
       {error && (
@@ -265,9 +308,11 @@ const EventChatPage: React.FC = () => {
         </div>
       )}
 
-      <div className="flex flex-col xl:flex-row gap-4 flex-1 min-h-0">
-        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 flex-1 flex flex-col min-w-0 overflow-hidden">
-          <div className="flex-1 overflow-y-auto space-y-3 min-h-0">
+      <div className="mt-4 flex-1 min-h-0 bg-gray-50 border border-gray-200 rounded-2xl p-4 flex flex-col min-w-0 overflow-hidden">
+        <div
+          className="flex-1 overflow-y-auto space-y-3 min-h-0 pb-4"
+          onClick={() => setOpenMessageMenuId(null)}
+        >
             {messages.length === 0 ? (
               <p className="text-primary-gray text-sm">
                 Aucun message pour le moment.
@@ -278,70 +323,104 @@ const EventChatPage: React.FC = () => {
                 const showDelete = mine && !message.isDeleted;
                 const showModerate = canModerate && !mine && !message.isDeleted;
                 const isAdmin = message.authorRole === "ADMIN";
+                const canManageMessage = showDelete || showModerate;
+                const isMenuOpen = openMessageMenuId === message.id;
 
                 return (
                   <div
                     key={message.id}
-                    className={`rounded-xl px-4 py-3 border ${mine ? "bg-primary-accent/10 border-primary-accent/20" : "bg-white border-gray-200"}`}
+                    className={`flex ${mine ? "justify-end" : "justify-start"}`}
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-2">
-                        <div className="text-sm font-semibold text-primary-dark">
-                          {message.authorName}
-                        </div>
-                        {isAdmin && (
-                          <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-medium rounded-full">
-                            Admin
-                          </span>
-                        )}
-                      </div>
-                      <div className="text-xs text-primary-gray">
-                        {new Date(message.createdAt).toLocaleTimeString(
-                          "fr-FR",
-                          {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          },
-                        )}
-                      </div>
-                    </div>
-
-                    <p
-                      className={`mt-1 text-sm ${message.isDeleted ? "text-gray-400 italic" : "text-primary-dark"}`}
+                    <div
+                      className={`relative rounded-2xl px-4 py-3 border shadow-sm max-w-[92%] sm:max-w-[78%] ${mine ? "bg-primary-accent/10 border-primary-accent/20" : "bg-white border-gray-200"}`}
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      {message.isDeleted
-                        ? message.isModerated
-                          ? "[message modéré]"
-                          : "[message supprimé]"
-                        : message.content}
-                    </p>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="text-sm font-semibold text-primary-dark truncate">
+                            {message.authorName}
+                          </div>
+                          {isAdmin && (
+                            <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-medium rounded-full flex-shrink-0">
+                              Admin
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <div className="text-xs text-primary-gray">
+                            {new Date(message.createdAt).toLocaleTimeString(
+                              "fr-FR",
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              },
+                            )}
+                          </div>
+                          {canManageMessage && (
+                            <div className="relative">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setOpenMessageMenuId((prev) =>
+                                    prev === message.id ? null : message.id,
+                                  );
+                                }}
+                                className="h-7 w-7 inline-flex items-center justify-center rounded-md text-primary-gray hover:bg-primary-gray/10 hover:text-primary-dark"
+                                aria-label="Actions du message"
+                              >
+                                <MoreVertical size={15} />
+                              </button>
 
-                    {message.isModerated && message.moderatedByName && (
-                      <p className="mt-1 text-xs text-orange-600">
-                        Modéré par l'administrateur {message.moderatedByName}
-                      </p>
-                    )}
-
-                    {(showDelete || showModerate) && (
-                      <div className="mt-2 flex items-center gap-2">
-                        {showDelete && (
-                          <button
-                            onClick={() => handleDelete(message)}
-                            className="text-xs px-2 py-1 rounded border border-red-200 text-red-600 hover:bg-red-50"
-                          >
-                            Supprimer
-                          </button>
-                        )}
-                        {showModerate && (
-                          <button
-                            onClick={() => handleModerate(message)}
-                            className="text-xs px-2 py-1 rounded border border-orange-200 text-orange-700 hover:bg-orange-50"
-                          >
-                            Modérer
-                          </button>
-                        )}
+                              {isMenuOpen && (
+                                <div className="absolute right-0 top-8 min-w-36 rounded-xl border border-primary-gray/20 bg-white shadow-lg z-10 p-1">
+                                  {showDelete && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        void handleDelete(message);
+                                        setOpenMessageMenuId(null);
+                                      }}
+                                      className="w-full px-3 py-2 text-left text-sm rounded-lg text-red-600 hover:bg-red-50"
+                                    >
+                                      Supprimer
+                                    </button>
+                                  )}
+                                  {showModerate && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        void handleModerate(message);
+                                        setOpenMessageMenuId(null);
+                                      }}
+                                      className="w-full px-3 py-2 text-left text-sm rounded-lg text-orange-700 hover:bg-orange-50"
+                                    >
+                                      Modérer
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
+
+                      <p
+                        className={`mt-2 text-sm leading-relaxed break-words ${message.isDeleted ? "text-gray-400 italic" : "text-primary-dark"}`}
+                      >
+                        {message.isDeleted
+                          ? message.isModerated
+                            ? "[message modéré]"
+                            : "[message supprimé]"
+                          : message.content}
+                      </p>
+
+                      {message.isModerated && message.moderatedByName && (
+                        <p className="mt-1 text-xs text-orange-600">
+                          Modéré par l'administrateur {message.moderatedByName}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 );
               })
@@ -350,47 +429,121 @@ const EventChatPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="w-full xl:w-64 bg-white border border-gray-200 rounded-2xl p-4 flex flex-col max-h-56 xl:max-h-none">
-          <h2 className="font-semibold text-primary-dark mb-3">
-            Membres ({members.length})
-          </h2>
-          <div className="flex-1 overflow-y-auto space-y-2">
-            {members.map((member) => (
-              <div
-                key={member.id}
-                className="flex items-center justify-between gap-2 p-2 rounded-lg hover:bg-gray-50"
-              >
-                <span className="text-sm text-primary-dark">{member.name}</span>
-                {member.role === "ADMIN" && (
-                  <span className="px-1.5 py-0.5 bg-orange-100 text-orange-700 text-xs font-medium rounded">
-                    Admin
-                  </span>
-                )}
+      <div className="mt-auto sticky bottom-0 z-20 pt-4 pb-2 sm:pb-0">
+        <form
+          onSubmit={handleSend}
+          className="relative bg-white/95 backdrop-blur border border-gray-200 shadow-lg rounded-2xl p-2 sm:p-3 flex flex-row items-center gap-2"
+        >
+          {isEmojiPickerOpen && (
+            <div className="absolute left-3 right-3 bottom-full mb-3 z-30 rounded-2xl border border-primary-gray/15 bg-white shadow-2xl p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-semibold uppercase tracking-wide text-primary-gray">
+                  Emojis
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setIsEmojiPickerOpen(false)}
+                  className="h-8 w-8 inline-flex items-center justify-center rounded-lg text-primary-gray hover:bg-primary-gray/10"
+                  aria-label="Fermer le sélecteur d'emojis"
+                >
+                  <X size={14} />
+                </button>
               </div>
-            ))}
+              <EmojiPicker
+                onEmojiClick={(emojiData) => insertEmoji(emojiData.emoji)}
+                width="100%"
+                height={340}
+                searchDisabled={false}
+                skinTonesDisabled={false}
+                lazyLoadEmojis
+              />
+            </div>
+          )}
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setIsEmojiPickerOpen((prev) => !prev)}
+              className="h-10 w-10 sm:h-11 sm:w-11 inline-flex items-center justify-center rounded-xl border border-primary-gray/20 bg-white text-primary-accent hover:bg-primary-accent hover:text-white transition-all flex-shrink-0"
+              aria-label="Ouvrir le sélecteur d'emojis"
+              title="Emojis"
+            >
+              <Smile size={18} />
+            </button>
           </div>
-        </div>
+
+          <input
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            maxLength={2000}
+            placeholder="Écrire un message..."
+            className="min-w-0 flex-1 px-4 py-2.5 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-accent"
+          />
+          <button
+            type="submit"
+            disabled={sending || !input.trim()}
+            className="h-10 w-10 sm:h-11 sm:w-auto sm:px-5 inline-flex items-center justify-center gap-2 rounded-xl bg-primary-accent text-white font-semibold disabled:opacity-50 flex-shrink-0"
+          >
+            <Send size={17} />
+            <span className="hidden sm:inline">Envoyer</span>
+          </button>
+        </form>
       </div>
 
-      <form
-        onSubmit={handleSend}
-        className="bg-white border border-gray-200 rounded-2xl p-3 flex flex-col sm:flex-row gap-2"
-      >
-        <input
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          maxLength={2000}
-          placeholder="Écrire un message..."
-          className="flex-1 px-4 py-2 rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-accent"
-        />
-        <button
-          type="submit"
-          disabled={sending || !input.trim()}
-          className="w-full sm:w-auto px-5 py-2 rounded-xl bg-primary-accent text-white disabled:opacity-50"
-        >
-          Envoyer
-        </button>
-      </form>
+      {isMembersPanelOpen && (
+        <>
+          <button
+            type="button"
+            onClick={() => setIsMembersPanelOpen(false)}
+            className="absolute inset-0 bg-primary-dark/25 rounded-2xl z-30"
+            aria-label="Fermer le panneau des membres"
+          />
+
+          <aside
+            className="absolute top-0 right-0 h-full w-full max-w-sm z-40"
+            aria-hidden={!isMembersPanelOpen}
+          >
+            <div className="h-full bg-white border-l border-primary-gray/20 shadow-2xl rounded-r-2xl sm:rounded-l-2xl overflow-hidden flex flex-col">
+              <div className="px-4 py-3 border-b border-primary-gray/15 bg-gradient-to-r from-primary-light/20 to-primary-white flex items-center justify-between">
+                <div>
+                  <h2 className="font-semibold text-primary-dark">Membres du chat</h2>
+                  <p className="text-xs text-primary-gray">{members.length} participant{members.length > 1 ? "s" : ""}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsMembersPanelOpen(false)}
+                  className="h-9 w-9 inline-flex items-center justify-center rounded-lg border border-primary-gray/20 text-primary-dark hover:bg-primary-light/30"
+                  aria-label="Fermer"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-gradient-to-b from-white to-primary-light/10">
+                {members.map((member) => (
+                  <div
+                    key={member.id}
+                    className="flex items-center justify-between gap-3 p-3 rounded-xl border border-primary-gray/15 bg-white hover:border-primary-accent/30 hover:shadow-sm transition-all"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-9 w-9 rounded-full bg-primary-accent/10 text-primary-accent inline-flex items-center justify-center flex-shrink-0">
+                        <UserRound size={17} />
+                      </div>
+                      <span className="text-sm font-medium text-primary-dark truncate">{member.name}</span>
+                    </div>
+                    {member.role === "ADMIN" && (
+                      <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs font-semibold rounded-full">
+                        Admin
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </aside>
+        </>
+      )}
     </div>
   );
 };

@@ -12,7 +12,11 @@ interface NavItemProps {
 
 const NavItem: React.FC<NavItemProps> = ({ icon: Icon, label, active = false, onClick, to }) => {
   const location = useLocation();
-  const isActive = to ? location.pathname === to : active;
+  const isActive = to
+    ? to === '/'
+      ? location.pathname === '/'
+      : location.pathname === to || location.pathname.startsWith(`${to}/`)
+    : active;
 
   const classes = `w-full flex items-center gap-3 px-3 py-3 rounded-2xl transition-all text-left ${
     isActive
