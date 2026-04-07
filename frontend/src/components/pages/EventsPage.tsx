@@ -1,22 +1,18 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { deleteEvent, getAllEvents } from '../../services/event.service';
 import { Event } from '../../types/event.types';
 import EventCard from '../molecules/EventCard';
-import Button  from '../atoms/Button';
+import Button from '../atoms/Button';
 import { Plus } from 'lucide-react';
 
-const EventsPage= () => {
+const EventsPage = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadEvents();
-  }, []);
-
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getAllEvents();
@@ -33,10 +29,15 @@ const EventsPage= () => {
     } finally {
       setLoading(false);
     }
-  };
-const handleDeleteEvent = async (eventId: number) => {
+  }, [navigate]);
+
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
+
+  const handleDeleteEvent = async (eventId: number) => {
     console.log('Tentative de suppression de l\'événement:', eventId);
-    
+
     if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet événement ? Cette action est irréversible.')) {
       console.log('Suppression annulée par l\'utilisateur');
       return;
@@ -52,6 +53,7 @@ const handleDeleteEvent = async (eventId: number) => {
       alert(err.message || 'Erreur lors de la suppression');
     }
   };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -85,7 +87,6 @@ const handleDeleteEvent = async (eventId: number) => {
           Créer un événement
         </Button>
       </div>
-      
 
       {events.length === 0 ? (
         <div className="text-center py-12">

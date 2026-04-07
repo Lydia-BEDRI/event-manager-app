@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllZones, deleteZone } from '../../services/zone.service';
 import { Zone } from '../../types/zone.types';
@@ -12,11 +12,7 @@ const ZonesPage = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadZones();
-  }, []);
-
-  const loadZones = async () => {
+  const loadZones = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getAllZones();
@@ -33,7 +29,11 @@ const ZonesPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    loadZones();
+  }, [loadZones]);
 
   const handleDeleteZone = async (zone: Zone) => {
     if (!window.confirm(`Êtes-vous sûr de vouloir supprimer la zone "${zone.name}" ?`)) {
