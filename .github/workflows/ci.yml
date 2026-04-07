@@ -10,6 +10,7 @@ on:
 
 env:
   REGISTRY: ghcr.io
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   backend-test:
@@ -97,4 +98,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Validate docker-compose
+        env:
+          MYSQL_ROOT_PASSWORD: rootpass
+          MYSQL_DATABASE: eventmanager
+          MYSQL_USER: eventmanager_user
+          MYSQL_PASSWORD: eventmanager_password
         run: docker compose config -q
