@@ -1,5 +1,7 @@
 # EventManager
 
+[![CI](https://github.com/Lydia-BEDRI/event-manager-app/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/Lydia-BEDRI/event-manager-app/actions/workflows/ci.yml)
+
 EventManager est une application web destinée à la gestion d’événements internes en entreprise. Elle permet aux organisateurs de créer, gérer et suivre des événements tout en offrant aux participants une expérience fluide et sécurisée.
 
 ## Fonctionnalités principales
