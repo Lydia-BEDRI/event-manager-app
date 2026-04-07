@@ -12,16 +12,6 @@
 - [ ] Tests manuels
 - [ ] Non applicable (justifier ci-dessous)
 
-## Vérification des endpoints
-<!-- Cocher les endpoints réellement testés (Postman, curl, front, etc.). -->
-- [ ] Auth (`/api/auth/*`)
-- [ ] Events (`/api/events/*`)
-- [ ] Participations (`/api/participations/*`)
-- [ ] Zones (`/api/zones/*`)
-- [ ] Export (`/api/export/*`)
-- [ ] Chat (`/api/chat/*`)
-- [ ] Admin (`/api/admin/*`)
-- [ ] Healthcheck (`/health`)
 
 ## Checklist
 - [ ] Le code respecte les conventions du projet
