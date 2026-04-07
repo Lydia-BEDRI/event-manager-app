@@ -1,4 +1,4 @@
-name: pre-commit
+name: CI/CD Pipeline
 
 on:
   pull_request:
@@ -6,23 +6,44 @@ on:
     branches:
       - main
       - develop
+  workflow_dispatch:
 
-concurrency:
-  group: pre-commit-${{ github.ref }}
-  cancel-in-progress: true
-
-permissions:
-  contents: write
+env:
+  REGISTRY: ghcr.io
 
 jobs:
-  pre-commit:
+  backend-test:
+    name: Backend tests
     runs-on: ubuntu-latest
+    services:
+      db:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: rootpass
+          MYSQL_DATABASE: eventmanager
+          MYSQL_USER: eventmanager_user
+          MYSQL_PASSWORD: eventmanager_password
+        ports:
+          - 3307:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h localhost -uroot -prootpass"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DB_HOST: 127.0.0.1
+      DB_PORT: "3307"
+      DB_USER: eventmanager_user
+      DB_PASSWORD: eventmanager_password
+      DB_NAME: eventmanager
+      JWT_SECRET: ci-secret-key
+      FRONTEND_URL: http://localhost:3000
+      CORS_ORIGIN: http://localhost:3000
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js (backend)
         uses: actions/setup-node@v4
@@ -34,7 +55,7 @@ jobs:
       - name: Install backend dependencies
         run: |
           cd backend
-          HUSKY=0 npm ci
+          npm ci
 
       - name: Setup Node.js (frontend)
         uses: actions/setup-node@v4
@@ -48,61 +69,7 @@ jobs:
           cd frontend
           npm ci
 
-      - name: Ensure ESLint config exists (CI fallback only)
-        run: |
-          if [ ! -f backend/.eslintrc.js ] && [ ! -f backend/.eslintrc.cjs ] && [ ! -f backend/.eslintrc.json ] && [ ! -f backend/eslint.config.js ]; then
-            cat > backend/.eslintrc.ci.cjs <<'EOF'
-            module.exports = {
-              root: true,
-              parser: '@typescript-eslint/parser',
-              parserOptions: {
-                ecmaVersion: 'latest',
-                sourceType: 'module',
-              },
-              env: {
-                node: true,
-                es2021: true,
-                jest: true,
-              },
-              plugins: ['@typescript-eslint'],
-              extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
-              ignorePatterns: ['dist', 'node_modules'],
-              rules: {
-                '@typescript-eslint/no-explicit-any': 'off',
-                'no-useless-escape': 'off',
-              },
-            };
-            EOF
-          fi
-
-      - name: Autofix backend lint
-        run: |
-          cd backend
-          if [ -f .eslintrc.ci.cjs ]; then
-            npx eslint -c .eslintrc.ci.cjs "src/**/*.ts" --fix
-          else
-            npx eslint "src/**/*.ts" --fix
-          fi
-
-      - name: Verify backend lint
-        run: |
-          cd backend
-          if [ -f .eslintrc.ci.cjs ]; then
-            npx eslint -c .eslintrc.ci.cjs "src/**/*.ts"
-          else
-            npm run lint
-          fi
-
-      - name: Remove CI fallback ESLint config
-        run: rm -f backend/.eslintrc.ci.cjs
-
-      - name: Commit auto-fixes
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
-        uses: autofix-ci/action@v1
-        with:
-          commit-message: "ci: auto-fix lint issues"
-
-      - name: Backend tests
+      - name: Run backend tests
         run: |
           cd backend
           npm run test -- --ci

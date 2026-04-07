@@ -1,0 +1,89 @@
+name: pre-commit
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+concurrency:
+  group: pre-commit-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install backend dependencies
+        run: |
+          cd backend
+          npm ci
+
+      - name: Ensure ESLint config exists (CI fallback only)
+        run: |
+          if [ ! -f backend/.eslintrc.js ] && [ ! -f backend/.eslintrc.cjs ] && [ ! -f backend/.eslintrc.json ] && [ ! -f backend/eslint.config.js ]; then
+            printf '%s\n' \
+              "module.exports = {" \
+              "  root: true," \
+              "  parser: '@typescript-eslint/parser'," \
+              "  parserOptions: {" \
+              "    ecmaVersion: 'latest'," \
+              "    sourceType: 'module'," \
+              "  }," \
+              "  env: {" \
+              "    node: true," \
+              "    es2021: true," \
+              "    jest: true," \
+              "  }," \
+              "  plugins: ['@typescript-eslint']," \
+              "  extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended']," \
+              "  ignorePatterns: ['dist', 'node_modules']," \
+              "  rules: {" \
+              "    '@typescript-eslint/no-explicit-any': 'off'," \
+              "    'no-useless-escape': 'off'," \
+              "  }," \
+              "};" > backend/.eslintrc.ci.cjs
+          fi
+
+      - name: Autofix backend lint
+        run: |
+          cd backend
+          if [ -f .eslintrc.ci.cjs ]; then
+            npx eslint -c .eslintrc.ci.cjs "src/**/*.ts" --fix
+          else
+            npx eslint "src/**/*.ts" --fix
+          fi
+
+      - name: Verify backend lint
+        run: |
+          cd backend
+          if [ -f .eslintrc.ci.cjs ]; then
+            npx eslint -c .eslintrc.ci.cjs "src/**/*.ts"
+          else
+            npm run lint
+          fi
+
+      - name: Remove CI fallback ESLint config
+        run: rm -f backend/.eslintrc.ci.cjs
+
+      - name: Commit auto-fixes
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
+        uses: autofix-ci/action@v1
+        with:
+          commit-message: "ci: auto-fix lint issues"
