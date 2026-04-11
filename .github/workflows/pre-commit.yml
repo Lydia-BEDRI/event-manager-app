@@ -13,18 +13,21 @@ concurrency:
 permissions:
   contents: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: "20"
           cache: "npm"
@@ -84,6 +87,6 @@ jobs:
 
       - name: Commit auto-fixes
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork == false
-        uses: autofix-ci/action@v1
+        uses: autofix-ci/action@v1.3.3
         with:
           commit-message: "ci: auto-fix lint issues"
