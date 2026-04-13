@@ -73,6 +73,48 @@ export const getParticipationsByEvent = async (req: Request, res: Response) => {
   }
 };
 
+export const getMyParticipations = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ message: 'Non authentifie' });
+      return;
+    }
+
+    const userId = req.user.userId;
+
+    const [participations] = await pool.query<RowDataPacket[]>(
+      `SELECT 
+        p.id,
+        p.user_id,
+        p.event_id,
+        p.status,
+        p.qr_code,
+        p.created_at,
+        p.approved_at,
+        u.email,
+        u.first_name,
+        u.last_name,
+        e.name as event_name,
+        e.location as event_location,
+        e.start_date as event_start_date,
+        approver.first_name as approved_by_first_name,
+        approver.last_name as approved_by_last_name
+      FROM participations p
+      JOIN users u ON p.user_id = u.id
+      JOIN events e ON p.event_id = e.id
+      LEFT JOIN users approver ON p.approved_by = approver.id
+      WHERE p.user_id = ?
+      ORDER BY p.created_at DESC`,
+      [userId]
+    );
+
+    res.json(participations);
+  } catch (error) {
+    console.error('Error fetching my participations:', error);
+    res.status(500).json({ message: 'Erreur serveur', error });
+  }
+};
+
 export const getMyParticipantStats = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {

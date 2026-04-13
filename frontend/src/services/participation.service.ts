@@ -24,3 +24,10 @@ export const getMyParticipantStats = async () => {
   }
   return await api.get<ParticipantDashboardStats>('/participations/my-stats', token);
 };
+export const getMyParticipations = async () => {
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
+    throw new Error('Token manquant. Veuillez vous reconnecter.');
+  }
+  return await api.get<Participation[]>('/participations/my-participations', token);
+};

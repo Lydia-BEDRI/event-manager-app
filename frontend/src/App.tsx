@@ -20,6 +20,7 @@ import EditEventPage from "./components/pages/EditEventPage";
 import CreateZonePage from "./components/pages/CreateZonePage";
 import EditZonePage from "./components/pages/EditZonePage";
 import ParticipantsPage from "./components/pages/ParticipantsPage";
+import MesParticipationsPage from "./components/pages/MesParticipationsPage";
 import ProfilePage from "./components/pages/ProfilePage";
 import ChatsPage from "./components/pages/ChatsPage";
 import EventChatPage from "./components/pages/EventChatPage";
@@ -207,6 +208,17 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute allowedRoles={["ADMIN"]}>
             <Layout role={"ADMIN"}>
               <ParticipantsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/mes-participations"
+        element={
+          <ProtectedRoute>
+            <Layout role={userRole || "PARTICIPANT"}>
+              <MesParticipationsPage />
             </Layout>
           </ProtectedRoute>
         }
