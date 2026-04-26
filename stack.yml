@@ -53,6 +53,7 @@ services:
       - ./certs:/etc/nginx/certs
     networks:
       - proxynet
+      - frontnet
     deploy:
       replicas: 1
       placement:
