@@ -26,6 +26,11 @@ interface SendPayload {
 
 let io: Server | null = null;
 
+const allowedOrigins = (process.env.CORS_ORIGINS || process.env.FRONTEND_URL || "http://localhost:3000")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
 function roomName(eventId: number): string {
   return `event:${eventId}`;
 }
@@ -37,7 +42,7 @@ function emitSocketError(socket: Socket, message: string): void {
 export function initSocketServer(server: HttpServer): Server {
   io = new Server(server, {
     cors: {
-      origin: process.env.FRONTEND_URL || "http://localhost:3000",
+      origin: allowedOrigins,
       credentials: true,
     },
   });

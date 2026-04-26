@@ -24,6 +24,8 @@ services:
     image: nbouzidia/backend:latest
     environment:
       - NODE_ENV=production
+      - FRONTEND_URL=${FRONTEND_URL}
+      - CORS_ORIGINS=${CORS_ORIGINS}
       - DB_HOST=db
       - DB_PORT=3306
       - DB_USER=${MYSQL_USER}
