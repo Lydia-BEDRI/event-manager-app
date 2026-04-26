@@ -21,7 +21,7 @@ services:
           - node.role == worker
 
   backend:
-    image: event-manager-backend:latest
+    image: nbouzidia/backend:latest
     environment:
       - NODE_ENV=production
       - DB_HOST=db
@@ -36,7 +36,7 @@ services:
       replicas: 2
 
   frontend:
-    image: event-manager-frontend:latest
+    image: nbouzidia/frontend:latest
     networks:
       - proxynet
       - frontnet
