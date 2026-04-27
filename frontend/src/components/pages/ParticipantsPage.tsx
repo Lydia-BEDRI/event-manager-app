@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllParticipations, getParticipationsByEvent } from '../../services/participation.service';
+import { approveParticipation, getAllParticipations, getParticipationsByEvent } from '../../services/participation.service';
 import { getAllEvents } from '../../services/event.service';
 import { Participation } from '../../types/participation.types';
 import { Event } from '../../types/event.types';
@@ -12,6 +12,7 @@ const ParticipantsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedEventId, setSelectedEventId] = useState<string>('all');
+  const [approvingId, setApprovingId] = useState<number | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -52,6 +53,19 @@ const ParticipantsPage = () => {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleApprove = async (participationId: number) => {
+    try {
+      setApprovingId(participationId);
+      await approveParticipation(participationId);
+      await loadParticipations();
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Erreur lors de l\'approbation de la participation');
+    } finally {
+      setApprovingId(null);
     }
   };
 
@@ -226,7 +240,17 @@ const ParticipantsPage = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      {participation.approved_by_first_name && participation.approved_by_last_name ? (
+                      {participation.status !== 'APPROVED' ? (
+                        <button
+                          type="button"
+                          onClick={() => handleApprove(participation.id)}
+                          disabled={approvingId === participation.id}
+                          className="inline-flex items-center gap-1.5 rounded-lg bg-green-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors hover:bg-green-700 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          <CheckCircle size={14} />
+                          {approvingId === participation.id ? 'Approbation...' : 'Approuver'}
+                        </button>
+                      ) : participation.approved_by_first_name && participation.approved_by_last_name ? (
                         <span className="text-sm text-gray-600">
                           {participation.approved_by_first_name} {participation.approved_by_last_name}
                         </span>

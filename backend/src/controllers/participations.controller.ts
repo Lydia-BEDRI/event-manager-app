@@ -75,6 +75,78 @@ export const registerForEvent = async (req: AuthenticatedRequest, res: Response)
   }
 };
 
+export const approveParticipation = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ message: 'Non authentifié' });
+      return;
+    }
+
+    const approverId = req.user.userId;
+    const participationId = Number(req.params.id);
+
+    if (!Number.isInteger(participationId) || participationId <= 0) {
+      res.status(400).json({ message: 'ID de participation invalide' });
+      return;
+    }
+
+    const [rows] = await pool.query<RowDataPacket[]>(
+      `SELECT id, user_id, event_id, status
+       FROM participations
+       WHERE id = ?
+       LIMIT 1`,
+      [participationId]
+    );
+
+    if (rows.length === 0) {
+      res.status(404).json({ message: 'Participation introuvable' });
+      return;
+    }
+
+    if (rows[0].status === 'APPROVED') {
+      res.status(409).json({ message: 'Participation déjà approuvée' });
+      return;
+    }
+
+    const eventId = Number(rows[0].event_id);
+
+    const [approvedCountRows] = await pool.query<RowDataPacket[]>(
+      `SELECT COUNT(*) AS approved_count
+       FROM participations
+       WHERE event_id = ? AND status = 'APPROVED'`,
+      [eventId]
+    );
+
+    const [eventRows] = await pool.query<RowDataPacket[]>(
+      `SELECT capacity FROM events WHERE id = ? LIMIT 1`,
+      [eventId]
+    );
+
+    const approvedCount = Number(approvedCountRows[0]?.approved_count || 0);
+    const capacity = Number(eventRows[0]?.capacity || 0);
+
+    if (capacity > 0 && approvedCount >= capacity) {
+      res.status(409).json({ message: 'Événement complet, approbation impossible' });
+      return;
+    }
+
+    await pool.query<ResultSetHeader>(
+      `UPDATE participations
+       SET status = 'APPROVED',
+           approved_by = ?,
+           approved_at = NOW(),
+           qr_code = COALESCE(qr_code, CONCAT('QR-EVT', event_id, '-USR', user_id, '-', SUBSTRING(REPLACE(UUID(), '-', ''), 1, 8)))
+       WHERE id = ?`,
+      [approverId, participationId]
+    );
+
+    res.status(200).json({ message: 'Participation approuvée avec succès' });
+  } catch (error) {
+    console.error('Error approving participation:', error);
+    res.status(500).json({ message: 'Erreur serveur', error });
+  }
+};
+
 export const getAllParticipations = async (_req: Request, res: Response) => {
   try {
     const [participations] = await pool.query<RowDataPacket[]>(

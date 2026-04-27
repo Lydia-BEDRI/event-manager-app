@@ -7,6 +7,10 @@ export interface RegisterForEventResponse {
   status: 'PENDING';
 }
 
+export interface ApproveParticipationResponse {
+  message: string;
+}
+
 export const getAllParticipations = async () => {
   const token = localStorage.getItem('accessToken');
   if (!token) {
@@ -50,4 +54,13 @@ export const registerForEvent = async (eventId: number) => {
   }
 
   return await api.post<RegisterForEventResponse>('/participations', { event_id: eventId }, token);
+};
+
+export const approveParticipation = async (participationId: number) => {
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
+    throw new Error('Token manquant. Veuillez vous reconnecter.');
+  }
+
+  return await api.patch<ApproveParticipationResponse>(`/participations/${participationId}/approve`, {}, token);
 };
