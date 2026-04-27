@@ -49,6 +49,18 @@ const EventsDisponiblesPage: React.FC = () => {
     }
   };
 
+  const handleRegisterClick = (event: AvailableEvent) => {
+    const isRegistered = registeredEvents.has(event.id);
+    const spotsAvailable = Math.max(0, event.capacity - (event.current_participants || 0));
+    const isFull = spotsAvailable === 0;
+
+    if (isFull || isRegistered || registering === event.id) {
+      return;
+    }
+
+    void handleRegister(event.id);
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR', {
       day: '2-digit',
@@ -66,9 +78,9 @@ const EventsDisponiblesPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary-light to-white">
+      <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <Loader className="w-12 h-12 animate-spin mx-auto text-primary-dark mb-4" />
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-purple mx-auto mb-4"></div>
           <p className="text-gray-600">Chargement des événements...</p>
         </div>
       </div>
@@ -77,13 +89,16 @@ const EventsDisponiblesPage: React.FC = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary-light to-white">
+      <div className="flex items-center justify-center h-full">
         <div className="text-center max-w-md mx-auto">
-          <AlertCircle className="w-12 h-12 mx-auto text-red-500 mb-4" />
-          <p className="text-red-600 mb-4">{error}</p>
-          <Button onClick={() => navigate('/login')} variant="primary">
-            Retour à la connexion
-          </Button>
+          <div className="bg-red-100 text-red-600 p-4 rounded-xl mb-4">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <AlertCircle className="w-5 h-5" />
+              <p className="font-semibold">Erreur</p>
+            </div>
+            <p>{error}</p>
+          </div>
+          <Button onClick={() => navigate('/login')} variant="primary">Retour à la connexion</Button>
         </div>
       </div>
     );
@@ -91,27 +106,41 @@ const EventsDisponiblesPage: React.FC = () => {
 
   if (events.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-primary-light to-white">
-        <div className="text-center max-w-md mx-auto">
-          <Calendar className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Aucun événement disponible</h2>
-          <p className="text-gray-600">
-            Il n'y a actuellement aucun événement disponible pour votre inscription.
-          </p>
+      <div className="p-8">
+        <div className="text-center py-20 bg-white rounded-2xl shadow-sm border border-gray-200">
+          <div className="bg-gray-100 rounded-full p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
+            <Calendar className="text-gray-400" size={48} />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">Aucun événement disponible</h3>
+          <p className="text-gray-500">Il n'y a actuellement aucun événement ouvert à l'inscription.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-light to-white py-12 px-4">
-      <div className="max-w-6xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">Événements disponibles</h1>
-        <p className="text-gray-600 mb-8">
-          Découvrez les événements à venir et inscrivez-vous
-        </p>
+    <div className="p-8">
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="p-3 bg-gradient-to-br from-primary-purple to-purple-600 rounded-xl shadow-lg">
+            <Calendar className="text-white" size={32} />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-primary-dark">Événements disponibles</h1>
+            <p className="text-gray-600 mt-1">
+              {events.length} événement{events.length > 1 ? 's' : ''} ouvert{events.length > 1 ? 's' : ''} à l'inscription
+            </p>
+          </div>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
+          <p className="text-sm text-gray-600">
+            Sélectionnez un événement pour envoyer votre demande d'inscription. Les événements déjà demandés n'apparaissent pas dans cette liste.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {events.map((event) => {
             const isRegistered = registeredEvents.has(event.id);
             const spotsAvailable = Math.max(0, event.capacity - (event.current_participants || 0));
@@ -120,28 +149,24 @@ const EventsDisponiblesPage: React.FC = () => {
             return (
               <div
                 key={event.id}
-                className="bg-white rounded-xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden border border-gray-100"
+                className="bg-white rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden border border-gray-200"
               >
                 <div className="p-6">
-                  {/* Titre */}
                   <h3 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2">
                     {event.name}
                   </h3>
 
-                  {/* Description */}
                   {event.description && (
                     <p className="text-sm text-gray-600 mb-4 line-clamp-2">
                       {event.description}
                     </p>
                   )}
 
-                  {/* Lieu */}
                   <div className="flex items-start gap-2 mb-3">
                     <MapPin className="w-4 h-4 text-primary-dark flex-shrink-0 mt-0.5" />
                     <span className="text-sm text-gray-700">{event.location}</span>
                   </div>
 
-                  {/* Date et heure */}
                   <div className="flex items-start gap-2 mb-3">
                     <Calendar className="w-4 h-4 text-primary-dark flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-gray-700">
@@ -152,7 +177,6 @@ const EventsDisponiblesPage: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Capacité */}
                   <div className="flex items-center gap-2 mb-4 pb-4 border-b border-gray-200">
                     <Users className="w-4 h-4 text-primary-dark" />
                     <span className="text-sm text-gray-700">
@@ -165,9 +189,8 @@ const EventsDisponiblesPage: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Bouton */}
                   <Button
-                    onClick={() => !isFull && !isRegistered && handleRegister(event.id)}
+                    onClick={() => handleRegisterClick(event)}
                     disabled={isFull || isRegistered || registering === event.id}
                     variant={isFull ? 'secondary' : 'primary'}
                     className="w-full"
@@ -190,7 +213,6 @@ const EventsDisponiblesPage: React.FC = () => {
             );
           })}
         </div>
-      </div>
     </div>
   );
 };

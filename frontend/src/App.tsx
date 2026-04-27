@@ -24,6 +24,7 @@ import MesParticipationsPage from "./components/pages/MesParticipationsPage";
 import ProfilePage from "./components/pages/ProfilePage";
 import ChatsPage from "./components/pages/ChatsPage";
 import EventChatPage from "./components/pages/EventChatPage";
+import EventsDisponiblesPage from "./components/pages/EventsDisponiblesPage";
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, user, isLoading } = useAuth();
@@ -208,6 +209,17 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute allowedRoles={["ADMIN"]}>
             <Layout role={"ADMIN"}>
               <ParticipantsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/events-disponibles"
+        element={
+          <ProtectedRoute>
+            <Layout role={userRole || "PARTICIPANT"}>
+              <EventsDisponiblesPage />
             </Layout>
           </ProtectedRoute>
         }

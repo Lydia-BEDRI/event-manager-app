@@ -1,6 +1,12 @@
 import { api } from './api';
 import { Participation, ParticipantDashboardStats } from '../types/participation.types';
 
+export interface RegisterForEventResponse {
+  message: string;
+  participationId: number;
+  status: 'PENDING';
+}
+
 export const getAllParticipations = async () => {
   const token = localStorage.getItem('accessToken');
   if (!token) {
@@ -30,4 +36,18 @@ export const getMyParticipations = async () => {
     throw new Error('Token manquant. Veuillez vous reconnecter.');
   }
   return await api.get<Participation[]>('/participations/my-participations', token);
+};
+
+export const getAvailableEvents = async () => {
+  const stats = await getMyParticipantStats();
+  return stats.availableEvents;
+};
+
+export const registerForEvent = async (eventId: number) => {
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
+    throw new Error('Token manquant. Veuillez vous reconnecter.');
+  }
+
+  return await api.post<RegisterForEventResponse>('/participations', { event_id: eventId }, token);
 };

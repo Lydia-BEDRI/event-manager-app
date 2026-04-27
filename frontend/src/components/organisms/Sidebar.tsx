@@ -51,7 +51,7 @@ const Sidebar: React.FC<SidebarProps> = ({ role = "PARTICIPANT" }) => {
 
   const participantMenuItems = [
     { icon: Home, label: "Accueil", to: "/" },
-    { icon: CalendarDays, label: "Événements disponibles" },
+    { icon: CalendarDays, label: "Événements disponibles", to: "/events-disponibles" },
     { icon: Ticket, label: "Mes participations", to: "/mes-participations" },
     { icon: QrCode, label: "Mes QR Codes" },
     { icon: ScanLine, label: "Vérifier ma présence" },

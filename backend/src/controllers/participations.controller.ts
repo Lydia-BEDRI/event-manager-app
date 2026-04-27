@@ -1,7 +1,79 @@
 import { Request, Response } from 'express';
 import pool from '../config/database';
-import { RowDataPacket } from 'mysql2';
+import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { AuthenticatedRequest } from '../middlewares/authenticate';
+
+export const registerForEvent = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  try {
+    if (!req.user) {
+      res.status(401).json({ message: 'Non authentifié' });
+      return;
+    }
+
+    const userId = req.user.userId;
+    const eventId = Number(req.body?.event_id);
+
+    if (!Number.isInteger(eventId) || eventId <= 0) {
+      res.status(400).json({ message: 'event_id invalide' });
+      return;
+    }
+
+    const [events] = await pool.query<RowDataPacket[]>(
+      `SELECT id, status, capacity
+       FROM events
+       WHERE id = ? AND status = 'PUBLISHED' AND start_date > NOW()`,
+      [eventId]
+    );
+
+    if (events.length === 0) {
+      res.status(404).json({ message: 'Événement non disponible' });
+      return;
+    }
+
+    const [existing] = await pool.query<RowDataPacket[]>(
+      `SELECT id
+       FROM participations
+       WHERE user_id = ? AND event_id = ?
+       LIMIT 1`,
+      [userId, eventId]
+    );
+
+    if (existing.length > 0) {
+      res.status(409).json({ message: 'Vous êtes déjà inscrit à cet événement' });
+      return;
+    }
+
+    const [approvedCountRows] = await pool.query<RowDataPacket[]>(
+      `SELECT COUNT(*) AS approved_count
+       FROM participations
+       WHERE event_id = ? AND status = 'APPROVED'`,
+      [eventId]
+    );
+
+    const approvedCount = Number(approvedCountRows[0]?.approved_count || 0);
+    const capacity = Number(events[0].capacity || 0);
+
+    if (approvedCount >= capacity) {
+      res.status(409).json({ message: 'Cet événement est complet' });
+      return;
+    }
+
+    const [insertResult] = await pool.query<ResultSetHeader>(
+      `INSERT INTO participations (user_id, event_id, status, created_at)
+       VALUES (?, ?, 'PENDING', NOW())`,
+      [userId, eventId]
+    );
+
+    res.status(201).json({
+      message: 'Demande d\'inscription envoyée',
+      participationId: insertResult.insertId,
+      status: 'PENDING'
+    });
+  } catch (error) {
+    console.error('Error registering for event:', error);
+    res.status(500).json({ message: 'Erreur serveur', error });
+  }
+};
 
 export const getAllParticipations = async (_req: Request, res: Response) => {
   try {
