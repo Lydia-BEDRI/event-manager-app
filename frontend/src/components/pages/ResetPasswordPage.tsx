@@ -1,20 +1,26 @@
-import React, { useState } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import Logo from '../atoms/Logo';
-import { Eye, EyeOff, Check, Circle, CheckCircle2, AlertTriangle } from 'lucide-react';
+import React, { useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import Logo from "../atoms/Logo";
+import {
+  Eye,
+  EyeOff,
+  Check,
+  Circle,
+  CheckCircle2,
+  AlertTriangle,
+} from "lucide-react";
 
 const ResetPasswordPage: React.FC = () => {
   const { resetPassword } = useAuth();
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const tokenFromUrl = searchParams.get('token') || '';
-  const isExpired = searchParams.get('expired') === 'true';
+  const tokenFromUrl = searchParams.get("token") || "";
+  const isExpired = searchParams.get("expired") === "true";
 
   const [token, setToken] = useState(tokenFromUrl);
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -23,22 +29,22 @@ const ResetPasswordPage: React.FC = () => {
     lowercase: /[a-z]/.test(password),
     uppercase: /[A-Z]/.test(password),
     digit: /\d/.test(password),
-    special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password),
+    special: /[^A-Za-z0-9]/.test(password),
   };
 
   const isPasswordValid = Object.values(passwordChecks).every(Boolean);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
 
     if (!isPasswordValid) {
-      setError('Le mot de passe ne respecte pas les critères de sécurité.');
+      setError("Le mot de passe ne respecte pas les critères de sécurité.");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas.');
+      setError("Les mots de passe ne correspondent pas.");
       return;
     }
 
@@ -48,7 +54,7 @@ const ResetPasswordPage: React.FC = () => {
       await resetPassword(token, password);
       setSuccess(true);
     } catch (err: any) {
-      setError(err.error || 'Token invalide ou expiré.');
+      setError(err.error || "Token invalide ou expiré.");
     } finally {
       setLoading(false);
     }
@@ -57,9 +63,18 @@ const ResetPasswordPage: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
-  const PasswordCheck: React.FC<{ ok: boolean; label: string }> = ({ ok, label }) => (
-    <div className={`flex items-center gap-2 text-xs transition-colors ${ok ? 'text-emerald-600' : 'text-gray-400'}`}>
-      {ok ? <Check className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />}
+  const PasswordCheck: React.FC<{ ok: boolean; label: string }> = ({
+    ok,
+    label,
+  }) => (
+    <div
+      className={`flex items-center gap-2 text-xs transition-colors ${ok ? "text-emerald-600" : "text-gray-400"}`}
+    >
+      {ok ? (
+        <Check className="w-3.5 h-3.5" />
+      ) : (
+        <Circle className="w-3.5 h-3.5" />
+      )}
       <span>{label}</span>
     </div>
   );
@@ -75,7 +90,9 @@ const ResetPasswordPage: React.FC = () => {
             <div className="w-14 h-14 bg-emerald-50 rounded-full flex items-center justify-center mx-auto">
               <CheckCircle2 className="text-emerald-600" size={28} />
             </div>
-            <h2 className="text-xl font-heading font-bold text-gray-800">Mot de passe modifié</h2>
+            <h2 className="text-xl font-heading font-bold text-gray-800">
+              Mot de passe modifié
+            </h2>
             <p className="text-gray-500 text-sm">
               Votre mot de passe a été réinitialisé avec succès.
             </p>
@@ -110,7 +127,8 @@ const ResetPasswordPage: React.FC = () => {
         <form onSubmit={handleSubmit} className="space-y-4">
           {isExpired && (
             <div className="bg-yellow-50 border border-yellow-200 text-yellow-700 px-4 py-3 rounded-lg text-sm">
-              Votre mot de passe a expiré (plus de 60 jours). Veuillez le renouveler.
+              Votre mot de passe a expiré (plus de 60 jours). Veuillez le
+              renouveler.
             </div>
           )}
 
@@ -123,7 +141,10 @@ const ResetPasswordPage: React.FC = () => {
 
           {!tokenFromUrl && (
             <div>
-              <label htmlFor="token" className="block text-sm font-medium text-gray-700 mb-1.5">
+              <label
+                htmlFor="token"
+                className="block text-sm font-medium text-gray-700 mb-1.5"
+              >
                 Token de réinitialisation
               </label>
               <input
@@ -139,13 +160,16 @@ const ResetPasswordPage: React.FC = () => {
           )}
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700 mb-1.5"
+            >
               Nouveau mot de passe
             </label>
             <div className="relative">
               <input
                 id="password"
-                type={showPassword ? 'text' : 'password'}
+                type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -158,37 +182,56 @@ const ResetPasswordPage: React.FC = () => {
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
               </button>
             </div>
             {password.length > 0 && (
               <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5">
-                <PasswordCheck ok={passwordChecks.length} label="12 caractères min." />
-                <PasswordCheck ok={passwordChecks.uppercase} label="Une majuscule" />
-                <PasswordCheck ok={passwordChecks.lowercase} label="Une minuscule" />
+                <PasswordCheck
+                  ok={passwordChecks.length}
+                  label="12 caractères min."
+                />
+                <PasswordCheck
+                  ok={passwordChecks.uppercase}
+                  label="Une majuscule"
+                />
+                <PasswordCheck
+                  ok={passwordChecks.lowercase}
+                  label="Une minuscule"
+                />
                 <PasswordCheck ok={passwordChecks.digit} label="Un chiffre" />
-                <PasswordCheck ok={passwordChecks.special} label="Un caractère spécial" />
+                <PasswordCheck
+                  ok={passwordChecks.special}
+                  label="Un caractère spécial"
+                />
               </div>
             )}
           </div>
 
           <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1.5">
+            <label
+              htmlFor="confirmPassword"
+              className="block text-sm font-medium text-gray-700 mb-1.5"
+            >
               Confirmer le mot de passe
             </label>
             <div className="relative">
               <input
                 id="confirmPassword"
-                type={showConfirm ? 'text' : 'password'}
+                type={showConfirm ? "text" : "password"}
                 required
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className={`w-full px-4 py-3 pr-12 bg-white border rounded-xl focus:ring-2 focus:ring-primary-accent/40 focus:border-primary-accent outline-none transition-all ${
                   confirmPassword.length > 0
                     ? password === confirmPassword
-                      ? 'border-emerald-300'
-                      : 'border-red-300'
-                    : 'border-gray-200'
+                      ? "border-emerald-300"
+                      : "border-red-300"
+                    : "border-gray-200"
                 }`}
                 placeholder="••••••••••••"
                 autoComplete="new-password"
@@ -198,11 +241,17 @@ const ResetPasswordPage: React.FC = () => {
                 onClick={() => setShowConfirm(!showConfirm)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition"
               >
-                {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showConfirm ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
               </button>
             </div>
             {confirmPassword.length > 0 && password !== confirmPassword && (
-              <p className="mt-1.5 text-xs text-red-500">Les mots de passe ne correspondent pas</p>
+              <p className="mt-1.5 text-xs text-red-500">
+                Les mots de passe ne correspondent pas
+              </p>
             )}
           </div>
 
@@ -211,11 +260,14 @@ const ResetPasswordPage: React.FC = () => {
             disabled={loading || !isPasswordValid}
             className="w-full bg-primary-accent text-white py-3.5 rounded-xl font-semibold hover:bg-primary-accent/90 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary-accent/25 mt-2"
           >
-            {loading ? 'Réinitialisation...' : 'Réinitialiser le mot de passe'}
+            {loading ? "Réinitialisation..." : "Réinitialiser le mot de passe"}
           </button>
 
           <p className="text-center text-sm text-gray-500 mt-4">
-            <Link to="/login" className="text-primary-accent hover:text-primary-accent/80 font-medium transition">
+            <Link
+              to="/login"
+              className="text-primary-accent hover:text-primary-accent/80 font-medium transition"
+            >
               ← Retour à la connexion
             </Link>
           </p>

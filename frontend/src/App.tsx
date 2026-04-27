@@ -23,6 +23,8 @@ import ParticipantsPage from "./components/pages/ParticipantsPage";
 import ProfilePage from "./components/pages/ProfilePage";
 import ChatsPage from "./components/pages/ChatsPage";
 import EventChatPage from "./components/pages/EventChatPage";
+import KioskPage from "./components/pages/KioskPage";
+import BadgeWriterPage from "./components/pages/BadgeWriterPage";
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, user, isLoading } = useAuth();
@@ -207,6 +209,28 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute allowedRoles={["ADMIN"]}>
             <Layout role={"ADMIN"}>
               <ParticipantsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/kiosk"
+        element={
+          <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <Layout role="ADMIN">
+              <KioskPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/kiosk/badges"
+        element={
+          <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <Layout role="ADMIN">
+              <BadgeWriterPage />
             </Layout>
           </ProtectedRoute>
         }

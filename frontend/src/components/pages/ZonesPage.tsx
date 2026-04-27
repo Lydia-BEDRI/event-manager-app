@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getAllZones, deleteZone } from '../../services/zone.service';
-import { Zone } from '../../types/zone.types';
-import ZoneCard from '../molecules/ZoneCard';
-import { MapPin, Plus } from 'lucide-react';
-import Button from '../atoms/Button';
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { getAllZones, deleteZone } from "../../services/zone.service";
+import { Zone } from "../../types/zone.types";
+import ZoneCard from "../molecules/ZoneCard";
+import { MapPin, Plus } from "lucide-react";
+import Button from "../atoms/Button";
 
 const ZonesPage = () => {
   const [zones, setZones] = useState<Zone[]>([]);
@@ -12,11 +12,7 @@ const ZonesPage = () => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadZones();
-  }, []);
-
-  const loadZones = async () => {
+  const loadZones = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getAllZones();
@@ -24,19 +20,27 @@ const ZonesPage = () => {
       setError(null);
     } catch (err: any) {
       console.error(err);
-      if (err.message?.includes('Token manquant')) {
-        setError('Session expirée. Redirection vers la page de connexion...');
-        setTimeout(() => navigate('/login'), 2000);
+      if (err.message?.includes("Token manquant")) {
+        setError("Session expirée. Redirection vers la page de connexion...");
+        setTimeout(() => navigate("/login"), 2000);
       } else {
-        setError('Erreur lors du chargement des zones');
+        setError("Erreur lors du chargement des zones");
       }
     } finally {
       setLoading(false);
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    loadZones();
+  }, [loadZones]);
 
   const handleDeleteZone = async (zone: Zone) => {
-    if (!window.confirm(`Êtes-vous sûr de vouloir supprimer la zone "${zone.name}" ?`)) {
+    if (
+      !window.confirm(
+        `Êtes-vous sûr de vouloir supprimer la zone "${zone.name}" ?`,
+      )
+    ) {
       return;
     }
 
@@ -45,7 +49,7 @@ const ZonesPage = () => {
       await loadZones();
     } catch (err: any) {
       console.error(err);
-      alert(err.message || 'Erreur lors de la suppression de la zone');
+      alert(err.message || "Erreur lors de la suppression de la zone");
     }
   };
 
@@ -86,15 +90,17 @@ const ZonesPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-primary-white to-primary-light/30 p-4 sm:p-8">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="font-heading text-3xl font-bold text-primary-dark">Zones d'accès</h1>
+          <h1 className="font-heading text-3xl font-bold text-primary-dark">
+            Zones d'accès
+          </h1>
           <p className="text-primary-gray mt-2">
-            {zones.length} zone{zones.length > 1 ? 's' : ''} au total
+            {zones.length} zone{zones.length > 1 ? "s" : ""} au total
           </p>
         </div>
-        <Button 
-          variant="primary" 
+        <Button
+          variant="primary"
           icon={Plus}
-          onClick={() => navigate('/zones/create')}
+          onClick={() => navigate("/zones/create")}
         >
           Créer une zone
         </Button>
@@ -105,7 +111,9 @@ const ZonesPage = () => {
           <div className="bg-gray-100 rounded-full p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
             <MapPin className="text-gray-400" size={48} />
           </div>
-          <h3 className="text-xl font-semibold text-gray-700 mb-2">Aucune zone trouvée</h3>
+          <h3 className="text-xl font-semibold text-gray-700 mb-2">
+            Aucune zone trouvée
+          </h3>
           <p className="text-gray-500 mb-6">
             Créez des zones pour organiser vos événements
           </p>

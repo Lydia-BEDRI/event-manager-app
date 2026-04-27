@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { createEvent } from '../../services/event.service';
-import { getDistinctZones } from '../../services/zone.service';
-import { CreateEventDto, ZoneInput } from '../../types/event.types';
-import Button from '../atoms/Button';
-import { ArrowLeft, Save, Plus, AlertTriangle } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { createEvent } from "../../services/event.service";
+import { getDistinctZones } from "../../services/zone.service";
+import { CreateEventDto, ZoneInput } from "../../types/event.types";
+import Button from "../atoms/Button";
+import { ArrowLeft, Save, Plus, AlertTriangle } from "lucide-react";
 
 const CreateEventPage = () => {
   const navigate = useNavigate();
@@ -15,51 +15,51 @@ const CreateEventPage = () => {
   const [selectedZones, setSelectedZones] = useState<ZoneInput[]>([]);
   const [showZonesList, setShowZonesList] = useState(false);
   const [formData, setFormData] = useState<CreateEventDto>({
-    name: '',
-    description: '',
-    location: '',
-    start_date: '',
-    end_date: '',
+    name: "",
+    description: "",
+    location: "",
+    start_date: "",
+    end_date: "",
     capacity: 0,
-    status: 'DRAFT',
+    status: "DRAFT",
     zones: [],
   });
 
-  useEffect(() => {
-    loadAvailableZones();
-  }, []);
-
-  const loadAvailableZones = async () => {
+  const loadAvailableZones = useCallback(async () => {
     try {
       setLoadingZones(true);
       const zones = await getDistinctZones();
       setAvailableZones(zones);
     } catch (err: any) {
-      console.error('Erreur lors du chargement des zones:', err);
-      if (err.message?.includes('Token manquant')) {
-        setError('Session expirée. Veuillez vous reconnecter.');
-        setTimeout(() => navigate('/login'), 2000);
+      console.error("Erreur lors du chargement des zones:", err);
+      if (err.message?.includes("Token manquant")) {
+        setError("Session expirée. Veuillez vous reconnecter.");
+        setTimeout(() => navigate("/login"), 2000);
       }
     } finally {
       setLoadingZones(false);
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    loadAvailableZones();
+  }, [loadAvailableZones]);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); 
-    
+    e.preventDefault();
+
     try {
       setLoading(true);
       setError(null);
 
       await createEvent({
         ...formData,
-        zones: selectedZones
+        zones: selectedZones,
       });
-      
-      navigate('/events');
+
+      navigate("/events");
     } catch (err: any) {
-      setError(err.message || 'Erreur lors de la création de l\'événement');
+      setError(err.message || "Erreur lors de la création de l'événement");
       console.error(err);
     } finally {
       setLoading(false);
@@ -67,10 +67,14 @@ const CreateEventPage = () => {
   };
 
   const toggleZoneSelection = (zone: ZoneInput) => {
-    setSelectedZones(prev => {
-      const isSelected = prev.some(z => z.name === zone.name && z.capacity === zone.capacity);
+    setSelectedZones((prev) => {
+      const isSelected = prev.some(
+        (z) => z.name === zone.name && z.capacity === zone.capacity,
+      );
       if (isSelected) {
-        return prev.filter(z => !(z.name === zone.name && z.capacity === zone.capacity));
+        return prev.filter(
+          (z) => !(z.name === zone.name && z.capacity === zone.capacity),
+        );
       } else {
         return [...prev, zone];
       }
@@ -78,16 +82,25 @@ const CreateEventPage = () => {
   };
 
   const isZoneSelected = (zone: ZoneInput) => {
-    return selectedZones.some(z => z.name === zone.name && z.capacity === zone.capacity);
+    return selectedZones.some(
+      (z) => z.name === zone.name && z.capacity === zone.capacity,
+    );
   };
 
-  const totalZonesCapacity = selectedZones.reduce((sum, zone) => sum + zone.capacity, 0);
+  const totalZonesCapacity = selectedZones.reduce(
+    (sum, zone) => sum + zone.capacity,
+    0,
+  );
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >,
+  ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: name === 'capacity' ? parseInt(value) || 0 : value
+      [name]: name === "capacity" ? parseInt(value) || 0 : value,
     }));
   };
 
@@ -96,16 +109,21 @@ const CreateEventPage = () => {
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-4 mb-6">
           <button
-            onClick={() => navigate('/events')}
+            onClick={() => navigate("/events")}
             className="p-2.5 hover:bg-white/80 rounded-xl transition-all shadow-sm border border-primary-gray/10"
             aria-label="Retour aux événements"
           >
             <ArrowLeft size={22} className="text-primary-dark" />
           </button>
-          <h1 className="font-heading text-2xl sm:text-3xl font-bold text-primary-dark">Créer un événement</h1>
+          <h1 className="font-heading text-2xl sm:text-3xl font-bold text-primary-dark">
+            Créer un événement
+          </h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-md border border-primary-gray/10">
+        <form
+          onSubmit={handleSubmit}
+          className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-md border border-primary-gray/10"
+        >
           {error && (
             <div className="bg-red-50 border border-red-300 text-red-800 px-4 py-3 rounded-xl mb-6 flex items-start gap-3">
               <AlertTriangle size={20} className="flex-shrink-0 mt-0.5" />
@@ -227,7 +245,9 @@ const CreateEventPage = () => {
             <div className="border-t border-primary-gray/20 pt-6 mt-6">
               <div className="flex justify-between items-center mb-4">
                 <div>
-                  <h3 className="font-heading text-lg font-bold text-primary-dark">Zones d'accès</h3>
+                  <h3 className="font-heading text-lg font-bold text-primary-dark">
+                    Zones d'accès
+                  </h3>
                   <p className="text-sm text-primary-gray mt-1">
                     Sélectionnez les zones pour votre événement
                   </p>
@@ -239,7 +259,7 @@ const CreateEventPage = () => {
                   onClick={() => setShowZonesList(!showZonesList)}
                   disabled={loadingZones}
                 >
-                  {showZonesList ? 'Masquer' : 'Ajouter des zones'}
+                  {showZonesList ? "Masquer" : "Ajouter des zones"}
                 </Button>
               </div>
 
@@ -252,8 +272,11 @@ const CreateEventPage = () => {
                         <p className="text-sm font-semibold">Attention</p>
                       </div>
                       <p className="text-sm mt-1">
-                        La capacité totale des zones ({totalZonesCapacity}) est inférieure à la capacité de l'événement ({formData.capacity}).
-                        Il reste {formData.capacity - totalZonesCapacity} places non attribuées.
+                        La capacité totale des zones ({totalZonesCapacity}) est
+                        inférieure à la capacité de l'événement (
+                        {formData.capacity}). Il reste{" "}
+                        {formData.capacity - totalZonesCapacity} places non
+                        attribuées.
                       </p>
                     </div>
                   )}
@@ -263,9 +286,13 @@ const CreateEventPage = () => {
               {showZonesList && (
                 <div className="mb-4 bg-primary-light/30 rounded-xl p-4 border border-primary-gray/20 max-h-64 overflow-y-auto">
                   {loadingZones ? (
-                    <p className="text-primary-gray text-center py-4">Chargement des zones...</p>
+                    <p className="text-primary-gray text-center py-4">
+                      Chargement des zones...
+                    </p>
                   ) : availableZones.length === 0 ? (
-                    <p className="text-primary-gray text-center py-4">Aucune zone disponible</p>
+                    <p className="text-primary-gray text-center py-4">
+                      Aucune zone disponible
+                    </p>
                   ) : (
                     <div className="space-y-2">
                       {availableZones.map((zone, index) => (
@@ -280,9 +307,13 @@ const CreateEventPage = () => {
                             className="w-5 h-5 text-primary-accent rounded focus:ring-primary-accent"
                           />
                           <div className="flex-1">
-                            <p className="font-bold text-primary-dark">{zone.name}</p>
+                            <p className="font-bold text-primary-dark">
+                              {zone.name}
+                            </p>
                             {zone.description && (
-                              <p className="text-sm text-primary-gray">{zone.description}</p>
+                              <p className="text-sm text-primary-gray">
+                                {zone.description}
+                              </p>
                             )}
                           </div>
                           <span className="text-sm font-semibold text-primary-dark bg-primary-light/50 px-3 py-1 rounded-lg">
@@ -301,11 +332,18 @@ const CreateEventPage = () => {
                     Zones sélectionnées ({selectedZones.length})
                   </p>
                   {selectedZones.map((zone, index) => (
-                    <div key={index} className="flex items-center justify-between bg-gradient-to-br from-primary-accent/5 to-primary-purple/5 rounded-xl p-3 border border-primary-accent/20">
+                    <div
+                      key={index}
+                      className="flex items-center justify-between bg-gradient-to-br from-primary-accent/5 to-primary-purple/5 rounded-xl p-3 border border-primary-accent/20"
+                    >
                       <div className="flex-1">
-                        <p className="font-bold text-primary-dark">{zone.name}</p>
+                        <p className="font-bold text-primary-dark">
+                          {zone.name}
+                        </p>
                         {zone.description && (
-                          <p className="text-sm text-primary-gray">{zone.description}</p>
+                          <p className="text-sm text-primary-gray">
+                            {zone.description}
+                          </p>
                         )}
                       </div>
                       <span className="text-sm font-bold text-primary-accent bg-white px-3 py-1 rounded-lg shadow-sm">
@@ -317,7 +355,9 @@ const CreateEventPage = () => {
               ) : (
                 <div className="text-center py-8 text-primary-gray">
                   <p className="font-medium">Aucune zone sélectionnée</p>
-                  <p className="text-sm mt-1">Cliquez sur "Ajouter des zones" pour commencer</p>
+                  <p className="text-sm mt-1">
+                    Cliquez sur "Ajouter des zones" pour commencer
+                  </p>
                 </div>
               )}
             </div>
@@ -330,12 +370,12 @@ const CreateEventPage = () => {
               icon={Save}
               disabled={loading}
             >
-              {loading ? 'Création...' : 'Créer l\'événement'}
+              {loading ? "Création..." : "Créer l'événement"}
             </Button>
             <Button
               type="button"
               variant="secondary"
-              onClick={() => navigate('/events')}
+              onClick={() => navigate("/events")}
               disabled={loading}
             >
               Annuler

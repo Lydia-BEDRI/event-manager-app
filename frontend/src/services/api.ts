@@ -1,4 +1,8 @@
-const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+import { Capacitor } from '@capacitor/core';
+
+const isAndroid = Capacitor.getPlatform() === 'android';
+const BASE_URL = process.env.REACT_APP_API_URL ||
+  (isAndroid ? "http://10.0.2.2:5000/api" : "http://localhost:5000/api");
 
 export class ApiError extends Error {
   status: number;

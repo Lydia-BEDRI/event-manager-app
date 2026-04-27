@@ -1,22 +1,18 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { deleteEvent, getAllEvents } from '../../services/event.service';
-import { Event } from '../../types/event.types';
-import EventCard from '../molecules/EventCard';
-import Button  from '../atoms/Button';
-import { Plus } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { deleteEvent, getAllEvents } from "../../services/event.service";
+import { Event } from "../../types/event.types";
+import EventCard from "../molecules/EventCard";
+import Button from "../atoms/Button";
+import { Plus } from "lucide-react";
 
-const EventsPage= () => {
+const EventsPage = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    loadEvents();
-  }, []);
-
-  const loadEvents = async () => {
+  const loadEvents = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getAllEvents();
@@ -24,32 +20,40 @@ const EventsPage= () => {
       setError(null);
     } catch (err: any) {
       console.error(err);
-      if (err.message?.includes('Token manquant')) {
-        setError('Session expirée. Redirection vers la page de connexion...');
-        setTimeout(() => navigate('/login'), 2000);
+      if (err.message?.includes("Token manquant")) {
+        setError("Session expirée. Redirection vers la page de connexion...");
+        setTimeout(() => navigate("/login"), 2000);
       } else {
-        setError('Erreur lors du chargement des événements');
+        setError("Erreur lors du chargement des événements");
       }
     } finally {
       setLoading(false);
     }
-  };
-const handleDeleteEvent = async (eventId: number) => {
-    console.log('Tentative de suppression de l\'événement:', eventId);
-    
-    if (!window.confirm('Êtes-vous sûr de vouloir supprimer cet événement ? Cette action est irréversible.')) {
-      console.log('Suppression annulée par l\'utilisateur');
+  }, [navigate]);
+
+  useEffect(() => {
+    loadEvents();
+  }, [loadEvents]);
+  const handleDeleteEvent = async (eventId: number) => {
+    console.log("Tentative de suppression de l'événement:", eventId);
+
+    if (
+      !window.confirm(
+        "Êtes-vous sûr de vouloir supprimer cet événement ? Cette action est irréversible.",
+      )
+    ) {
+      console.log("Suppression annulée par l'utilisateur");
       return;
     }
 
     try {
-      console.log('Appel de deleteEvent avec l\'ID:', eventId);
+      console.log("Appel de deleteEvent avec l'ID:", eventId);
       await deleteEvent(eventId);
-      console.log('Événement supprimé avec succès');
+      console.log("Événement supprimé avec succès");
       await loadEvents();
     } catch (err: any) {
-      console.error('Erreur lors de la suppression:', err);
-      alert(err.message || 'Erreur lors de la suppression');
+      console.error("Erreur lors de la suppression:", err);
+      alert(err.message || "Erreur lors de la suppression");
     }
   };
   if (loading) {
@@ -72,18 +76,21 @@ const handleDeleteEvent = async (eventId: number) => {
     <div className="min-h-screen bg-gradient-to-br from-primary-white to-primary-light/30 p-4 sm:p-8">
       <div className="flex justify-between items-center mb-8">
         <div>
-          <h1 className="font-heading text-3xl font-bold text-primary-dark">Événements disponibles</h1>
-          <p className="text-primary-gray mt-2">{events.length} événement{events.length > 1 ? 's' : ''} au total</p>
+          <h1 className="font-heading text-3xl font-bold text-primary-dark">
+            Événements disponibles
+          </h1>
+          <p className="text-primary-gray mt-2">
+            {events.length} événement{events.length > 1 ? "s" : ""} au total
+          </p>
         </div>
-        <Button 
-          variant="primary" 
+        <Button
+          variant="primary"
           icon={Plus}
-          onClick={() => navigate('/events/create')}
+          onClick={() => navigate("/events/create")}
         >
           Créer un événement
         </Button>
       </div>
-      
 
       {events.length === 0 ? (
         <div className="text-center py-12">

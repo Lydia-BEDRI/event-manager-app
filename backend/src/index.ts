@@ -9,6 +9,7 @@ import exportRoutes from "./routes/export.routes";
 import eventRoutes from "./routes/events.routes";
 import zoneRoutes from "./routes/zones.routes";
 import participationsRoutes from "./routes/participations.routes";
+import accessRoutes from "./routes/access.routes";
 import chatRoutes from "./routes/chat.routes";
 import { initSocketServer } from "./sockets/server.socket";
 
@@ -19,9 +20,27 @@ const PORT = process.env.PORT || 5000;
 const server = createServer(app);
 
 app.use(helmet());
+
+const allowedOrigins = [
+  process.env.FRONTEND_URL || "http://localhost:3000",
+  "http://localhost",
+  "https://localhost",
+  "http://localhost:5000",
+  "http://10.0.2.2:3000",
+  "http://10.0.2.2:5000"
+];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: (origin, callback) => {
+      // allow requests with no origin (like mobile apps or curl requests)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) === -1) {
+        const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+        return callback(new Error(msg), false);
+      }
+      return callback(null, true);
+    },
     credentials: true,
   }),
 );
@@ -50,6 +69,7 @@ app.use("/api/export", exportRoutes);
 app.use("/api/events", eventRoutes);
 app.use("/api/zones", zoneRoutes);
 app.use("/api/participations", participationsRoutes);
+app.use("/api/access", accessRoutes);
 app.use("/api/chat", chatRoutes);
 app.use((_req: Request, res: Response) => {
   res.status(404).json({
