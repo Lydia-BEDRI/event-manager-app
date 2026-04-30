@@ -1,6 +1,7 @@
 import jwt, { Secret, SignOptions } from 'jsonwebtoken';
+import { readSecretFromFile } from '../config/secrets';
 
-const JWT_SECRET: Secret = process.env.JWT_SECRET || 'dev-secret-key';
+const JWT_SECRET: Secret = readSecretFromFile('JWT_SECRET_FILE') || process.env.JWT_SECRET || 'dev-secret-key';
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '15m';
 const REFRESH_EXPIRES_IN_DAYS = 7;
 

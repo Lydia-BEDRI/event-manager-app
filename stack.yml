@@ -34,6 +34,7 @@ services:
       - DB_USER=eventuser
       - DB_PASSWORD_FILE=/run/secrets/mysql_password
       - DB_NAME=eventmanager
+      - JWT_SECRET_FILE=/run/secrets/jwt_secret
     secrets:
       - mysql_password
       - jwt_secret
