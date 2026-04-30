@@ -4,13 +4,16 @@ services:
   db:
     image: mysql:8.0
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${MYSQL_DATABASE}
-      MYSQL_USER: ${MYSQL_USER}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+      MYSQL_DATABASE: eventmanager
+      MYSQL_USER: eventuser
+      MYSQL_PASSWORD_FILE: /run/secrets/mysql_password
+    secrets:
+      - mysql_root_password
+      - mysql_password
     volumes:
       - eventmanager-db-data:/var/lib/mysql
-      - ./db:/docker-entrypoint-initdb.d  
+      - ./db:/docker-entrypoint-initdb.d
     networks:
       - backnet
       - dbnet
@@ -24,13 +27,16 @@ services:
     image: nbouzidia/backend:latest
     environment:
       - NODE_ENV=production
-      - FRONTEND_URL=${FRONTEND_URL}
-      - CORS_ORIGINS=${CORS_ORIGINS}
+      - FRONTEND_URL=http://192.168.40.112
+      - CORS_ORIGINS=http://192.168.40.112,http://192.168.40.113,http://192.168.40.114
       - DB_HOST=db
       - DB_PORT=3306
-      - DB_USER=${MYSQL_USER}
-      - DB_PASSWORD=${MYSQL_PASSWORD}
-      - DB_NAME=${MYSQL_DATABASE}
+      - DB_USER=eventuser
+      - DB_PASSWORD_FILE=/run/secrets/mysql_password
+      - DB_NAME=eventmanager
+    secrets:
+      - mysql_password
+      - jwt_secret
     networks:
       - frontnet
       - backnet
@@ -71,11 +77,19 @@ networks:
 
   backnet:
     driver: overlay
-    internal: true 
+    internal: true
 
   dbnet:
     driver: overlay
-    internal: true 
+    internal: true
 
 volumes:
   eventmanager-db-data:
+
+secrets:
+  mysql_root_password:
+    external: true
+  mysql_password:
+    external: true
+  jwt_secret:
+    external: true
