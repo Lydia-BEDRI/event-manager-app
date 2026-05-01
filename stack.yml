@@ -27,8 +27,8 @@ services:
     image: nbouzidia/backend:latest
     environment:
       - NODE_ENV=production
-      - FRONTEND_URL=http://192.168.40.112
-      - CORS_ORIGINS=http://192.168.40.112,http://192.168.40.113,http://192.168.40.114
+      - FRONTEND_URL=http://192.168.40.112,https://eventmanager.local
+      - CORS_ORIGINS=http://192.168.40.112,http://192.168.40.113,http://192.168.40.114,https://eventmanager.local
       - DB_HOST=db
       - DB_PORT=3306
       - DB_USER=eventuser
