@@ -86,9 +86,9 @@ export const getMyParticipantStats = async (req: AuthenticatedRequest, res: Resp
     const [participationStats] = await pool.query<RowDataPacket[]>(
       `SELECT 
         COUNT(*) as total_participations,
-        SUM(CASE WHEN status = 'APPROVED' THEN 1 ELSE 0 END) as approved_participations,
-        SUM(CASE WHEN status = 'PENDING' THEN 1 ELSE 0 END) as pending_participations,
-        SUM(CASE WHEN status = 'REFUSED' THEN 1 ELSE 0 END) as refused_participations
+        COALESCE(SUM(CASE WHEN status = 'APPROVED' THEN 1 ELSE 0 END), 0) as approved_participations,
+        COALESCE(SUM(CASE WHEN status = 'PENDING' THEN 1 ELSE 0 END), 0) as pending_participations,
+        COALESCE(SUM(CASE WHEN status = 'REFUSED' THEN 1 ELSE 0 END), 0) as refused_participations
       FROM participations
       WHERE user_id = ?`,
       [userId]
