@@ -29,6 +29,7 @@ services:
       - NODE_ENV=production
       - FRONTEND_URL=http://192.168.40.112,https://eventmanager.local
       - CORS_ORIGINS=http://eventmanager.local,https://eventmanager.local,http://192.168.40.112,https://192.168.40.112
+      - DB_HOST=db
       - DB_PORT=3306
       - DB_USER=eventuser
       - DB_PASSWORD_FILE=/run/secrets/mysql_password
