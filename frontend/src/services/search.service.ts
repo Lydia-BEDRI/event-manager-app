@@ -24,7 +24,7 @@ export interface GlobalSearchResults {
 export interface AdvancedSearchParams {
   query: string;
   filters?: {
-    type?: 'event' | 'user' | 'zone' | 'message';
+    type?: string;
     eventId?: number;
     status?: string;
     dateFrom?: string;
@@ -87,12 +87,6 @@ export const searchService = {
     const response = await this.searchByType('event', query, limit, token);
     return response.results;
   },
-
-  async suggestUsers(query: string, limit: number = 5, token?: string): Promise<SearchResult[]> {
-    const response = await this.searchByType('user', query, limit, token);
-    return response.results;
-  },
-
   async suggestZones(query: string, limit: number = 5, token?: string): Promise<SearchResult[]> {
     const response = await this.searchByType('zone', query, limit, token);
     return response.results;

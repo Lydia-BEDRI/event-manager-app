@@ -36,7 +36,7 @@ describe('SearchService - Global Search Integration Tests', () => {
   describe('globalSearch()', () => {
     testIfDbAvailable('should return results with all entity types', async () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const results = await SearchService.globalSearch('test', 5, 0);
+      const results = await SearchService.globalSearch('test', 1, 'PARTICIPANT', 5, 0);
       
       expect(results).toBeDefined();
       expect(results.query).toBe('test');
@@ -50,23 +50,23 @@ describe('SearchService - Global Search Integration Tests', () => {
     });
 
     testIfDbAvailable('should throw error on empty query', async () => {
-      await expect(SearchService.globalSearch('', 5, 0)).rejects.toThrow();
-      await expect(SearchService.globalSearch('   ', 5, 0)).rejects.toThrow();
+      await expect(SearchService.globalSearch('', 1, 'PARTICIPANT', 5, 0)).rejects.toThrow();
+      await expect(SearchService.globalSearch('   ', 1, 'PARTICIPANT', 5, 0)).rejects.toThrow();
     });
 
     testIfDbAvailable('should respect limit parameter', async () => {
-      const results = await SearchService.globalSearch('a', 3, 0);
+      const results = await SearchService.globalSearch('a', 1, 'PARTICIPANT', 3, 0);
       
-      expect(results.results.length).toBeLessThanOrEqual(3 * 4);
+      expect(results.results.length).toBeLessThanOrEqual(3 * 5);
     });
 
     testIfDbAvailable('should return results with correct structure', async () => {
-      const results = await SearchService.globalSearch('event', 5, 0);
+      const results = await SearchService.globalSearch('event', 1, 'PARTICIPANT', 5, 0);
       
       if (results.results.length > 0) {
         const firstResult = results.results[0];
         
-        expect(firstResult.type).toMatch(/^(event|user|zone|message)$/);
+        expect(firstResult.type).toMatch(/^(event|user|zone|message|participation)$/);
         expect(firstResult.id).toBeGreaterThan(0);
         expect(firstResult.title).toBeDefined();
         expect(firstResult.relevance).toBeGreaterThan(0);
@@ -76,7 +76,7 @@ describe('SearchService - Global Search Integration Tests', () => {
 
   describe('searchByType()', () => {
     testIfDbAvailable('should search events correctly', async () => {
-      const results = await SearchService.searchByType('event test', 'event', 10);
+      const results = await SearchService.searchByType('event test', 'event', 1, 'PARTICIPANT', 10);
       
       expect(results).toBeInstanceOf(Array);
       results.forEach((result) => {
@@ -85,7 +85,7 @@ describe('SearchService - Global Search Integration Tests', () => {
     });
 
     testIfDbAvailable('should search users correctly', async () => {
-      const results = await SearchService.searchByType('admin', 'user', 10);
+      const results = await SearchService.searchByType('admin', 'user', 1, 'PARTICIPANT', 10);
       
       expect(results).toBeInstanceOf(Array);
       results.forEach((result) => {
@@ -94,7 +94,7 @@ describe('SearchService - Global Search Integration Tests', () => {
     });
 
     testIfDbAvailable('should search zones correctly', async () => {
-      const results = await SearchService.searchByType('zone', 'zone', 10);
+      const results = await SearchService.searchByType('zone', 'zone', 1, 'PARTICIPANT', 10);
       
       expect(results).toBeInstanceOf(Array);
       results.forEach((result) => {
@@ -103,7 +103,7 @@ describe('SearchService - Global Search Integration Tests', () => {
     });
 
     testIfDbAvailable('should search messages correctly', async () => {
-      const results = await SearchService.searchByType('hello', 'message', 10);
+      const results = await SearchService.searchByType('hello', 'message', 1, 'PARTICIPANT', 10);
       
       expect(results).toBeInstanceOf(Array);
       results.forEach((result) => {
@@ -113,14 +113,14 @@ describe('SearchService - Global Search Integration Tests', () => {
 
     testIfDbAvailable('should throw on invalid type', async () => {
       await expect(
-        SearchService.searchByType('test', 'invalid' as any, 10)
+        SearchService.searchByType('test', 'invalid' as any, 1, 'PARTICIPANT', 10)
       ).rejects.toThrow();
     });
   });
 
   describe('advancedSearch()', () => {
     testIfDbAvailable('should filter by type', async () => {
-      const results = await SearchService.advancedSearch('test', { type: 'event' }, 10);
+      const results = await SearchService.advancedSearch('test', 1, 'PARTICIPANT', { type: 'event' }, 10, 0);
       
       results.forEach((result) => {
         expect(result.type).toBe('event');
@@ -128,11 +128,11 @@ describe('SearchService - Global Search Integration Tests', () => {
     });
 
     testIfDbAvailable('should filter by eventId when searching zones', async () => {
-      const zoneResults = await SearchService.searchByType('zone', 'zone', 1);
+      const zoneResults = await SearchService.searchByType('zone', 'zone', 1, 'PARTICIPANT', 1);
       
       if (zoneResults.length > 0) {
         const eventId = zoneResults[0].metadata?.eventId;
-        const results = await SearchService.advancedSearch('zone', { eventId }, 10);
+        const results = await SearchService.advancedSearch('zone', 1, 'PARTICIPANT', { eventId }, 10, 0);
         
         results.forEach((result) => {
           if (result.type === 'zone') {
@@ -143,7 +143,7 @@ describe('SearchService - Global Search Integration Tests', () => {
     });
 
     testIfDbAvailable('should handle empty results gracefully', async () => {
-      const results = await SearchService.advancedSearch('xyzabc123notexist', {}, 10);
+      const results = await SearchService.advancedSearch('xyzabc123notexist', 1, 'PARTICIPANT', {}, 10, 0);
       
       expect(results).toBeInstanceOf(Array);
       expect(results.length).toBe(0);
@@ -153,7 +153,7 @@ describe('SearchService - Global Search Integration Tests', () => {
   describe('Performance Tests', () => {
     testIfDbAvailable('should complete search within reasonable time', async () => {
       const startTime = Date.now();
-      const results = await SearchService.globalSearch('event', 10, 0);
+      const results = await SearchService.globalSearch('event', 1, 'PARTICIPANT', 10, 0);
       const duration = Date.now() - startTime;
       
       expect(results).toBeDefined();
@@ -161,8 +161,8 @@ describe('SearchService - Global Search Integration Tests', () => {
     });
 
     testIfDbAvailable('should handle pagination correctly', async () => {
-      const page1 = await SearchService.globalSearch('e', 5, 0);
-      const page2 = await SearchService.globalSearch('e', 5, 5);
+      const page1 = await SearchService.globalSearch('e', 1, 'PARTICIPANT', 5, 0);
+      const page2 = await SearchService.globalSearch('e', 1, 'PARTICIPANT', 5, 5);
       
       if (page1.totalResults > 5) {
         expect(page1.results).not.toEqual(page2.results);
@@ -179,7 +179,7 @@ describe('SearchService - Global Search Integration Tests', () => {
       ];
 
       for (const query of maliciousQueries) {
-        const results = await SearchService.globalSearch(query, 5, 0);
+        const results = await SearchService.globalSearch(query, 1, 'PARTICIPANT', 5, 0);
         expect(results).toBeDefined();
       }
     });
@@ -193,7 +193,7 @@ describe('SearchService - Global Search Integration Tests', () => {
       ];
 
       for (const query of specialQueries) {
-        const results = await SearchService.globalSearch(query, 5, 0);
+        const results = await SearchService.globalSearch(query, 1, 'PARTICIPANT', 5, 0);
         expect(results).toBeDefined();
       }
     });

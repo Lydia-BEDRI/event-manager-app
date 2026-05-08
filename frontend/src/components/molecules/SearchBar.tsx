@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { Search, X, ChevronRight, Calendar, User, MapPin, MessageCircle } from 'lucide-react';
+import { Search, X, ChevronRight, Calendar, User, MapPin, MessageCircle, Filter } from 'lucide-react';
+import AdvancedSearchModal from './AdvancedSearchModal';
 import { useNavigate } from 'react-router-dom';
 import { searchService } from '../../services/search.service';
 import { SearchResult } from '../../types/search.types';
@@ -32,6 +33,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -101,6 +103,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
             navigate(`/chats`);
           }
           break;
+        case 'participation':
+          if (result.metadata?.eventId) {
+            navigate(`/events/${result.metadata.eventId}`);
+          } else {
+            navigate(`/events`);
+          }
+          break;
       }
       
       handleClear();
@@ -135,6 +144,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
         return <MapPin className={`${iconProps} text-red-500`} />;
       case 'message':
         return <MessageCircle className={`${iconProps} text-purple-500`} />;
+      case 'participation':
+        return <Calendar className={`${iconProps} text-orange-500`} />;
       default:
         return <Search className={`${iconProps} text-gray-500`} />;
     }
@@ -182,6 +193,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const containerClass = fullWidth ? 'w-full' : '';
 
   return (
+    <>
     <div ref={searchRef} className={`relative ${containerClass} ${className}`}>
       <div className="flex items-center rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm transition-all focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
         <Search className="h-5 w-5 text-gray-400" />
@@ -204,6 +216,14 @@ const SearchBar: React.FC<SearchBarProps> = ({
             <X className="h-4 w-4" />
           </button>
         )}
+        <button
+          onClick={() => setAdvancedOpen(true)}
+          title="Recherche avancée"
+          className="ml-2 text-gray-400 hover:text-gray-600 transition-colors"
+          aria-label="Recherche avancée"
+        >
+          <Filter className="h-4 w-4" />
+        </button>
         {loading && (
           <div className="ml-2 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500" />
         )}
@@ -333,6 +353,36 @@ const SearchBar: React.FC<SearchBarProps> = ({
                   ))}
               </div>
             )}
+
+            {results.filter((r) => r.type === 'participation').length > 0 && (
+              <div>
+                <div className="px-3 py-2 bg-gray-50 border-b border-gray-100 sticky top-0">
+                  <p className="text-xs font-semibold text-gray-500 uppercase">Participations</p>
+                </div>
+                {results
+                  .filter((r) => r.type === 'participation')
+                  .map((result) => (
+                    <button
+                      key={`${result.type}-${result.id}`}
+                      onClick={() => handleResultSelect(result)}
+                      className={`w-full px-3 py-2 text-left text-sm transition-colors flex items-center gap-2 border-b border-gray-100 last:border-b-0 ${
+                        results.indexOf(result) === selectedIndex
+                          ? 'bg-blue-50'
+                          : 'hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex-shrink-0">
+                        {getResultIcon(result.type)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 truncate">{highlightText(result.title, query)}</p>
+                        <p className="text-xs text-gray-500 truncate">{highlightText(result.description || '', query)}</p>
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                    </button>
+                  ))}
+              </div>
+            )}
           </div>
 
           {results.length > 0 && (
@@ -350,6 +400,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
         </div>
       )}
     </div>
+
+      <AdvancedSearchModal isOpen={advancedOpen} onClose={() => setAdvancedOpen(false)} onResultSelect={handleResultSelect} />
+    </>
   );
 };
 

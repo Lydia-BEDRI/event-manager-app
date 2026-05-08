@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { SearchService } from '../services/search.service';
+import { AuthenticatedRequest } from '../middlewares/authenticate';
 
 export class SearchController {
   /**
@@ -9,9 +10,18 @@ export class SearchController {
    *   - q: string (obligatoire) => Terme de recherche
    *   - limit: number (optionnel, défaut: 5) => Résultats par type
    *   - offset: number (optionnel, défaut: 0) => Décalage pour pagination
+   * Types searchés: events, users, zones, messages
    */
-  static async globalSearch(req: Request, res: Response): Promise<void> {
+  static async globalSearch(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
+      if (!req.user) {
+        res.status(401).json({
+          success: false,
+          error: 'Non authentifié.',
+        });
+        return;
+      }
+
       const { q, limit = 5, offset = 0 } = req.query;
 
       if (!q || typeof q !== 'string' || q.trim().length === 0) {
@@ -25,7 +35,13 @@ export class SearchController {
       const parsedLimit = Math.min(Math.max(parseInt(limit as string) || 5, 1), 50);
       const parsedOffset = Math.max(parseInt(offset as string) || 0, 0);
 
-      const results = await SearchService.globalSearch(q, parsedLimit, parsedOffset);
+      const results = await SearchService.globalSearch(
+        q,
+        req.user.userId,
+        req.user.role as 'ADMIN' | 'PARTICIPANT',
+        parsedLimit,
+        parsedOffset
+      );
 
       res.status(200).json({
         success: true,
@@ -57,8 +73,16 @@ export class SearchController {
    *     offset?: number
    *   }
    */
-  static async advancedSearch(req: Request, res: Response): Promise<void> {
+  static async advancedSearch(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
+      if (!req.user) {
+        res.status(401).json({
+          success: false,
+          error: 'Non authentifié.',
+        });
+        return;
+      }
+
       const { query, filters, limit = 10, offset = 0 } = req.body;
 
       if (!query || typeof query !== 'string' || query.trim().length === 0) {
@@ -74,6 +98,8 @@ export class SearchController {
 
       const results = await SearchService.advancedSearch(
         query,
+        req.user.userId,
+        req.user.role as 'ADMIN' | 'PARTICIPANT',
         filters,
         parsedLimit,
         parsedOffset
@@ -104,8 +130,16 @@ export class SearchController {
    *   - q: string (obligatoire) - Terme de recherche
    *   - limit: number (optionnel, défaut: 10)
    */
-  static async searchByType(req: Request, res: Response): Promise<void> {
+  static async searchByType(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
+      if (!req.user) {
+        res.status(401).json({
+          success: false,
+          error: 'Non authentifié.',
+        });
+        return;
+      }
+
       const { type } = req.params;
       const { q, limit = 10 } = req.query;
 
@@ -130,7 +164,9 @@ export class SearchController {
 
       const results = await SearchService.searchByType(
         q,
-        type as 'event' | 'user' | 'zone' | 'message',
+        type as 'event' | 'user' | 'zone' | 'message' | 'participation',
+        req.user.userId,
+        req.user.role as 'ADMIN' | 'PARTICIPANT',
         parsedLimit
       );
 
