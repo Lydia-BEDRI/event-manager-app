@@ -47,7 +47,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   };
 
   const adminMenuItems = [
-    { icon: LayoutDashboard, label: "Dashboard", to: "/" },
+    { icon: LayoutDashboard, label: "Dashboard", to: "/dashboard" },
     { icon: CalendarDays, label: "Événements", to: "/events" },
     { icon: Users, label: "Participants", to: "/participants" },
     { icon: MapPin, label: "Zones", to: "/zones" },
@@ -57,7 +57,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   const participantMenuItems = [
-    { icon: Home, label: "Accueil", to: "/" },
+    { icon: Home, label: "Accueil", to: "/dashboard" },
     { icon: CalendarDays, label: "Événements disponibles" },
     { icon: Ticket, label: "Mes participations" },
     { icon: QrCode, label: "Mes QR Codes" },

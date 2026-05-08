@@ -23,3 +23,14 @@ export const resetPasswordLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
 });
+
+export const searchLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 60,
+  message: { error: 'Trop de requêtes de recherche. Réessayez dans une minute.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    return (req as any).user?.role === 'ADMIN' && (req as any).user;
+  },
+});

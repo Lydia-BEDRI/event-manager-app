@@ -10,6 +10,7 @@ import eventRoutes from "./routes/events.routes";
 import zoneRoutes from "./routes/zones.routes";
 import participationsRoutes from "./routes/participations.routes";
 import chatRoutes from "./routes/chat.routes";
+import searchRoutes from "./routes/search.routes";
 import { initSocketServer } from "./sockets/server.socket";
 
 dotenv.config();
@@ -51,6 +52,7 @@ app.use("/api/events", eventRoutes);
 app.use("/api/zones", zoneRoutes);
 app.use("/api/participations", participationsRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/search", searchRoutes);
 app.use((_req: Request, res: Response) => {
   res.status(404).json({
     error: "Route not found",
