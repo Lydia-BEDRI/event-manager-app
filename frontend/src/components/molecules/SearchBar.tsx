@@ -103,13 +103,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
             navigate(`/chats`);
           }
           break;
-        case 'participation':
-          if (result.metadata?.eventId) {
-            navigate(`/events/${result.metadata.eventId}`);
-          } else {
-            navigate(`/events`);
-          }
-          break;
       }
       
       handleClear();
@@ -144,8 +137,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
         return <MapPin className={`${iconProps} text-red-500`} />;
       case 'message':
         return <MessageCircle className={`${iconProps} text-purple-500`} />;
-      case 'participation':
-        return <Calendar className={`${iconProps} text-orange-500`} />;
       default:
         return <Search className={`${iconProps} text-gray-500`} />;
     }
@@ -347,36 +338,6 @@ const SearchBar: React.FC<SearchBarProps> = ({
                         <p className="text-xs text-gray-500 truncate line-clamp-1">
                           {highlightText(result.description || '', query)}
                         </p>
-                      </div>
-                      <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                    </button>
-                  ))}
-              </div>
-            )}
-
-            {results.filter((r) => r.type === 'participation').length > 0 && (
-              <div>
-                <div className="px-3 py-2 bg-gray-50 border-b border-gray-100 sticky top-0">
-                  <p className="text-xs font-semibold text-gray-500 uppercase">Participations</p>
-                </div>
-                {results
-                  .filter((r) => r.type === 'participation')
-                  .map((result) => (
-                    <button
-                      key={`${result.type}-${result.id}`}
-                      onClick={() => handleResultSelect(result)}
-                      className={`w-full px-3 py-2 text-left text-sm transition-colors flex items-center gap-2 border-b border-gray-100 last:border-b-0 ${
-                        results.indexOf(result) === selectedIndex
-                          ? 'bg-blue-50'
-                          : 'hover:bg-gray-50'
-                      }`}
-                    >
-                      <div className="flex-shrink-0">
-                        {getResultIcon(result.type)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">{highlightText(result.title, query)}</p>
-                        <p className="text-xs text-gray-500 truncate">{highlightText(result.description || '', query)}</p>
                       </div>
                       <ChevronRight className="h-4 w-4 text-gray-400 flex-shrink-0" />
                     </button>

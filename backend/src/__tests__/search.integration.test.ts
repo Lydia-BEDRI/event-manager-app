@@ -66,7 +66,7 @@ describe('SearchService - Global Search Integration Tests', () => {
       if (results.results.length > 0) {
         const firstResult = results.results[0];
         
-        expect(firstResult.type).toMatch(/^(event|user|zone|message|participation)$/);
+        expect(firstResult.type).toMatch(/^(event|user|zone|message)$/);
         expect(firstResult.id).toBeGreaterThan(0);
         expect(firstResult.title).toBeDefined();
         expect(firstResult.relevance).toBeGreaterThan(0);
@@ -114,6 +114,12 @@ describe('SearchService - Global Search Integration Tests', () => {
     testIfDbAvailable('should throw on invalid type', async () => {
       await expect(
         SearchService.searchByType('test', 'invalid' as any, 1, 'PARTICIPANT', 10)
+      ).rejects.toThrow();
+    });
+
+    it('should throw on participation type (deprecated)', async () => {
+      await expect(
+        SearchService.searchByType('test', 'participation' as any, 1, 'PARTICIPANT', 10)
       ).rejects.toThrow();
     });
   });
