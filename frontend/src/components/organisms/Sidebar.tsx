@@ -117,7 +117,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         <NavItem
           icon={Settings}
           label={role === "ADMIN" ? "Paramètres" : "Mon profil"}
-          to={role === "ADMIN" ? undefined : "/profile"}
+          to={role === "ADMIN" ? "/admin/settings" : "/profile"}
           onClick={onNavigate}
         />
         <div className="mt-1">

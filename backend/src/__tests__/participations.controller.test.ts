@@ -2,7 +2,8 @@ import { Request, Response } from 'express';
 import { 
   getAllParticipations,
   getParticipationsByEvent,
-  getMyParticipantStats
+  getMyParticipantStats,
+  updateParticipationStatus
 } from '../controllers/participations.controller';
 import pool from '../config/database';
 import { AuthenticatedRequest } from '../middlewares/authenticate';
@@ -11,6 +12,7 @@ jest.mock('../config/database', () => ({
   __esModule: true,
   default: {
     query: jest.fn(),
+    getConnection: jest.fn(),
   },
 }));
 
@@ -19,6 +21,7 @@ describe('Participations Controller', () => {
   let mockResponse: Partial<Response>;
   let responseJson: jest.Mock;
   let responseStatus: jest.Mock;
+  let mockConnection: any;
 
   beforeEach(() => {
     responseJson = jest.fn();
@@ -29,8 +32,18 @@ describe('Participations Controller', () => {
       status: responseStatus,
       json: responseJson,
     };
+
+    mockConnection = {
+      beginTransaction: jest.fn().mockResolvedValue(undefined),
+      commit: jest.fn().mockResolvedValue(undefined),
+      rollback: jest.fn().mockResolvedValue(undefined),
+      release: jest.fn(),
+      query: jest.fn(),
+    };
+    (pool.getConnection as jest.Mock).mockResolvedValue(mockConnection);
     
     jest.clearAllMocks();
+    (pool.getConnection as jest.Mock).mockResolvedValue(mockConnection);
   });
 
   describe('getAllParticipations', () => {
@@ -230,6 +243,83 @@ describe('Participations Controller', () => {
         ['42']
       );
       expect(responseJson).toHaveBeenCalledWith(mockParticipations);
+    });
+  });
+
+  describe('updateParticipationStatus', () => {
+    it('devrait approuver une participation, générer le QR code et accorder les accès zones', async () => {
+      const mockAuthRequest = {
+        params: { participationId: '12' },
+        body: { status: 'APPROVED' },
+        user: { userId: 1, email: 'admin@test.com', role: 'ADMIN' },
+        ip: '127.0.0.1'
+      };
+
+      const updatedParticipation = {
+        id: 12,
+        user_id: 3,
+        event_id: 8,
+        status: 'APPROVED',
+        qr_code: 'QR-EVT8-USR3',
+        created_at: new Date('2026-01-15'),
+        approved_at: new Date('2026-01-16'),
+        email: 'participant@test.com',
+        first_name: 'Charlie',
+        last_name: 'Durand',
+        event_name: 'Conférence Tech 2026',
+        event_location: 'Paris',
+        event_start_date: new Date('2026-05-01'),
+        approved_by_first_name: 'Alice',
+        approved_by_last_name: 'Martin'
+      };
+
+      mockConnection.query
+        .mockResolvedValueOnce([[{
+          id: 12,
+          user_id: 3,
+          event_id: 8,
+          status: 'PENDING',
+          qr_code: null,
+          capacity: 100,
+          event_name: 'Conférence Tech 2026',
+          approved_count: 20
+        }]])
+        .mockResolvedValueOnce([{ affectedRows: 1 }])
+        .mockResolvedValueOnce([{ affectedRows: 1 }])
+        .mockResolvedValueOnce([{ insertId: 1 }])
+        .mockResolvedValueOnce([{ insertId: 1 }])
+        .mockResolvedValueOnce([[updatedParticipation]]);
+
+      await updateParticipationStatus(
+        mockAuthRequest as unknown as AuthenticatedRequest,
+        mockResponse as Response
+      );
+
+      expect(mockConnection.beginTransaction).toHaveBeenCalled();
+      expect(mockConnection.commit).toHaveBeenCalled();
+      expect(mockConnection.query).toHaveBeenCalledWith(
+        expect.stringContaining('INSERT IGNORE INTO zone_access'),
+        [12, 8]
+      );
+      expect(responseJson).toHaveBeenCalledWith(updatedParticipation);
+    });
+
+    it('devrait refuser un statut invalide', async () => {
+      const mockAuthRequest = {
+        params: { participationId: '12' },
+        body: { status: 'PENDING' },
+        user: { userId: 1, email: 'admin@test.com', role: 'ADMIN' },
+      };
+
+      await updateParticipationStatus(
+        mockAuthRequest as unknown as AuthenticatedRequest,
+        mockResponse as Response
+      );
+
+      expect(responseStatus).toHaveBeenCalledWith(400);
+      expect(responseJson).toHaveBeenCalledWith({ message: 'Statut invalide' });
+      expect(mockConnection.beginTransaction).not.toHaveBeenCalled();
+      expect(mockConnection.release).toHaveBeenCalled();
     });
   });
 

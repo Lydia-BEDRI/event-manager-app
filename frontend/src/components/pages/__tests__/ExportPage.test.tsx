@@ -1,10 +1,12 @@
 /// <reference types="jest" />
 /// <reference types="@testing-library/jest-dom" />
 
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { act, render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ExportPage from '../ExportPage';
 import { exportService } from '../../../services/export.service';
+import { getAllEvents } from '../../../services/event.service';
+import { getAllZones } from '../../../services/zone.service';
 
 jest.mock('../../../services/export.service', () => ({
   exportService: {
@@ -16,6 +18,14 @@ jest.mock('../../../services/export.service', () => ({
     exportStatistics: jest.fn(),
     exportComplete: jest.fn(),
   },
+}));
+
+jest.mock('../../../services/event.service', () => ({
+  getAllEvents: jest.fn(),
+}));
+
+jest.mock('../../../services/zone.service', () => ({
+  getAllZones: jest.fn(),
 }));
 
 jest.mock('lucide-react', () => ({
@@ -33,9 +43,18 @@ jest.mock('lucide-react', () => ({
   CheckCircle: () => <div data-testid="icon-checkcircle" />,
 }));
 
+const clickAsync = async (element: HTMLElement) => {
+  await act(async () => {
+    fireEvent.click(element);
+    await new Promise(resolve => setTimeout(resolve, 0));
+  });
+};
+
 describe('ExportPage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    (getAllEvents as jest.Mock).mockReturnValue(new Promise(() => {}));
+    (getAllZones as jest.Mock).mockReturnValue(new Promise(() => {}));
   });
 
   describe('Rendu initial', () => {
@@ -119,13 +138,38 @@ describe('ExportPage', () => {
       expect(startDateInput.value).toBe('2026-01-01');
     });
 
-    it('devrait afficher le filtre eventId pour les participations', () => {
+    it('devrait afficher le filtre événement pour les participations', async () => {
+      (getAllEvents as jest.Mock).mockResolvedValue([
+        {
+          id: 1,
+          name: 'Conférence Tech 2026',
+          location: 'Paris',
+          start_date: '2026-05-01T10:00:00Z',
+          end_date: '2026-05-01T18:00:00Z',
+          capacity: 200,
+          status: 'PUBLISHED',
+          created_at: '2026-01-01T10:00:00Z',
+        },
+      ]);
+      (getAllZones as jest.Mock).mockResolvedValue([
+        {
+          id: 5,
+          event_id: 1,
+          name: 'Hall Principal',
+          event_name: 'Conférence Tech 2026',
+          capacity: 200,
+          created_at: '2026-01-01T10:00:00Z',
+        },
+      ]);
       render(<ExportPage />);
       
       const filterButtons = screen.getAllByText('Filtres');
       fireEvent.click(filterButtons[1]); 
       
-      expect(screen.getByPlaceholderText('ID Événement')).toBeInTheDocument();
+      expect(screen.getByText('Tous les événements')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('Conférence Tech 2026')).toBeInTheDocument();
+      });
     });
 
     it('devrait afficher le filtre de rôle pour les utilisateurs', () => {
@@ -161,7 +205,7 @@ describe('ExportPage', () => {
       render(<ExportPage />);
       
       const exportButtons = screen.getAllByText('Exporter');
-      fireEvent.click(exportButtons[0]);
+      await clickAsync(exportButtons[0]);
       
       await waitFor(() => {
         expect(exportService.exportEvents).toHaveBeenCalledWith({});
@@ -182,7 +226,7 @@ describe('ExportPage', () => {
       fireEvent.change(endDateInput, { target: { value: '2026-12-31' } });
       
       const exportButtons = screen.getAllByText('Exporter');
-      fireEvent.click(exportButtons[0]);
+      await clickAsync(exportButtons[0]);
       
       await waitFor(() => {
         expect(exportService.exportEvents).toHaveBeenCalledWith({
@@ -200,7 +244,7 @@ describe('ExportPage', () => {
       render(<ExportPage />);
       
       const exportButtons = screen.getAllByText('Exporter');
-      fireEvent.click(exportButtons[1]);
+      await clickAsync(exportButtons[1]);
       
       await waitFor(() => {
         expect(exportService.exportParticipations).toHaveBeenCalled();
@@ -212,7 +256,7 @@ describe('ExportPage', () => {
       render(<ExportPage />);
       
       const exportButtons = screen.getAllByText('Exporter');
-      fireEvent.click(exportButtons[2]);
+      await clickAsync(exportButtons[2]);
       
       await waitFor(() => {
         expect(exportService.exportAccessLogs).toHaveBeenCalled();
@@ -224,7 +268,7 @@ describe('ExportPage', () => {
       render(<ExportPage />);
       
       const exportButtons = screen.getAllByText('Exporter');
-      fireEvent.click(exportButtons[3]);
+      await clickAsync(exportButtons[3]);
       
       await waitFor(() => {
         expect(exportService.exportUsers).toHaveBeenCalled();
@@ -236,7 +280,7 @@ describe('ExportPage', () => {
       render(<ExportPage />);
       
       const exportButtons = screen.getAllByText('Exporter');
-      fireEvent.click(exportButtons[4]);
+      await clickAsync(exportButtons[4]);
       
       await waitFor(() => {
         expect(exportService.exportZones).toHaveBeenCalled();
@@ -248,7 +292,7 @@ describe('ExportPage', () => {
       render(<ExportPage />);
       
       const exportButtons = screen.getAllByText('Exporter');
-      fireEvent.click(exportButtons[5]);
+      await clickAsync(exportButtons[5]);
       
       await waitFor(() => {
         expect(exportService.exportStatistics).toHaveBeenCalled();
@@ -260,7 +304,7 @@ describe('ExportPage', () => {
       render(<ExportPage />);
       
       const exportButtons = screen.getAllByText('Exporter');
-      fireEvent.click(exportButtons[6]);
+      await clickAsync(exportButtons[6]);
       
       await waitFor(() => {
         expect(exportService.exportComplete).toHaveBeenCalled();
@@ -276,7 +320,7 @@ describe('ExportPage', () => {
       const filterButtons = screen.getAllByText('Filtres');
       expect(filterButtons).toHaveLength(6);
       
-      fireEvent.click(exportButtons[5]);
+      await clickAsync(exportButtons[5]);
       
       await waitFor(() => {
         expect(exportService.exportStatistics).toHaveBeenCalled();
@@ -293,7 +337,7 @@ describe('ExportPage', () => {
       render(<ExportPage />);
       
       const exportButtons = screen.getAllByText('Exporter');
-      fireEvent.click(exportButtons[0]);
+      await clickAsync(exportButtons[0]);
       
       expect(screen.getByText('Export...')).toBeInTheDocument();
       
@@ -302,7 +346,7 @@ describe('ExportPage', () => {
       });
     });
 
-    it('devrait désactiver le bouton pendant le chargement', () => {
+    it('devrait désactiver le bouton pendant le chargement', async () => {
       (exportService.exportEvents as jest.Mock).mockImplementation(
         () => new Promise(resolve => setTimeout(resolve, 100))
       );
@@ -310,7 +354,7 @@ describe('ExportPage', () => {
       render(<ExportPage />);
       
       const exportButtons = screen.getAllByText('Exporter');
-      fireEvent.click(exportButtons[0]);
+      await clickAsync(exportButtons[0]);
       
       expect(screen.getByText('Export...')).toBeInTheDocument();
     });
@@ -321,7 +365,7 @@ describe('ExportPage', () => {
       render(<ExportPage />);
       
       const exportButtons = screen.getAllByText('Exporter');
-      fireEvent.click(exportButtons[0]);
+      await clickAsync(exportButtons[0]);
       
       await waitFor(() => {
         expect(screen.getAllByText('Exporter').length).toBeGreaterThan(0);
@@ -372,16 +416,16 @@ describe('ExportPage', () => {
       fireEvent.click(exportButtons[0]);
       
       await waitFor(() => {
-        expect(screen.getByText('Erreur lors de l\'export')).toBeInTheDocument();
+        expect(screen.getByText('Erreur test')).toBeInTheDocument();
       }, { timeout: 2000 });
       
       await new Promise(resolve => setTimeout(resolve, 100));
       
       const newExportButtons = screen.getAllByText('Exporter');
-      fireEvent.click(newExportButtons[0]);
+      await clickAsync(newExportButtons[0]);
       
       await waitFor(() => {
-        expect(screen.queryByText('Erreur lors de l\'export')).not.toBeInTheDocument();
+        expect(screen.queryByText('Erreur test')).not.toBeInTheDocument();
       }, { timeout: 2000 });
     });
   });
@@ -398,7 +442,7 @@ describe('ExportPage', () => {
       expect(screen.getByText('Filtres optionnels')).toBeInTheDocument();
       
       const exportButtons = screen.getAllByText('Exporter');
-      fireEvent.click(exportButtons[0]);
+      await clickAsync(exportButtons[0]);
       
       await waitFor(() => {
         expect(screen.queryByText('Filtres optionnels')).not.toBeInTheDocument();
@@ -417,7 +461,7 @@ describe('ExportPage', () => {
       fireEvent.change(startDateInput, { target: { value: '2026-01-01' } });
       
       const exportButtons = screen.getAllByText('Exporter');
-      fireEvent.click(exportButtons[0]);
+      await clickAsync(exportButtons[0]);
       
       await waitFor(() => {
         expect(exportService.exportEvents).toHaveBeenCalled();

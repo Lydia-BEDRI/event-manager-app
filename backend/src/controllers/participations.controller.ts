@@ -75,6 +75,157 @@ export const getParticipationsByEvent = async (req: Request, res: Response) => {
   }
 };
 
+export const updateParticipationStatus = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const connection = await pool.getConnection();
+
+  try {
+    if (!req.user) {
+      res.status(401).json({ message: 'Non authentifié' });
+      return;
+    }
+
+    const participationId = Number(req.params.participationId);
+    const { status } = req.body;
+
+    if (!Number.isInteger(participationId) || participationId <= 0) {
+      res.status(400).json({ message: 'Participation invalide' });
+      return;
+    }
+
+    if (!['APPROVED', 'REFUSED'].includes(status)) {
+      res.status(400).json({ message: 'Statut invalide' });
+      return;
+    }
+
+    await connection.beginTransaction();
+
+    const [participations] = await connection.query<RowDataPacket[]>(
+      `SELECT 
+        p.id,
+        p.user_id,
+        p.event_id,
+        p.status,
+        p.qr_code,
+        e.capacity,
+        e.name as event_name,
+        COUNT(CASE WHEN approved_p.status = 'APPROVED' THEN 1 END) as approved_count
+      FROM participations p
+      JOIN events e ON e.id = p.event_id
+      LEFT JOIN participations approved_p ON approved_p.event_id = e.id AND approved_p.status = 'APPROVED'
+      WHERE p.id = ?
+      GROUP BY p.id, e.id`,
+      [participationId]
+    );
+
+    if (participations.length === 0) {
+      await connection.rollback();
+      res.status(404).json({ message: 'Participation non trouvée' });
+      return;
+    }
+
+    const participation = participations[0];
+
+    if (
+      status === 'APPROVED' &&
+      participation.status !== 'APPROVED' &&
+      Number(participation.approved_count) >= Number(participation.capacity)
+    ) {
+      await connection.rollback();
+      res.status(400).json({ message: 'La capacité maximale de cet événement est atteinte' });
+      return;
+    }
+
+    const qrCode = status === 'APPROVED'
+      ? participation.qr_code || `QR-EVT${participation.event_id}-USR${participation.user_id}-${crypto.randomBytes(8).toString('hex')}`
+      : null;
+    const qrCodeData = status === 'APPROVED' && qrCode ? await QRCode.toDataURL(qrCode) : null;
+
+    await connection.query(
+      `UPDATE participations
+       SET status = ?,
+           qr_code = ?,
+           qr_code_data = ?,
+           approved_by = ?,
+           approved_at = NOW(),
+           updated_at = NOW()
+       WHERE id = ?`,
+      [status, qrCode, qrCodeData, req.user.userId, participationId]
+    );
+
+    if (status === 'APPROVED') {
+      await connection.query(
+        `INSERT IGNORE INTO zone_access (participation_id, zone_id)
+         SELECT ?, z.id
+         FROM zones z
+         WHERE z.event_id = ?`,
+        [participationId, participation.event_id]
+      );
+    } else {
+      await connection.query('DELETE FROM zone_access WHERE participation_id = ?', [participationId]);
+    }
+
+    await connection.query(
+      `INSERT INTO audit_logs (user_id, action, entity_type, entity_id, ip_address)
+       VALUES (?, ?, 'participation', ?, ?)`,
+      [
+        req.user.userId,
+        status === 'APPROVED' ? 'APPROVE_PARTICIPATION' : 'REFUSE_PARTICIPATION',
+        participationId,
+        req.ip
+      ]
+    );
+
+    await connection.query(
+      `INSERT INTO notifications (user_id, title, body, type, reference_type, reference_id)
+       VALUES (?, ?, ?, ?, 'participation', ?)`,
+      [
+        participation.user_id,
+        status === 'APPROVED' ? 'Participation approuvée' : 'Participation refusée',
+        status === 'APPROVED'
+          ? `Votre participation à "${participation.event_name}" a été approuvée.`
+          : `Votre participation à "${participation.event_name}" a été refusée.`,
+        status === 'APPROVED' ? 'PARTICIPATION_APPROVED' : 'PARTICIPATION_REFUSED',
+        participationId
+      ]
+    );
+
+    await connection.commit();
+
+    const [updatedParticipation] = await connection.query<RowDataPacket[]>(
+      `SELECT 
+        p.id,
+        p.user_id,
+        p.event_id,
+        p.status,
+        p.qr_code,
+        p.created_at,
+        p.approved_at,
+        u.email,
+        u.first_name,
+        u.last_name,
+        e.name as event_name,
+        e.location as event_location,
+        e.start_date as event_start_date,
+        approver.first_name as approved_by_first_name,
+        approver.last_name as approved_by_last_name
+      FROM participations p
+      JOIN users u ON p.user_id = u.id
+      JOIN events e ON p.event_id = e.id
+      LEFT JOIN users approver ON p.approved_by = approver.id
+      WHERE p.id = ?`,
+      [participationId]
+    );
+
+    res.json(updatedParticipation[0]);
+  } catch (error) {
+    await connection.rollback();
+    console.error('Error updating participation status:', error);
+    res.status(500).json({ message: 'Erreur serveur', error });
+  } finally {
+    connection.release();
+  }
+};
+
 export const getMyParticipantStats = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   try {
     if (!req.user) {

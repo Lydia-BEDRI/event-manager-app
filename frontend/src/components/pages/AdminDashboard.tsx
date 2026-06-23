@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Users, 
   Calendar, 
@@ -31,6 +32,7 @@ import {
 
 const AdminDashboard: React.FC = () => {
   const { accessToken } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -633,7 +635,10 @@ const AdminDashboard: React.FC = () => {
                         {request.event_name} <span className="mx-1.5 text-gray-400">|</span> {formatTime(request.created_at)}
                       </p>
                     </div>
-                    <button className="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-medium hover:bg-yellow-700 transition-colors">
+                    <button
+                      onClick={() => navigate('/participants?status=PENDING')}
+                      className="px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-medium hover:bg-yellow-700 transition-colors"
+                    >
                       Traiter
                     </button>
                   </div>

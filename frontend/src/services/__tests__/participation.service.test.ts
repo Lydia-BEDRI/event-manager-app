@@ -5,6 +5,7 @@ import {
   getAllParticipations,
   getParticipationsByEvent,
   getMyParticipantStats,
+  updateParticipationStatus,
   requestEventParticipation,
   getMyQrCodes,
   generateParticipationQrCode,
@@ -16,6 +17,7 @@ jest.mock('../api', () => ({
   api: {
     get: jest.fn(),
     post: jest.fn(),
+    patch: jest.fn(),
   },
 }));
 
@@ -446,6 +448,41 @@ describe('Participation Service', () => {
 
       await expect(requestEventParticipation(12)).rejects.toThrow('Token manquant. Veuillez vous reconnecter.');
       expect(api.post).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('updateParticipationStatus', () => {
+    it('devrait mettre à jour le statut d’une participation', async () => {
+      const mockParticipation = {
+        id: 4,
+        user_id: 3,
+        event_id: 1,
+        status: 'APPROVED' as const,
+        qr_code: 'QR123',
+        created_at: '2026-01-15T10:00:00Z',
+        approved_at: '2026-01-16T10:00:00Z',
+        email: 'participant@test.com',
+        first_name: 'Charlie',
+        last_name: 'Durand',
+        event_name: 'Conférence Tech 2026',
+        event_location: 'Paris',
+        event_start_date: '2026-05-01T10:00:00Z',
+        approved_by_first_name: 'Alice',
+        approved_by_last_name: 'Martin',
+      };
+      (api.patch as jest.Mock).mockResolvedValueOnce(mockParticipation);
+
+      const result = await updateParticipationStatus(4, 'APPROVED');
+
+      expect(api.patch).toHaveBeenCalledWith('/participations/4/status', { status: 'APPROVED' }, mockAccessToken);
+      expect(result).toEqual(mockParticipation);
+    });
+
+    it('devrait lever une erreur si le token est manquant', async () => {
+      localStorage.removeItem('accessToken');
+
+      await expect(updateParticipationStatus(4, 'REFUSED')).rejects.toThrow('Token manquant. Veuillez vous reconnecter.');
+      expect(api.patch).not.toHaveBeenCalled();
     });
   });
 

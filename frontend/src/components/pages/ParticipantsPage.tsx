@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { getAllParticipations, getParticipationsByEvent } from '../../services/participation.service';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { getAllParticipations, getParticipationsByEvent, updateParticipationStatus } from '../../services/participation.service';
 import { getAllEvents } from '../../services/event.service';
 import { Participation } from '../../types/participation.types';
 import { Event } from '../../types/event.types';
-import { Users, Calendar, MapPin, CheckCircle, Clock, XCircle, Filter, Search, RotateCcw } from 'lucide-react';
+import { Users, Calendar, MapPin, CheckCircle, Clock, XCircle, Search, RotateCcw } from 'lucide-react';
 
 const ParticipantsPage = () => {
   const [participations, setParticipations] = useState<Participation[]>([]);
@@ -15,7 +15,10 @@ const ParticipantsPage = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<string>('newest');
+  const [updatingId, setUpdatingId] = useState<number | null>(null);
+  const [actionMessage, setActionMessage] = useState<string | null>(null);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const loadEvents = useCallback(async () => {
     try {
@@ -58,25 +61,32 @@ const ParticipantsPage = () => {
     loadParticipations();
   }, [loadParticipations]);
 
+  useEffect(() => {
+    const status = searchParams.get('status');
+    if (status && ['APPROVED', 'PENDING', 'REFUSED'].includes(status)) {
+      setSelectedStatus(status);
+    }
+  }, [searchParams]);
+
   const getStatusBadge = (status: Participation['status']) => {
     switch (status) {
       case 'APPROVED':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-100">
             <CheckCircle size={14} />
             Approuvé
           </span>
         );
       case 'PENDING':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-700">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-100">
             <Clock size={14} />
             En attente
           </span>
         );
       case 'REFUSED':
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-700">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-red-50 text-red-700 border border-red-100">
             <XCircle size={14} />
             Refusé
           </span>
@@ -138,6 +148,58 @@ const ParticipantsPage = () => {
     setSortBy('newest');
   };
 
+  const handleStatusUpdate = async (participation: Participation, status: 'APPROVED' | 'REFUSED') => {
+    const label = status === 'APPROVED' ? 'approuver' : 'refuser';
+    if (!window.confirm(`Voulez-vous ${label} la participation de ${participation.first_name} ${participation.last_name} ?`)) {
+      return;
+    }
+
+    try {
+      setUpdatingId(participation.id);
+      const updatedParticipation = await updateParticipationStatus(participation.id, status);
+      setParticipations((current) =>
+        current.map((item) => item.id === updatedParticipation.id ? updatedParticipation : item)
+      );
+      setActionMessage(status === 'APPROVED'
+        ? 'Participation approuvée et QR code généré.'
+        : 'Participation refusée.'
+      );
+    } catch (err: any) {
+      setError(err.message || `Erreur lors du traitement de la participation`);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
+
+  const renderParticipationActions = (participation: Participation) => {
+    if (participation.status !== 'PENDING') {
+      return <span className="text-sm text-gray-400">Traitée</span>;
+    }
+
+    return (
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <button
+          type="button"
+          onClick={() => handleStatusUpdate(participation, 'APPROVED')}
+          disabled={updatingId === participation.id}
+          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-xs font-semibold text-green-700 hover:bg-green-100 disabled:opacity-50"
+        >
+          <CheckCircle size={14} />
+          Approuver
+        </button>
+        <button
+          type="button"
+          onClick={() => handleStatusUpdate(participation, 'REFUSED')}
+          disabled={updatingId === participation.id}
+          className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-100 bg-white px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+        >
+          <XCircle size={14} />
+          Refuser
+        </button>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -162,55 +224,46 @@ const ParticipantsPage = () => {
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
-      <div className="mb-8">
-        <div className="flex items-start sm:items-center gap-3 mb-4">
-          <div className="p-2.5 sm:p-3 bg-gradient-to-br from-primary-purple to-purple-600 rounded-xl shadow-lg flex-shrink-0">
-            <Users className="text-white" size={24} />
-          </div>
-          <div className="min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold text-primary-dark">Participants</h1>
-            <p className="text-sm sm:text-base text-gray-600 mt-1">
-              {filteredParticipations.length} participant{filteredParticipations.length > 1 ? 's' : ''}
+    <div className="space-y-6">
+      <div>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h1 className="font-heading text-3xl font-bold text-primary-dark">Participants</h1>
+            <p className="mt-2 text-primary-gray">
+              {filteredParticipations.length} participation{filteredParticipations.length > 1 ? 's' : ''}
               {participations.length !== filteredParticipations.length && (
                 <span> sur {participations.length}</span>
               )}
             </p>
           </div>
+
+          <button
+            type="button"
+            onClick={resetFilters}
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-primary-dark transition hover:bg-gray-50 sm:w-auto"
+          >
+            <RotateCcw size={16} />
+            Réinitialiser
+          </button>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between gap-3 mb-3">
-            <div className="flex items-center gap-2 text-gray-700">
-              <Filter className="text-gray-400 flex-shrink-0" size={18} />
-              <p className="text-sm font-medium">Filtres participants</p>
-            </div>
-            <button
-              type="button"
-              onClick={resetFilters}
-              className="inline-flex items-center gap-1.5 text-xs sm:text-sm text-primary-purple hover:text-purple-700"
-            >
-              <RotateCcw size={14} />
-              Réinitialiser
-            </button>
-          </div>
-
-          <div className="grid grid-cols-6 gap-3">
-            <div className="relative col-span-6">
+        <div className="mt-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-12">
+            <div className="relative lg:col-span-5">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Rechercher par nom, email ou événement"
-                className="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent"
+                className="w-full rounded-lg border border-gray-200 bg-white py-2.5 pl-9 pr-3 text-sm outline-none transition focus:border-primary-accent"
               />
             </div>
 
             <select
               value={selectedEventId}
               onChange={(e) => setSelectedEventId(e.target.value)}
-              className="col-span-2 w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-primary-accent lg:col-span-3"
             >
               <option value="all">Tous les événements</option>
               {events.map((event) => (
@@ -223,7 +276,7 @@ const ParticipantsPage = () => {
             <select
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value)}
-              className="col-span-2 w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-primary-accent lg:col-span-2"
             >
               <option value="all">Tous les statuts</option>
               <option value="APPROVED">Approuvé</option>
@@ -234,7 +287,7 @@ const ParticipantsPage = () => {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="col-span-2 w-full px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-primary-purple focus:border-transparent"
+              className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2.5 text-sm outline-none transition focus:border-primary-accent lg:col-span-2"
             >
               <option value="newest">Inscription: plus récent</option>
               <option value="oldest">Inscription: plus ancien</option>
@@ -245,10 +298,16 @@ const ParticipantsPage = () => {
         </div>
       </div>
 
+      {actionMessage && (
+        <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-sm font-medium text-green-700">
+          {actionMessage}
+        </div>
+      )}
+
       {filteredParticipations.length === 0 ? (
-        <div className="text-center py-20">
-          <div className="bg-gray-100 rounded-full p-6 w-24 h-24 mx-auto mb-6 flex items-center justify-center">
-            <Users className="text-gray-400" size={48} />
+        <div className="rounded-xl border border-gray-200 bg-white py-16 text-center">
+          <div className="bg-gray-50 rounded-full p-5 w-20 h-20 mx-auto mb-5 flex items-center justify-center">
+            <Users className="text-gray-400" size={36} />
           </div>
           <h3 className="text-xl font-semibold text-gray-700 mb-2">Aucun participant trouvé</h3>
           <p className="text-gray-500">
@@ -259,23 +318,18 @@ const ParticipantsPage = () => {
         </div>
       ) : (
         <>
-          <div className="lg:hidden space-y-4">
+          <div className="lg:hidden space-y-3">
             {filteredParticipations.map((participation) => (
               <article
                 key={participation.id}
-                className="bg-white rounded-2xl p-4 border border-gray-200 shadow-sm"
+                className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm"
               >
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold flex-shrink-0">
-                      {participation.first_name[0]}{participation.last_name[0]}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-medium text-gray-900 truncate">
-                        {participation.first_name} {participation.last_name}
-                      </p>
-                      <p className="text-sm text-gray-500 break-all">{participation.email}</p>
-                    </div>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-gray-900 truncate">
+                      {participation.first_name} {participation.last_name}
+                    </p>
+                    <p className="mt-1 text-sm text-gray-500 break-all">{participation.email}</p>
                   </div>
                   <div>{getStatusBadge(participation.status)}</div>
                 </div>
@@ -301,50 +355,51 @@ const ParticipantsPage = () => {
                       ? `${participation.approved_by_first_name} ${participation.approved_by_last_name}`
                       : '-'}
                   </p>
+                  <div className="pt-2">{renderParticipationActions(participation)}</div>
                 </div>
               </article>
             ))}
           </div>
 
-          <div className="hidden lg:block bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+          <div className="hidden lg:block bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                     Participant
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                     Événement
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                     Statut
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                     Date d'inscription
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                     Approuvé par
+                  </th>
+                  <th className="px-5 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                    Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-100">
                 {filteredParticipations.map((participation) => (
-                  <tr key={participation.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4">
+                  <tr key={participation.id} className="hover:bg-gray-50/70 transition-colors">
+                    <td className="px-5 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
-                          {participation.first_name[0]}{participation.last_name[0]}
-                        </div>
                         <div>
-                          <p className="font-medium text-gray-900">
+                          <p className="font-semibold text-gray-900">
                             {participation.first_name} {participation.last_name}
                           </p>
                           <p className="text-sm text-gray-500">{participation.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-4">
                       <div className="flex flex-col gap-1">
                         <div className="flex items-center gap-2">
                           <Calendar className="text-gray-400 flex-shrink-0" size={16} />
@@ -359,15 +414,15 @@ const ParticipantsPage = () => {
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-4">
                       {getStatusBadge(participation.status)}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-4">
                       <span className="text-sm text-gray-600">
                         {formatDate(participation.created_at)}
                       </span>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-5 py-4">
                       {participation.approved_by_first_name && participation.approved_by_last_name ? (
                         <span className="text-sm text-gray-600">
                           {participation.approved_by_first_name} {participation.approved_by_last_name}
@@ -375,6 +430,9 @@ const ParticipantsPage = () => {
                       ) : (
                         <span className="text-sm text-gray-400">-</span>
                       )}
+                    </td>
+                    <td className="px-5 py-4">
+                      {renderParticipationActions(participation)}
                     </td>
                   </tr>
                 ))}
