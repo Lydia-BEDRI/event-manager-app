@@ -1,10 +1,9 @@
-version: '3.8'
-
 services:
   db:
     image: mysql:8.0
     container_name: eventmanager-db
     restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_DATABASE}
@@ -13,12 +12,26 @@ services:
     ports:
       - "3307:3306"
     volumes:
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      # Main init scripts (numbered for order because MySQL executes them in alphanumeric order)
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+      - ./db/sample_data.sql:/docker-entrypoint-initdb.d/02-sample_data.sql
+      - ./db/migrations/001-add-fulltext-indexes.sql:/docker-entrypoint-initdb.d/03-add-fulltext-indexes.sql
+      # Database persistence
       - eventmanager-db-data:/var/lib/mysql
     networks:
       - eventmanager-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "root",
+          "-p${MYSQL_ROOT_PASSWORD}",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -51,7 +64,15 @@ services:
     networks:
       - eventmanager-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:5000/health",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -70,7 +91,15 @@ services:
     networks:
       - eventmanager-network
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:80",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3

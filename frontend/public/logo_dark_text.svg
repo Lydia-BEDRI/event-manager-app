@@ -1,0 +1,29 @@
+<svg width="360" height="180" viewBox="0 0 360 180" xmlns="http://www.w3.org/2000/svg">
+  <!-- Icon (calendrier + QR) -->
+  <rect x="20" y="20" width="140" height="140" rx="28" fill="#17161f"/>
+  <rect x="50" y="55" width="80" height="12" rx="6" fill="#fcfcfd"/>
+  <rect x="50" y="70" width="80" height="55" rx="12" stroke="#fcfcfd" stroke-width="4" fill="none"/>
+  <rect x="72" y="83" width="36" height="36" rx="5" fill="#00BCF2"/>
+  
+  <!-- QR -->
+  <rect x="78" y="89" width="10" height="10" rx="1.5" fill="#fcfcfd"/>
+  <rect x="80" y="91" width="6" height="6" rx="0.8" fill="#00BCF2"/>
+  <rect x="81.5" y="92.5" width="3" height="3" fill="#fcfcfd"/>
+  
+  <rect x="92" y="89" width="10" height="10" rx="1.5" fill="#fcfcfd"/>
+  <rect x="94" y="91" width="6" height="6" rx="0.8" fill="#00BCF2"/>
+  <rect x="95.5" y="92.5" width="3" height="3" fill="#fcfcfd"/>
+  
+  <rect x="78" y="103" width="10" height="10" rx="1.5" fill="#fcfcfd"/>
+  <rect x="80" y="105" width="6" height="6" rx="0.8" fill="#00BCF2"/>
+  <rect x="81.5" y="106.5" width="3" height="3" fill="#fcfcfd"/>
+  
+  <rect x="92" y="103" width="4" height="4" rx="0.8" fill="#fcfcfd"/>
+  <rect x="98" y="103" width="4" height="4" rx="0.8" fill="#fcfcfd"/>
+  <rect x="92" y="109" width="4" height="4" rx="0.8" fill="#fcfcfd"/>
+  <rect x="98" y="109" width="4" height="4" rx="0.8" fill="#fcfcfd"/>
+  
+  <!-- Text Event Manager -->
+  <text x="190" y="85" font-family="Open Sans" font-size="32" font-weight="700" fill="#fcfcfd">Event</text>
+  <text x="190" y="120" font-family="Roboto" font-size="28" font-weight="400" fill="#A5A5A8">Manager</text>
+</svg>
