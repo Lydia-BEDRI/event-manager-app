@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getEventById, updateEvent } from '../../services/event.service';
 import { getEventZones } from '../../services/zone.service';
 import { Event, ZoneInput } from '../../types/event.types';
 import Button from '../atoms/Button';
-import { ArrowLeft, Save, Plus, Trash2, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Save, Trash2, AlertTriangle } from 'lucide-react';
 
 const EditEventPage = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,17 +24,8 @@ const EditEventPage = () => {
   });
 
   const [zones, setZones] = useState<ZoneInput[]>([]);
-  const [newZone, setNewZone] = useState<ZoneInput>({
-    name: '',
-    description: '',
-    capacity: 0
-  });
 
-  useEffect(() => {
-    loadEventData();
-  }, [id]);
-
-  const loadEventData = async () => {
+  const loadEventData = useCallback(async () => {
     if (!id) {
       setError('ID de l\'événement manquant');
       return;
@@ -43,7 +34,7 @@ const EditEventPage = () => {
     try {
       setLoadingData(true);
       const event = await getEventById(Number(id));
-      
+
       const startDate = new Date(event.start_date).toISOString().slice(0, 16);
       const endDate = new Date(event.end_date).toISOString().slice(0, 16);
 
@@ -80,7 +71,11 @@ const EditEventPage = () => {
     } finally {
       setLoadingData(false);
     }
-  };
+  }, [id, navigate]);
+
+  useEffect(() => {
+    loadEventData();
+  }, [loadEventData]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;

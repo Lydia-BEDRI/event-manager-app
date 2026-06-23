@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createEvent } from '../../services/event.service';
 import { getDistinctZones } from '../../services/zone.service';
@@ -25,11 +25,7 @@ const CreateEventPage = () => {
     zones: [],
   });
 
-  useEffect(() => {
-    loadAvailableZones();
-  }, []);
-
-  const loadAvailableZones = async () => {
+  const loadAvailableZones = useCallback(async () => {
     try {
       setLoadingZones(true);
       const zones = await getDistinctZones();
@@ -43,7 +39,11 @@ const CreateEventPage = () => {
     } finally {
       setLoadingZones(false);
     }
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    loadAvailableZones();
+  }, [loadAvailableZones]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault(); 
