@@ -4,13 +4,18 @@
 import { 
   getAllParticipations,
   getParticipationsByEvent,
-  getMyParticipantStats
+  getMyParticipantStats,
+  requestEventParticipation,
+  getMyQrCodes,
+  generateParticipationQrCode,
+  verifyPresence
 } from '../participation.service';
 import { api } from '../api';
 
 jest.mock('../api', () => ({
   api: {
     get: jest.fn(),
+    post: jest.fn(),
   },
 }));
 
@@ -422,6 +427,83 @@ describe('Participation Service', () => {
       expect(result.pastEvents).toBeDefined();
       expect(result.zoneAccess).toHaveLength(2);
       expect(result.myParticipations).toHaveLength(2);
+    });
+  });
+
+  describe('requestEventParticipation', () => {
+    it('devrait envoyer une demande de participation', async () => {
+      const mockParticipation = { id: 8, event_id: 12, status: 'PENDING' };
+      (api.post as jest.Mock).mockResolvedValueOnce(mockParticipation);
+
+      const result = await requestEventParticipation(12);
+
+      expect(api.post).toHaveBeenCalledWith('/participations/events/12/request', {}, mockAccessToken);
+      expect(result).toEqual(mockParticipation);
+    });
+
+    it('devrait lever une erreur si le token est manquant', async () => {
+      localStorage.removeItem('accessToken');
+
+      await expect(requestEventParticipation(12)).rejects.toThrow('Token manquant. Veuillez vous reconnecter.');
+      expect(api.post).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getMyQrCodes', () => {
+    it('devrait récupérer les QR codes du participant', async () => {
+      const mockQrCodes = [
+        {
+          id: 1,
+          event_id: 4,
+          qr_code: 'QR-EVT4-USR1',
+          qr_code_data: 'data:image/png;base64,abc',
+          event_name: 'Forum Innovation',
+          event_location: 'Nice',
+          event_start_date: '2026-08-15T09:00:00Z',
+          event_end_date: '2026-08-15T17:00:00Z',
+        },
+      ];
+      (api.get as jest.Mock).mockResolvedValueOnce(mockQrCodes);
+
+      const result = await getMyQrCodes();
+
+      expect(api.get).toHaveBeenCalledWith('/participations/my-qr-codes', mockAccessToken);
+      expect(result).toEqual(mockQrCodes);
+    });
+  });
+
+  describe('generateParticipationQrCode', () => {
+    it('devrait générer un QR code pour une participation', async () => {
+      const mockQrCode = { id: 3, qr_code: 'QR-GENERATED', qr_code_data: 'data:image/png;base64,xyz' };
+      (api.post as jest.Mock).mockResolvedValueOnce(mockQrCode);
+
+      const result = await generateParticipationQrCode(3);
+
+      expect(api.post).toHaveBeenCalledWith('/participations/3/qr-code', {}, mockAccessToken);
+      expect(result).toEqual(mockQrCode);
+    });
+  });
+
+  describe('verifyPresence', () => {
+    it('devrait vérifier une présence', async () => {
+      const mockResult = {
+        id: 20,
+        is_valid: true,
+        participant_name: 'Charlie Durand',
+        event_name: 'Conférence Tech 2026',
+        zone_name: 'Hall Principal',
+        scanned_at: '2026-06-23T10:00:00Z',
+      };
+      (api.post as jest.Mock).mockResolvedValueOnce(mockResult);
+
+      const result = await verifyPresence('QR-EVT1-USR3', 1);
+
+      expect(api.post).toHaveBeenCalledWith(
+        '/participations/verify-presence',
+        { qr_code: 'QR-EVT1-USR3', zone_id: 1 },
+        mockAccessToken
+      );
+      expect(result).toEqual(mockResult);
     });
   });
 });

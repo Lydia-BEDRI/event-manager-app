@@ -83,3 +83,29 @@ export interface ParticipantDashboardStats {
   upcomingEvents: UpcomingEvent[];
   pastEvents: PastEvent[];
 }
+
+export interface ParticipantQrCode {
+  id: number;
+  event_id: number;
+  qr_code: string;
+  qr_code_data: string | null;
+  event_name: string;
+  event_location: string;
+  event_start_date: string;
+  event_end_date: string;
+}
+
+export interface GeneratedQrCode {
+  id: number;
+  qr_code: string;
+  qr_code_data: string;
+}
+
+export interface PresenceVerificationResult {
+  id: number;
+  is_valid: boolean;
+  participant_name: string;
+  event_name: string;
+  zone_name: string;
+  scanned_at: string;
+}

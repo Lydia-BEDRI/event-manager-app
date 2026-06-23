@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Ticket, QrCode, CheckCircle, Clock, MapPin, TrendingUp, Check, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import StatCard from '../molecules/StatCard';
 import { useAuth } from '../../contexts/AuthContext';
 import { getMyParticipantStats } from '../../services/participation.service';
@@ -7,6 +8,7 @@ import { ParticipantDashboardStats } from '../../types/participation.types';
 
 const ParticipantDashboard: React.FC = () => {
   const { accessToken } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<ParticipantDashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -169,7 +171,7 @@ const ParticipantDashboard: React.FC = () => {
             </div>
           )}
           {stats.myParticipations.length > 3 && (
-            <button className="w-full mt-3 text-primary-accent text-sm hover:underline">
+            <button onClick={() => navigate('/my-participations')} className="w-full mt-3 text-primary-accent text-sm hover:underline">
               Voir tout ({stats.myParticipations.length})
             </button>
           )}
@@ -200,7 +202,7 @@ const ParticipantDashboard: React.FC = () => {
                       {formatDate(event.start_date)}
                     </p>
                   </div>
-                  <button className="text-primary-accent text-xs font-medium hover:underline whitespace-nowrap">
+                  <button onClick={() => navigate('/available-events')} className="text-primary-accent text-xs font-medium hover:underline whitespace-nowrap">
                     S'inscrire →
                   </button>
                 </div>
@@ -208,7 +210,7 @@ const ParticipantDashboard: React.FC = () => {
             </div>
           )}
           {stats.availableEvents.length > 3 && (
-            <button className="w-full mt-3 text-primary-accent text-sm hover:underline">
+            <button onClick={() => navigate('/available-events')} className="w-full mt-3 text-primary-accent text-sm hover:underline">
               Voir tout ({stats.availableEvents.length})
             </button>
           )}
@@ -233,7 +235,7 @@ const ParticipantDashboard: React.FC = () => {
                   </p>
                 </div>
                 {event.qr_code && (
-                  <button className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap">
+                  <button onClick={() => navigate('/my-qr-codes')} className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-xs font-medium transition-colors flex items-center gap-1.5 whitespace-nowrap">
                     <QrCode size={12} />
                     QR Code
                   </button>
@@ -302,7 +304,7 @@ const ParticipantDashboard: React.FC = () => {
                   {formatDate(event.start_date)}
                 </p>
 
-                <button className="w-full px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5">
+                <button onClick={() => navigate('/my-qr-codes')} className="w-full px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5">
                   <QrCode size={14} />
                   Afficher
                 </button>

@@ -494,7 +494,7 @@ describe('Participations Controller', () => {
       );
     });
 
-    it('devrait limiter les résultats aux limites définies', async () => {
+    it('devrait retourner toutes les participations détaillées', async () => {
       const mockManyParticipations = Array.from({ length: 15 }, (_, i) => ({
         id: i + 1,
         status: 'APPROVED',
@@ -512,7 +512,7 @@ describe('Participations Controller', () => {
 
       (pool.query as jest.Mock)
         .mockResolvedValueOnce([[{ total_participations: 15, approved_participations: 15, pending_participations: 0, refused_participations: 0 }]])
-        .mockResolvedValueOnce([mockManyParticipations.slice(0, 10)]) // LIMIT 10
+        .mockResolvedValueOnce([mockManyParticipations])
         .mockResolvedValueOnce([[]])
         .mockResolvedValueOnce([[{ unique_zones_visited: 5, total_zone_accesses: 20 }]])
         .mockResolvedValueOnce([[]])
@@ -520,10 +520,9 @@ describe('Participations Controller', () => {
 
       await getMyParticipantStats(mockAuthRequest as AuthenticatedRequest, mockResponse as Response);
 
-      expect(pool.query).toHaveBeenCalledWith(
-        expect.stringContaining('LIMIT 10'),
-        [mockAuthRequest.user?.userId]
-      );
+      expect(mockResponse.json).toHaveBeenCalledWith(expect.objectContaining({
+        myParticipations: mockManyParticipations
+      }));
     });
   });
 });
