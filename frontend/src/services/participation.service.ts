@@ -24,6 +24,17 @@ export const getParticipationsByEvent = async (eventId: number) => {
   return await api.get<Participation[]>(`/participations/event/${eventId}`, token);
 };
 
+export const updateParticipationStatus = async (
+  participationId: number,
+  status: 'APPROVED' | 'REFUSED'
+) => {
+  const token = localStorage.getItem('accessToken');
+  if (!token) {
+    throw new Error('Token manquant. Veuillez vous reconnecter.');
+  }
+  return await api.patch<Participation>(`/participations/${participationId}/status`, { status }, token);
+};
+
 export const getMyParticipantStats = async () => {
   const token = localStorage.getItem('accessToken');
   if (!token) {

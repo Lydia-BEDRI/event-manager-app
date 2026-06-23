@@ -118,7 +118,7 @@ const ZonesPage = () => {
             <ZoneCard
               key={zone.id}
               zone={zone}
-              onClick={() => navigate(`/events/${zone.event_id}`)}
+              onClick={() => handleEditZone(zone)}
               onEdit={() => handleEditZone(zone)}
               onDelete={() => handleDeleteZone(zone)}
             />

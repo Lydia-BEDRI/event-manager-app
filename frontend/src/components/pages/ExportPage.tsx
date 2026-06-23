@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   FileDown, 
   Calendar, 
@@ -15,20 +15,27 @@ import {
 } from 'lucide-react';
 import Input from '../atoms/Input';
 import { exportService, ExportFilters } from '../../services/export.service';
+import { getAllEvents } from '../../services/event.service';
+import { getAllZones } from '../../services/zone.service';
+import { Event } from '../../types/event.types';
+import { Zone } from '../../types/zone.types';
 
 interface ExportCategory {
   id: string;
   title: string;
   description: string;
   icon: React.ComponentType<any>;
-  color: string;
+  iconClass: string;
   hasFilters: boolean;
 }
 
 const ExportPage: React.FC = () => {
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [showFilters, setShowFilters] = useState<string | null>(null);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [zones, setZones] = useState<Zone[]>([]);
   const [filters, setFilters] = useState<ExportFilters>({
     startDate: '',
     endDate: '',
@@ -37,13 +44,27 @@ const ExportPage: React.FC = () => {
     role: ''
   });
 
+  useEffect(() => {
+    const loadFilterOptions = async () => {
+      try {
+        const [eventData, zoneData] = await Promise.all([getAllEvents(), getAllZones()]);
+        setEvents(eventData);
+        setZones(zoneData);
+      } catch (err) {
+        console.error('Erreur lors du chargement des filtres exports:', err);
+      }
+    };
+
+    loadFilterOptions();
+  }, []);
+
   const exportCategories: ExportCategory[] = [
     {
       id: 'events',
       title: 'Événements',
       description: 'Exporter la liste complète des événements avec leurs statistiques',
       icon: Calendar,
-      color: 'from-blue-500 to-blue-600',
+      iconClass: 'text-primary-blue bg-primary-blue/10',
       hasFilters: true
     },
     {
@@ -51,7 +72,7 @@ const ExportPage: React.FC = () => {
       title: 'Participations',
       description: 'Exporter toutes les participations avec les informations des participants',
       icon: ClipboardCheck,
-      color: 'from-green-500 to-green-600',
+      iconClass: 'text-emerald-700 bg-emerald-50',
       hasFilters: true
     },
     {
@@ -59,7 +80,7 @@ const ExportPage: React.FC = () => {
       title: 'Logs d\'accès',
       description: 'Exporter l\'historique complet des accès aux zones',
       icon: MapPin,
-      color: 'from-purple-500 to-purple-600',
+      iconClass: 'text-violet-700 bg-violet-50',
       hasFilters: true
     },
     {
@@ -67,7 +88,7 @@ const ExportPage: React.FC = () => {
       title: 'Utilisateurs',
       description: 'Exporter la liste des utilisateurs avec leurs activités',
       icon: Users,
-      color: 'from-orange-500 to-orange-600',
+      iconClass: 'text-amber-700 bg-amber-50',
       hasFilters: true
     },
     {
@@ -75,7 +96,7 @@ const ExportPage: React.FC = () => {
       title: 'Zones',
       description: 'Exporter toutes les zones avec leurs statistiques d\'occupation',
       icon: Shield,
-      color: 'from-pink-500 to-pink-600',
+      iconClass: 'text-rose-700 bg-rose-50',
       hasFilters: true
     },
     {
@@ -83,7 +104,7 @@ const ExportPage: React.FC = () => {
       title: 'Statistiques',
       description: 'Exporter un résumé des statistiques générales',
       icon: BarChart3,
-      color: 'from-cyan-500 to-cyan-600',
+      iconClass: 'text-cyan-700 bg-cyan-50',
       hasFilters: false
     },
     {
@@ -91,7 +112,7 @@ const ExportPage: React.FC = () => {
       title: 'Export complet',
       description: 'Exporter toutes les données dans un fichier unique',
       icon: Database,
-      color: 'from-red-500 to-red-600',
+      iconClass: 'text-slate-700 bg-slate-100',
       hasFilters: true
     }
   ];
@@ -99,6 +120,7 @@ const ExportPage: React.FC = () => {
   const handleExport = async (categoryId: string) => {
     setLoading(categoryId);
     setError(null);
+    setSuccess(null);
 
     try {
       const currentFilters = showFilters === categoryId ? filters : {};
@@ -128,6 +150,7 @@ const ExportPage: React.FC = () => {
       }
       
       setShowFilters(null);
+      setSuccess('Export généré avec succès.');
       setFilters({
         startDate: '',
         endDate: '',
@@ -137,7 +160,7 @@ const ExportPage: React.FC = () => {
       });
     } catch (err: any) {
       console.error('Export error:', err);
-      setError(err.response?.data?.error || 'Erreur lors de l\'export');
+      setError(err.message || err.response?.data?.error || 'Erreur lors de l\'export');
     } finally {
       setLoading(null);
     }
@@ -153,27 +176,35 @@ const ExportPage: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
-      {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <FileDown size={32} className="text-primary-blue" />
-          <h1 className="text-3xl font-bold text-primary-dark">Exports de données</h1>
+        <div className="flex items-center gap-3">
+          <div className="h-11 w-11 rounded-2xl bg-primary-blue/10 text-primary-blue flex items-center justify-center">
+            <FileDown size={22} />
+          </div>
+          <div>
+            <h1 className="text-3xl font-bold text-primary-dark">Exports de données</h1>
+            <p className="text-primary-gray mt-1">
+              Exportez vos données au format CSV pour analyse et archivage
+            </p>
+          </div>
         </div>
-        <p className="text-primary-gray">
-          Exportez vos données au format CSV pour analyse et archivage
-        </p>
       </div>
 
-      {/* Error message */}
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3 text-red-700">
+        <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-xl flex items-center gap-3 text-red-700">
           <X size={20} />
           <span>{error}</span>
         </div>
       )}
 
-      {/* Export Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {success && (
+        <div className="mb-6 p-4 bg-emerald-50 border border-emerald-100 rounded-xl flex items-center gap-3 text-emerald-700">
+          <CheckCircle size={20} />
+          <span>{success}</span>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
         {exportCategories.map((category) => {
           const Icon = category.icon;
           const isLoading = loading === category.id;
@@ -182,21 +213,22 @@ const ExportPage: React.FC = () => {
           return (
             <div
               key={category.id}
-              className="bg-white rounded-3xl shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300"
+              className="bg-white border border-gray-200 rounded-xl p-5 flex flex-col gap-5 hover:border-primary-blue/30 hover:shadow-sm transition-all"
             >
-              {/* Card Header */}
-              <div className={`bg-gradient-to-r ${category.color} p-6 text-white`}>
-                <Icon size={32} className="mb-3" />
-                <h3 className="text-xl font-bold mb-2">{category.title}</h3>
-                <p className="text-sm text-white/90">{category.description}</p>
+              <div className="flex items-start gap-4">
+                <div className={`h-10 w-10 rounded-xl flex items-center justify-center flex-shrink-0 ${category.iconClass}`}>
+                  <Icon size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-primary-dark">{category.title}</h3>
+                  <p className="text-sm text-primary-gray mt-1 leading-6">{category.description}</p>
+                </div>
               </div>
 
-              {/* Card Body */}
-              <div className="p-6">
-                {/* Filters Section */}
+              <div className="flex-1 flex flex-col justify-end gap-4">
                 {filtersVisible && (
-                  <div className="mb-4 space-y-3 p-4 bg-gray-50 rounded-2xl">
-                    <div className="flex items-center gap-2 mb-3 text-primary-dark font-medium">
+                  <div className="space-y-3 p-4 bg-gray-50 border border-gray-100 rounded-xl">
+                    <div className="flex items-center gap-2 text-primary-dark font-medium">
                       <Filter size={16} />
                       <span className="text-sm">Filtres optionnels</span>
                     </div>
@@ -222,32 +254,44 @@ const ExportPage: React.FC = () => {
                       </>
                     )}
 
-                    {(category.id === 'participations' || category.id === 'access-logs' || 
+                    {(category.id === 'participations' || category.id === 'access-logs' ||
                       category.id === 'zones') && (
-                      <Input
-                        type="text"
-                        placeholder="ID Événement"
+                      <select
                         value={filters.eventId}
-                        onChange={(e) => setFilters({ ...filters, eventId: e.target.value })}
-                        className="text-sm"
-                      />
+                        onChange={(e) => setFilters({ ...filters, eventId: e.target.value, zoneId: '' })}
+                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary-blue transition-colors"
+                      >
+                        <option value="">Tous les événements</option>
+                        {events.map((event) => (
+                          <option key={event.id} value={event.id}>
+                            {event.name}
+                          </option>
+                        ))}
+                      </select>
                     )}
 
                     {category.id === 'access-logs' && (
-                      <Input
-                        type="text"
-                        placeholder="ID Zone"
+                      <select
                         value={filters.zoneId}
                         onChange={(e) => setFilters({ ...filters, zoneId: e.target.value })}
-                        className="text-sm"
-                      />
+                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary-blue transition-colors"
+                      >
+                        <option value="">Toutes les zones</option>
+                        {zones
+                          .filter((zone) => !filters.eventId || String(zone.event_id) === filters.eventId)
+                          .map((zone) => (
+                            <option key={zone.id} value={zone.id}>
+                              {zone.event_name ? `${zone.event_name} - ${zone.name}` : zone.name}
+                            </option>
+                          ))}
+                      </select>
                     )}
 
                     {category.id === 'users' && (
                       <select
                         value={filters.role}
                         onChange={(e) => setFilters({ ...filters, role: e.target.value })}
-                        className="w-full px-4 py-3 border border-primary-gray/30 rounded-2xl text-sm focus:outline-none focus:border-primary-blue transition-colors"
+                        className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-primary-blue transition-colors"
                       >
                         <option value="">Tous les rôles</option>
                         <option value="ADMIN">Administrateurs</option>
@@ -257,26 +301,25 @@ const ExportPage: React.FC = () => {
 
                     <button
                       onClick={() => setShowFilters(null)}
-                      className="text-sm text-primary-gray hover:text-primary-dark transition-colors"
+                      className="text-sm font-medium text-primary-gray hover:text-primary-dark transition-colors"
                     >
                       Réinitialiser les filtres
                     </button>
                   </div>
                 )}
 
-                {/* Action Buttons */}
                 <div className="flex gap-2">
                   {category.hasFilters && (
                     <button
                       onClick={() => toggleFilters(category.id, category.hasFilters)}
                       disabled={isLoading}
-                      className={`flex-1 py-3 px-4 rounded-2xl font-medium transition-all flex items-center justify-center gap-2 ${
+                      className={`flex-1 py-3 px-4 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-2 ${
                         filtersVisible
-                          ? 'bg-primary-gray/10 text-primary-dark border border-primary-gray/30'
-                          : 'bg-primary-blue/10 text-primary-blue hover:bg-primary-blue/20'
+                          ? 'bg-gray-100 text-primary-dark border border-gray-200'
+                          : 'bg-white text-primary-gray border border-gray-200 hover:text-primary-dark hover:border-primary-gray/40'
                       }`}
                     >
-                      <Filter size={18} />
+                      <Filter size={16} />
                       {filtersVisible ? 'Masquer' : 'Filtres'}
                     </button>
                   )}
@@ -284,7 +327,7 @@ const ExportPage: React.FC = () => {
                   <button
                     onClick={() => handleExport(category.id)}
                     disabled={isLoading}
-                    className={`${category.hasFilters ? 'flex-1' : 'w-full'} py-3 px-4 bg-gradient-to-r ${category.color} text-white rounded-2xl font-medium hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
+                    className={`${category.hasFilters ? 'flex-1' : 'w-full'} py-3 px-4 bg-primary-dark text-white rounded-xl text-sm font-semibold hover:bg-primary-dark/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2`}
                   >
                     {isLoading ? (
                       <>
@@ -293,7 +336,7 @@ const ExportPage: React.FC = () => {
                       </>
                     ) : (
                       <>
-                        <Download size={18} />
+                        <Download size={16} />
                         <span>Exporter</span>
                       </>
                     )}
@@ -305,27 +348,26 @@ const ExportPage: React.FC = () => {
         })}
       </div>
 
-      {/* Info Section */}
-      <div className="mt-8 p-6 bg-blue-50 border border-blue-200 rounded-3xl">
-        <h3 className="text-lg font-bold text-primary-dark mb-2 flex items-center gap-2">
-          <FileDown size={20} className="text-primary-blue" />
+      <div className="mt-6 p-5 bg-white border border-gray-200 rounded-xl">
+        <h3 className="text-base font-semibold text-primary-dark mb-4 flex items-center gap-2">
+          <FileDown size={18} className="text-primary-blue" />
           À propos des exports CSV
         </h3>
-        <ul className="space-y-2 text-sm text-primary-gray">
+        <ul className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-primary-gray">
           <li className="flex items-start gap-2">
-            <CheckCircle size={16} className="text-primary-blue mt-0.5 flex-shrink-0" />
+            <CheckCircle size={16} className="text-emerald-600 mt-0.5 flex-shrink-0" />
             <span>Les fichiers sont encodés en UTF-8 avec BOM pour une compatibilité optimale avec Excel</span>
           </li>
           <li className="flex items-start gap-2">
-            <CheckCircle size={16} className="text-primary-blue mt-0.5 flex-shrink-0" />
+            <CheckCircle size={16} className="text-emerald-600 mt-0.5 flex-shrink-0" />
             <span>Utilisez les filtres pour limiter l'export à une période ou un événement spécifique</span>
           </li>
           <li className="flex items-start gap-2">
-            <CheckCircle size={16} className="text-primary-blue mt-0.5 flex-shrink-0" />
+            <CheckCircle size={16} className="text-emerald-600 mt-0.5 flex-shrink-0" />
             <span>L'export complet combine toutes les données dans un seul fichier pour une vue d'ensemble</span>
           </li>
           <li className="flex items-start gap-2">
-            <CheckCircle size={16} className="text-primary-blue mt-0.5 flex-shrink-0" />
+            <CheckCircle size={16} className="text-emerald-600 mt-0.5 flex-shrink-0" />
             <span>Les exports respectent les permissions et n'incluent que les données autorisées</span>
           </li>
         </ul>

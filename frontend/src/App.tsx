@@ -27,6 +27,7 @@ import AvailableEventsPage from "./components/pages/AvailableEventsPage";
 import MyParticipationsPage from "./components/pages/MyParticipationsPage";
 import MyQrCodesPage from "./components/pages/MyQrCodesPage";
 import PresenceVerificationPage from "./components/pages/PresenceVerificationPage";
+import AdminSettingsPage from "./components/pages/AdminSettingsPage";
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, user, isLoading } = useAuth();
@@ -251,6 +252,17 @@ const AppRoutes: React.FC = () => {
           <ProtectedRoute allowedRoles={["ADMIN"]}>
             <Layout role={"ADMIN"}>
               <ParticipantsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/admin/settings"
+        element={
+          <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <Layout role="ADMIN">
+              <AdminSettingsPage />
             </Layout>
           </ProtectedRoute>
         }
