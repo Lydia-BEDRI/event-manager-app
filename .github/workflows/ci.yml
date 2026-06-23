@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: CI
 
 on:
   pull_request:
@@ -6,33 +6,46 @@ on:
     branches:
       - main
       - develop
+      - "feature/**"
   workflow_dispatch:
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
 env:
-  REGISTRY: ghcr.io
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  NODE_VERSION: "20"
+  MYSQL_ROOT_PASSWORD: rootpass
+  MYSQL_DATABASE: eventmanager
+  MYSQL_USER: eventmanager_user
+  MYSQL_PASSWORD: eventmanager_password
 
 jobs:
-  backend-test:
-    name: Backend tests
+  backend:
+    name: Backend tests and build
     runs-on: ubuntu-latest
+
     services:
-      db:
+      mysql:
         image: mysql:8.0
         env:
-          MYSQL_ROOT_PASSWORD: rootpass
-          MYSQL_DATABASE: eventmanager
-          MYSQL_USER: eventmanager_user
-          MYSQL_PASSWORD: eventmanager_password
+          MYSQL_ROOT_PASSWORD: ${{ env.MYSQL_ROOT_PASSWORD }}
+          MYSQL_DATABASE: ${{ env.MYSQL_DATABASE }}
+          MYSQL_USER: ${{ env.MYSQL_USER }}
+          MYSQL_PASSWORD: ${{ env.MYSQL_PASSWORD }}
         ports:
           - 3307:3306
         options: >-
-          --health-cmd "mysqladmin ping -h localhost -uroot -prootpass"
+          --health-cmd "mysqladmin ping -h localhost -uroot -p${{ env.MYSQL_ROOT_PASSWORD }}"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 10
 
     env:
+      NODE_ENV: test
       DB_HOST: 127.0.0.1
       DB_PORT: "3307"
       DB_USER: eventmanager_user
@@ -44,63 +57,86 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
-      - name: Setup Node.js (backend)
-        uses: actions/setup-node@v6
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
           cache-dependency-path: backend/package-lock.json
 
+      - name: Install MySQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y default-mysql-client
+
+      - name: Initialize test database
+        run: |
+          mysql --host 127.0.0.1 --port 3307 --user root --password="${MYSQL_ROOT_PASSWORD}" "${MYSQL_DATABASE}" < db/init.sql
+          mysql --host 127.0.0.1 --port 3307 --user root --password="${MYSQL_ROOT_PASSWORD}" "${MYSQL_DATABASE}" < db/sample_data.sql
+
       - name: Install backend dependencies
-        run: |
-          cd backend
-          npm ci
-
-      - name: Setup Node.js (frontend)
-        uses: actions/setup-node@v6
-        with:
-          node-version: "20"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install frontend dependencies
-        run: |
-          cd frontend
-          npm ci
+        working-directory: backend
+        run: npm ci
 
       - name: Run backend tests
-        run: |
-          cd backend
-          npm run test -- --ci
+        working-directory: backend
+        run: npm test -- --ci --runInBand
 
-      - name: Backend build
-        run: |
-          cd backend
-          npm run build
+      - name: Build backend
+        working-directory: backend
+        run: npm run build
 
-      - name: Frontend tests
-        run: |
-          cd frontend
-          npm run test -- --ci
-
-      - name: Frontend build
-        run: |
-          cd frontend
-          npm run build
-
-  compose-validate:
+  frontend:
+    name: Frontend tests and build
     runs-on: ubuntu-latest
+
+    env:
+      CI: true
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
-      - name: Validate docker-compose
-        env:
-          MYSQL_ROOT_PASSWORD: rootpass
-          MYSQL_DATABASE: eventmanager
-          MYSQL_USER: eventmanager_user
-          MYSQL_PASSWORD: eventmanager_password
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Run frontend tests
+        working-directory: frontend
+        run: npm test -- --ci --watchAll=false
+
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+
+  docker:
+    name: Docker validation
+    runs-on: ubuntu-latest
+    needs:
+      - backend
+      - frontend
+
+    env:
+      JWT_SECRET: ci-secret-key
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate compose file
         run: docker compose config -q
+
+      - name: Build backend image
+        run: docker build --tag eventmanager-backend:ci ./backend
+
+      - name: Build frontend image
+        run: docker build --tag eventmanager-frontend:ci ./frontend

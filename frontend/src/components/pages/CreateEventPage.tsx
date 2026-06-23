@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback  } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createEvent } from '../../services/event.service';
 import { getDistinctZones } from '../../services/zone.service';
@@ -25,7 +25,6 @@ const CreateEventPage = () => {
     zones: [],
   });
 
-
   const loadAvailableZones = useCallback(async () => {
     try {
       setLoadingZones(true);
@@ -41,7 +40,7 @@ const CreateEventPage = () => {
       setLoadingZones(false);
     }
   }, [navigate]);
- 
+
   useEffect(() => {
     loadAvailableZones();
   }, [loadAvailableZones]);

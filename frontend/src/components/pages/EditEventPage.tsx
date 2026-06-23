@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback  } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getEventById, updateEvent } from '../../services/event.service';
 import { getEventZones } from '../../services/zone.service';
@@ -30,14 +30,14 @@ const EditEventPage = () => {
       setError('ID de l\'événement manquant');
       return;
     }
- 
+
     try {
       setLoadingData(true);
       const event = await getEventById(Number(id));
- 
+
       const startDate = new Date(event.start_date).toISOString().slice(0, 16);
       const endDate = new Date(event.end_date).toISOString().slice(0, 16);
- 
+
       setFormData({
         name: event.name,
         description: event.description || '',
@@ -47,7 +47,7 @@ const EditEventPage = () => {
         capacity: event.capacity,
         status: event.status,
       });
- 
+
       try {
         const eventZones = await getEventZones(Number(id));
         setZones(eventZones.map(z => ({
@@ -58,7 +58,7 @@ const EditEventPage = () => {
       } catch (zoneErr) {
         console.error('Erreur lors du chargement des zones:', zoneErr);
       }
- 
+
       setError(null);
     } catch (err: any) {
       console.error(err);
@@ -72,7 +72,7 @@ const EditEventPage = () => {
       setLoadingData(false);
     }
   }, [id, navigate]);
- 
+
   useEffect(() => {
     loadEventData();
   }, [loadEventData]);
