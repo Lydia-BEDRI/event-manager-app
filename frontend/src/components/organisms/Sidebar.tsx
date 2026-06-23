@@ -51,17 +51,17 @@ const Sidebar: React.FC<SidebarProps> = ({
     { icon: CalendarDays, label: "Événements", to: "/events" },
     { icon: Users, label: "Participants", to: "/participants" },
     { icon: MapPin, label: "Zones", to: "/zones" },
-    { icon: ClipboardCheck, label: "Présences" },
+    { icon: ClipboardCheck, label: "Présences", to: "/presence" },
     { icon: MessageCircle, label: "Chats", to: "/chats" },
     { icon: FileDown, label: "Exports", to: "/exports" },
   ];
 
   const participantMenuItems = [
     { icon: Home, label: "Accueil", to: "/dashboard" },
-    { icon: CalendarDays, label: "Événements disponibles" },
-    { icon: Ticket, label: "Mes participations" },
-    { icon: QrCode, label: "Mes QR Codes" },
-    { icon: ScanLine, label: "Vérifier ma présence" },
+    { icon: CalendarDays, label: "Événements disponibles", to: "/available-events" },
+    { icon: Ticket, label: "Mes participations", to: "/my-participations" },
+    { icon: QrCode, label: "Mes QR Codes", to: "/my-qr-codes" },
+    { icon: ScanLine, label: "Vérifier ma présence", to: "/presence" },
     { icon: MessageCircle, label: "Chats", to: "/chats" },
   ];
 

@@ -23,6 +23,10 @@ import ParticipantsPage from "./components/pages/ParticipantsPage";
 import ProfilePage from "./components/pages/ProfilePage";
 import ChatsPage from "./components/pages/ChatsPage";
 import EventChatPage from "./components/pages/EventChatPage";
+import AvailableEventsPage from "./components/pages/AvailableEventsPage";
+import MyParticipationsPage from "./components/pages/MyParticipationsPage";
+import MyQrCodesPage from "./components/pages/MyQrCodesPage";
+import PresenceVerificationPage from "./components/pages/PresenceVerificationPage";
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, user, isLoading } = useAuth();
@@ -164,9 +168,49 @@ const AppRoutes: React.FC = () => {
       <Route
         path="/events"
         element={
+          <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <Layout role="ADMIN">
+              <EventsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/available-events"
+        element={
+          <ProtectedRoute allowedRoles={["PARTICIPANT"]}>
+            <Layout role="PARTICIPANT">
+              <AvailableEventsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-participations"
+        element={
+          <ProtectedRoute allowedRoles={["PARTICIPANT"]}>
+            <Layout role="PARTICIPANT">
+              <MyParticipationsPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/my-qr-codes"
+        element={
+          <ProtectedRoute allowedRoles={["PARTICIPANT"]}>
+            <Layout role="PARTICIPANT">
+              <MyQrCodesPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/presence"
+        element={
           <ProtectedRoute>
             <Layout role={userRole || "PARTICIPANT"}>
-              <EventsPage />
+              <PresenceVerificationPage />
             </Layout>
           </ProtectedRoute>
         }
