@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Logo from '../atoms/Logo';
-import { Eye, EyeOff, Check, Circle, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { Eye, EyeOff, Check, Circle, CheckCircle2, AlertTriangle, ArrowLeft } from 'lucide-react';
 
 const ResetPasswordPage: React.FC = () => {
   const { resetPassword } = useAuth();
@@ -214,8 +214,12 @@ const ResetPasswordPage: React.FC = () => {
           </button>
 
           <p className="text-center text-sm text-gray-500 mt-4">
-            <Link to="/login" className="text-primary-accent hover:text-primary-accent/80 font-medium transition">
-              ← Retour à la connexion
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 text-primary-accent hover:text-primary-accent/80 font-medium transition"
+            >
+              <ArrowLeft size={16} aria-hidden="true" />
+              Retour à la connexion
             </Link>
           </p>
         </form>
