@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Logo from '../atoms/Logo';
-import { Mail, AlertTriangle } from 'lucide-react';
+import { Mail, AlertTriangle, ArrowLeft } from 'lucide-react';
 
 const ForgotPasswordPage: React.FC = () => {
   const { forgotPassword } = useAuth();
@@ -10,7 +10,6 @@ const ForgotPasswordPage: React.FC = () => {
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [devToken, setDevToken] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -18,11 +17,8 @@ const ForgotPasswordPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const result = await forgotPassword(email);
+      await forgotPassword(email);
       setSent(true);
-      if (result.resetToken) {
-        setDevToken(result.resetToken);
-      }
     } catch (err: any) {
       setError(err.error || 'Une erreur est survenue.');
     } finally {
@@ -45,19 +41,11 @@ const ForgotPasswordPage: React.FC = () => {
             <p className="text-gray-600 text-sm">
               Si un compte existe avec l'adresse <strong>{email}</strong>, vous recevrez un lien de réinitialisation.
             </p>
-            {devToken && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-xs text-left">
-                <p className="font-semibold text-yellow-700 mb-1">[DEV] Token de reset :</p>
-                <code className="break-all text-yellow-800">{devToken}</code>
-                <Link
-                  to={`/reset-password?token=${devToken}`}
-                  className="block mt-2 text-primary-accent hover:underline"
-                >
-                  Aller à la page de reset →
-                </Link>
-              </div>
-            )}
-            <Link to="/login" className="inline-block text-primary-accent hover:underline text-sm font-medium">
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 text-primary-accent hover:underline text-sm font-medium"
+            >
+              <ArrowLeft size={16} aria-hidden="true" />
               Retour à la connexion
             </Link>
           </div>
@@ -119,8 +107,12 @@ const ForgotPasswordPage: React.FC = () => {
           </button>
 
           <p className="text-center text-sm text-gray-500 mt-4">
-            <Link to="/login" className="text-primary-accent hover:text-primary-accent/80 font-medium transition">
-              ← Retour à la connexion
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 text-primary-accent hover:text-primary-accent/80 font-medium transition"
+            >
+              <ArrowLeft size={16} aria-hidden="true" />
+              Retour à la connexion
             </Link>
           </p>
         </form>
