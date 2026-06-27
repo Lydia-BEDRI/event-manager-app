@@ -8,4 +8,6 @@ exports.useNavigate = () => {
 
 exports.useParams = () => ({ eventId: '1' });
 
+exports.useSearchParams = () => [new URLSearchParams(window.location.search), () => {}];
+
 exports.BrowserRouter = ({ children }) => React.createElement('div', null, children);

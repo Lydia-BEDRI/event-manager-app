@@ -7,10 +7,16 @@ import { generateAccessToken, generateRefreshToken, getRefreshExpiresAt, verifyT
 import { isPasswordExpired } from '../utils/password';
 import { AuthenticatedRequest } from '../middlewares/authenticate';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
+import { sendPasswordResetEmail } from '../services/email.service';
 
 const SALT_ROUNDS = 12;
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCK_DURATION_MINUTES = 30;
+const PASSWORD_RESET_EXPIRY_MINUTES = 60;
+
+function hashResetToken(token: string): string {
+  return crypto.createHash('sha256').update(token).digest('hex');
+}
 
 // POST /api/auth/register
 export async function register(req: Request, res: Response): Promise<void> {
@@ -271,7 +277,8 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
 
     const user = rows[0];
     const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1h
+    const tokenHash = hashResetToken(token);
+    const expiresAt = new Date(Date.now() + PASSWORD_RESET_EXPIRY_MINUTES * 60 * 1000);
 
     // Invalider les anciens tokens
     await pool.query(
@@ -281,13 +288,16 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
 
     await pool.query(
       'INSERT INTO password_reset_tokens (user_id, token, expires_at) VALUES (?, ?, ?)',
-      [user.id, token, expiresAt]
+      [user.id, tokenHash, expiresAt]
     );
 
-    // TODO: Envoyer l'email avec le lien de reset
-    // En dev on renvoie le token dans la réponse
-    const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
-    console.log(`[DEV] Lien de réinitialisation pour ${email}: ${resetLink}`);
+    const resetUrl = new URL('/reset-password', process.env.FRONTEND_URL || 'http://localhost:3000');
+    resetUrl.searchParams.set('token', token);
+    await sendPasswordResetEmail({
+      to: email,
+      resetLink: resetUrl.toString(),
+      expiresInMinutes: PASSWORD_RESET_EXPIRY_MINUTES,
+    });
 
     await pool.query(
       `INSERT INTO audit_logs (user_id, action, entity_type, entity_id, ip_address)
@@ -295,11 +305,7 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
       [user.id, user.id, req.ip]
     );
 
-    res.json({
-      message: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.',
-      // En dev uniquement — à retirer en prod
-      ...(process.env.NODE_ENV !== 'production' && { resetToken: token, resetLink }),
-    });
+    res.json({ message: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.' });
   } catch (err) {
     console.error('Erreur forgot-password:', err);
     res.status(500).json({ error: 'Erreur serveur.' });
@@ -317,9 +323,10 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
   const { token, password } = req.body;
 
   try {
+    const tokenHash = hashResetToken(token);
     const [rows] = await pool.query<RowDataPacket[]>(
       'SELECT * FROM password_reset_tokens WHERE token = ? AND used = FALSE AND expires_at > NOW()',
-      [token]
+      [tokenHash]
     );
 
     if (rows.length === 0) {
