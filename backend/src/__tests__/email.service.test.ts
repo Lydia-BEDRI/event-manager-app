@@ -78,4 +78,16 @@ describe('Email service', () => {
       expiresInMinutes: 60,
     })).rejects.toThrow('SMTP_USER and SMTP_PASSWORD must be configured together.');
   });
+
+  it('refuse un port SMTP invalide', async () => {
+    process.env.SMTP_PORT = '70000';
+
+    await expect(sendPasswordResetEmail({
+      to: 'user@example.com',
+      resetLink: 'http://localhost/reset-password?token=token',
+      expiresInMinutes: 60,
+    })).rejects.toThrow('SMTP_PORT must be a valid TCP port.');
+
+    expect(nodemailer.createTransport).not.toHaveBeenCalled();
+  });
 });

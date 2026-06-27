@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import bcrypt from 'bcrypt';
 import { Request, Response } from 'express';
 import pool from '../config/database';
 import { forgotPassword, resetPassword } from '../controllers/auth.controller';
@@ -34,6 +35,10 @@ describe('Auth Controller - password reset', () => {
 
   afterAll(() => {
     delete process.env.FRONTEND_URL;
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('envoie un lien public et stocke uniquement le hash du token', async () => {
@@ -83,6 +88,24 @@ describe('Auth Controller - password reset', () => {
     });
   });
 
+  it('retourne une erreur si le service SMTP est indisponible', async () => {
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    (pool.query as jest.Mock)
+      .mockResolvedValueOnce([[{ id: 42 }]])
+      .mockResolvedValueOnce([{ affectedRows: 1 }])
+      .mockResolvedValueOnce([{ insertId: 7 }]);
+    (sendPasswordResetEmail as jest.Mock).mockRejectedValueOnce(new Error('SMTP unavailable'));
+
+    await forgotPassword({
+      body: { email: 'user@example.com' },
+      ip: '127.0.0.1',
+    } as Request, response as Response);
+
+    expect(status).toHaveBeenCalledWith(500);
+    expect(json).toHaveBeenCalledWith({ error: 'Erreur serveur.' });
+    expect(pool.query).toHaveBeenCalledTimes(3);
+  });
+
   it('recherche le hash du token reçu lors de la réinitialisation', async () => {
     const rawToken = 'reset-token-from-email';
     const expectedHash = crypto.createHash('sha256').update(rawToken).digest('hex');
@@ -99,8 +122,26 @@ describe('Auth Controller - password reset', () => {
     } as Request, response as Response);
 
     expect((pool.query as jest.Mock).mock.calls[0][1]).toEqual([expectedHash]);
+    expect(bcrypt.hash).toHaveBeenCalledWith('StrongPassword1!', 12);
+    expect((pool.query as jest.Mock).mock.calls[1][1]).toEqual(['hashed-password', 42]);
+    expect((pool.query as jest.Mock).mock.calls[2][1]).toEqual([5]);
+    expect((pool.query as jest.Mock).mock.calls[3][1]).toEqual([42]);
     expect(json).toHaveBeenCalledWith({
       message: 'Mot de passe réinitialisé avec succès. Veuillez vous reconnecter.',
     });
+  });
+
+  it('rejette un token invalide ou expiré sans modifier le mot de passe', async () => {
+    (pool.query as jest.Mock).mockResolvedValueOnce([[]]);
+
+    await resetPassword({
+      body: { token: 'invalid-token', password: 'StrongPassword1!' },
+      ip: '127.0.0.1',
+    } as Request, response as Response);
+
+    expect(status).toHaveBeenCalledWith(400);
+    expect(json).toHaveBeenCalledWith({ error: 'Token invalide ou expiré.' });
+    expect(bcrypt.hash).not.toHaveBeenCalled();
+    expect(pool.query).toHaveBeenCalledTimes(1);
   });
 });
