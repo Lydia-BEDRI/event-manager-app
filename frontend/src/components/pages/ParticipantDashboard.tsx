@@ -74,19 +74,19 @@ const ParticipantDashboard: React.FC = () => {
         <StatCard 
           icon={Ticket} 
           title="Mes participations" 
-          value={stats.stats.total_participations.toString()} 
+          value={String(stats.stats.total_participations ?? 0)}
           trend="Total"
         />
         <StatCard 
           icon={CheckCircle} 
           title="Participations validées" 
-          value={stats.stats.approved_participations.toString()} 
+          value={String(stats.stats.approved_participations ?? 0)}
           trend="Approuvées"
         />
         <StatCard 
           icon={Clock} 
           title="En attente" 
-          value={stats.stats.pending_participations.toString()} 
+          value={String(stats.stats.pending_participations ?? 0)}
           trend="En cours"
         />
         <StatCard 

@@ -2,16 +2,28 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Logo from '../atoms/Logo';
-import { CalendarDays, Shield, Users, Eye, EyeOff, AlertTriangle } from 'lucide-react';
+import {
+  AlertTriangle,
+  ArrowLeft,
+  CalendarDays,
+  Eye,
+  EyeOff,
+  LoaderCircle,
+  Shield,
+  ShieldCheck,
+  Users,
+} from 'lucide-react';
 
 const LoginPage: React.FC = () => {
-  const { login } = useAuth();
+  const { login, verifyTwoFactorLogin } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [challengeToken, setChallengeToken] = useState('');
+  const [twoFactorCode, setTwoFactorCode] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,7 +32,10 @@ const LoginPage: React.FC = () => {
 
     try {
       const result = await login({ email, password });
-      if (result.passwordExpired) {
+      if (result.requiresTwoFactor && result.challengeToken) {
+        setChallengeToken(result.challengeToken);
+        setPassword('');
+      } else if (result.passwordExpired) {
         navigate('/reset-password?expired=true');
       } else {
         navigate('/');
@@ -30,6 +45,31 @@ const LoginPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleTwoFactorSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    try {
+      const result = await verifyTwoFactorLogin(challengeToken, twoFactorCode);
+      if (result.passwordExpired) {
+        navigate('/reset-password?expired=true');
+      } else {
+        navigate('/');
+      }
+    } catch (err: any) {
+      setError(err.error || err.message || 'Code de vérification invalide.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const cancelTwoFactorChallenge = () => {
+    setChallengeToken('');
+    setTwoFactorCode('');
+    setError('');
   };
 
   const features = [
@@ -86,15 +126,25 @@ const LoginPage: React.FC = () => {
           </div>
 
           <div className="mb-8">
+            {challengeToken && (
+              <div className="w-11 h-11 mb-5 bg-emerald-50 text-emerald-600 flex items-center justify-center rounded-lg">
+                <ShieldCheck size={22} />
+              </div>
+            )}
             <h2 className="text-2xl font-heading font-bold text-primary-dark">
-              Bon retour parmi nous
+              {challengeToken ? 'Vérification en deux étapes' : 'Bon retour parmi nous'}
             </h2>
             <p className="text-primary-gray mt-2">
-              Connectez-vous pour accéder à votre espace
+              {challengeToken
+                ? 'Saisissez le code de votre application ou un code de secours'
+                : 'Connectez-vous pour accéder à votre espace'}
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form
+            onSubmit={challengeToken ? handleTwoFactorSubmit : handleSubmit}
+            className="space-y-5"
+          >
             {error && (
               <div className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
                 <AlertTriangle className="flex-shrink-0 mt-0.5" size={16} />
@@ -102,7 +152,7 @@ const LoginPage: React.FC = () => {
               </div>
             )}
 
-            <div>
+            {!challengeToken && <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
                 Adresse email
               </label>
@@ -116,9 +166,9 @@ const LoginPage: React.FC = () => {
                 placeholder="nom@entreprise.com"
                 autoComplete="email"
               />
-            </div>
+            </div>}
 
-            <div>
+            {!challengeToken && <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
                 Mot de passe
               </label>
@@ -141,13 +191,35 @@ const LoginPage: React.FC = () => {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-            </div>
+            </div>}
 
-            <div className="flex justify-end">
+            {!challengeToken && <div className="flex justify-end">
               <Link to="/forgot-password" className="text-sm text-primary-accent hover:text-primary-accent/80 transition">
                 Mot de passe oublié ?
               </Link>
-            </div>
+            </div>}
+
+            {challengeToken && (
+              <div>
+                <label htmlFor="twoFactorCode" className="block text-sm font-medium text-gray-700 mb-1.5">
+                  Code d’authentification
+                </label>
+                <input
+                  id="twoFactorCode"
+                  type="text"
+                  required
+                  autoFocus
+                  autoComplete="one-time-code"
+                  value={twoFactorCode}
+                  onChange={(event) => setTwoFactorCode(event.target.value)}
+                  className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-accent/40 focus:border-primary-accent outline-none transition-all font-mono text-center text-lg tracking-widest"
+                  placeholder="000000"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  Les codes de secours peuvent également être utilisés ici.
+                </p>
+              </div>
+            )}
 
             <button
               type="submit"
@@ -156,24 +228,32 @@ const LoginPage: React.FC = () => {
             >
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Connexion...
+                  <LoaderCircle className="animate-spin" size={20} />
+                  Vérification...
                 </span>
               ) : (
-                'Se connecter'
+                challengeToken ? 'Vérifier le code' : 'Se connecter'
               )}
             </button>
+
+            {challengeToken && (
+              <button
+                type="button"
+                onClick={cancelTwoFactorChallenge}
+                className="w-full inline-flex items-center justify-center gap-2 text-sm text-gray-600 hover:text-primary-dark transition"
+              >
+                <ArrowLeft size={16} />
+                Revenir à la connexion
+              </button>
+            )}
           </form>
 
-          <p className="text-center text-sm text-gray-500 mt-8">
+          {!challengeToken && <p className="text-center text-sm text-gray-500 mt-8">
             Pas encore de compte ?{' '}
             <Link to="/register" className="text-primary-accent hover:text-primary-accent/80 font-medium transition">
               Créer un compte
             </Link>
-          </p>
+          </p>}
         </div>
       </div>
     </div>

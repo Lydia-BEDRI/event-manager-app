@@ -13,6 +13,7 @@ import Button from '../atoms/Button';
 import Input from '../atoms/Input';
 import { useAuth } from '../../contexts/AuthContext';
 import { authService } from '../../services/auth.service';
+import TwoFactorSettings from '../organisms/TwoFactorSettings';
 
 const ProfilePage: React.FC = () => {
   const { user, accessToken, updateUser } = useAuth();
@@ -66,8 +67,14 @@ const ProfilePage: React.FC = () => {
           return;
         }
 
-        if (newPassword.length < 8) {
-          setError('Le nouveau mot de passe doit contenir au moins 8 caractères.');
+        const isStrongPassword = newPassword.length >= 12
+          && /[a-z]/.test(newPassword)
+          && /[A-Z]/.test(newPassword)
+          && /\d/.test(newPassword)
+          && /[^A-Za-z0-9]/.test(newPassword);
+
+        if (!isStrongPassword) {
+          setError('Le nouveau mot de passe doit contenir au moins 12 caractères, une majuscule, une minuscule, un chiffre et un symbole.');
           setLoading(false);
           return;
         }
@@ -292,7 +299,7 @@ const ProfilePage: React.FC = () => {
                       </button>
                     </div>
                     <p className="text-xs text-primary-gray mt-1">
-                      Minimum 8 caractères
+                      12 caractères minimum, avec majuscule, minuscule, chiffre et symbole
                     </p>
                   </div>
                   <div>
@@ -325,6 +332,9 @@ const ProfilePage: React.FC = () => {
                 </Button>
               </div>
             </form>
+            <div className="mt-6">
+              <TwoFactorSettings accessToken={accessToken} />
+            </div>
           </div>
         </div>
       </div>

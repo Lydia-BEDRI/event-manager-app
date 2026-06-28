@@ -3,8 +3,8 @@ import { validationResult } from 'express-validator';
 import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import pool from '../config/database';
-import { generateAccessToken, generateRefreshToken, getRefreshExpiresAt, verifyToken } from '../utils/jwt';
-import { isPasswordExpired } from '../utils/password';
+import { generateAccessToken, generateRefreshToken, generateTwoFactorChallengeToken, getRefreshExpiresAt, verifyToken } from '../utils/jwt';
+import { isPasswordExpired, isPasswordStrong } from '../utils/password';
 import { AuthenticatedRequest } from '../middlewares/authenticate';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { sendPasswordResetEmail } from '../services/email.service';
@@ -159,6 +159,20 @@ export async function login(req: Request, res: Response): Promise<void> {
     const passwordExpired = isPasswordExpired(user.password_updated_at);
 
     const tokenPayload = { userId: user.id, email: user.email, role: user.role };
+    const [twoFactorRows] = await pool.query<RowDataPacket[]>(
+      'SELECT is_enabled FROM two_factor_auth WHERE user_id = ?',
+      [user.id],
+    );
+
+    if (twoFactorRows[0]?.is_enabled) {
+      res.json({
+        message: 'Code de double authentification requis.',
+        requiresTwoFactor: true,
+        challengeToken: generateTwoFactorChallengeToken(tokenPayload),
+      });
+      return;
+    }
+
     const accessToken = generateAccessToken(tokenPayload);
     const refreshToken = generateRefreshToken(tokenPayload);
 
@@ -485,6 +499,12 @@ export async function updateProfile(req: AuthenticatedRequest, res: Response): P
 
     // Mise à jour du mot de passe
     if (currentPassword && newPassword) {
+      const passwordValidation = isPasswordStrong(newPassword);
+      if (!passwordValidation.valid) {
+        res.status(400).json({ error: passwordValidation.message });
+        return;
+      }
+
       const passwordMatch = await bcrypt.compare(currentPassword, user.password_hash);
       
       if (!passwordMatch) {

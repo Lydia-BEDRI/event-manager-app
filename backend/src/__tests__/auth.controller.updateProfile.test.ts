@@ -134,7 +134,7 @@ describe('Auth Controller - updateProfile', () => {
     it('devrait changer le mot de passe avec succès', async () => {
       mockRequest.body = {
         currentPassword: 'oldPassword123',
-        newPassword: 'newPassword456',
+        newPassword: 'NewPassword456!',
       };
 
       const mockCurrentUser = [{
@@ -169,7 +169,7 @@ describe('Auth Controller - updateProfile', () => {
       await updateProfile(mockRequest as AuthenticatedRequest, mockResponse as Response);
 
       expect(bcrypt.compare).toHaveBeenCalledWith('oldPassword123', 'hashedOldPassword');
-      expect(bcrypt.hash).toHaveBeenCalledWith('newPassword456', 12);
+      expect(bcrypt.hash).toHaveBeenCalledWith('NewPassword456!', 12);
 
       expect(responseJson).toHaveBeenCalledWith({
         message: 'Profil mis à jour avec succès.',
@@ -182,7 +182,7 @@ describe('Auth Controller - updateProfile', () => {
         firstName: 'Pierre',
         lastName: 'Durand',
         currentPassword: 'oldPassword123',
-        newPassword: 'newPassword456',
+        newPassword: 'NewPassword456!',
       };
 
       const mockCurrentUser = [{
@@ -229,6 +229,26 @@ describe('Auth Controller - updateProfile', () => {
   });
 
   describe('updateProfile - Error Cases', () => {
+    it('devrait refuser un nouveau mot de passe faible', async () => {
+      mockRequest.body = {
+        currentPassword: 'CurrentPassword1!',
+        newPassword: 'weak-password',
+      };
+      (pool.query as jest.Mock).mockResolvedValueOnce([[{
+        id: 1,
+        password_hash: 'hashed-current-password',
+      }]]);
+
+      await updateProfile(mockRequest as AuthenticatedRequest, mockResponse as Response);
+
+      expect(responseStatus).toHaveBeenCalledWith(400);
+      expect(responseJson).toHaveBeenCalledWith({
+        error: expect.stringContaining('majuscule'),
+      });
+      expect(bcrypt.compare).not.toHaveBeenCalled();
+      expect(bcrypt.hash).not.toHaveBeenCalled();
+    });
+
     it('devrait retourner 401 si aucun utilisateur authentifié', async () => {
       mockRequest.user = undefined;
 
@@ -258,7 +278,7 @@ describe('Auth Controller - updateProfile', () => {
     it('devrait retourner 401 si le mot de passe actuel est incorrect', async () => {
       mockRequest.body = {
         currentPassword: 'wrongPassword',
-        newPassword: 'newPassword456',
+        newPassword: 'NewPassword456!',
       };
 
       const mockCurrentUser = [{
@@ -345,7 +365,7 @@ describe('Auth Controller - updateProfile', () => {
     it('devrait créer un log d\'audit pour le changement de mot de passe', async () => {
       mockRequest.body = {
         currentPassword: 'oldPassword123',
-        newPassword: 'newPassword456',
+        newPassword: 'NewPassword456!',
       };
 
       const mockCurrentUser = [{
