@@ -43,6 +43,8 @@ EventManager est une application web destinée à la gestion d’événements in
 ## Sécurité et conformité
 
 - Authentification sécurisée avec politique de mot de passe fort.
+- Double authentification TOTP compatible avec les applications Authenticator.
+- Codes de secours à usage unique et secrets TOTP chiffrés en base.
 - QR codes signés cryptographiquement et associés strictement au compte utilisateur.
 - Vérification côté serveur obligatoire avec validation de signature.
 - Invalidation automatique après scan et impossibilité de réutilisation.
@@ -149,3 +151,84 @@ doit contenir l'URL HTTPS publique de l'application. Les identifiants SMTP ne do
 être ajoutés au dépôt. Utilisez `SMTP_SECURE=true` avec le port 465, ou `false` avec le
 port 587 et STARTTLS. Le service Mailpit local reste inaccessible depuis Internet car ses
 ports sont liés uniquement à `127.0.0.1`.
+
+### Double authentification TOTP
+
+Chaque utilisateur peut activer la double authentification depuis la section sécurité de
+son profil. L'application affiche un QR code compatible avec Google Authenticator,
+Microsoft Authenticator, Authy et les gestionnaires de mots de passe prenant en charge TOTP.
+
+L'activation suit ce parcours :
+
+1. L'utilisateur scanne le QR code ou saisit manuellement la clé Base32.
+2. Il confirme l'installation avec le premier code à six chiffres.
+3. Huit codes de secours à usage unique lui sont affichés une seule fois.
+4. Aux connexions suivantes, aucun JWT de session n'est délivré avant la validation du
+   code TOTP ou d'un code de secours.
+
+Le secret TOTP est chiffré en AES-256-GCM avant son stockage. Les codes de secours ne sont
+jamais enregistrés en clair : seule leur empreinte HMAC est conservée. Le challenge de
+connexion expire après cinq minutes et ne peut pas être utilisé comme token d'accès.
+
+En local, aucune variable supplémentaire n'est obligatoire : le backend utilise
+`JWT_SECRET` comme clé de repli. Il est néanmoins recommandé de générer une clé dédiée
+avant la première activation :
+
+```bash
+openssl rand -hex 32
+```
+
+Ajoutez la valeur obtenue dans le fichier `.env` à la racine du projet. Sur un VPS, cette
+configuration avec une valeur distincte du secret JWT est obligatoire :
+
+```env
+TWO_FACTOR_ENCRYPTION_KEY=une-valeur-aleatoire-longue-et-unique
+```
+
+Cette clé doit être conservée entre les déploiements. Si elle est perdue ou remplacée, les
+secrets TOTP existants ne pourront plus être déchiffrés et les utilisateurs devront réactiver
+leur double authentification.
+
+#### Activer la 2FA en local
+
+1. Démarrez l'application avec `docker compose up --build` et attendez que les services
+   `db`, `backend` et `frontend` soient sains.
+2. Ouvrez [http://localhost:3000](http://localhost:3000), connectez-vous puis accédez à
+   **Mon profil**.
+3. Dans la section **Double authentification**, cliquez sur **Configurer**.
+4. Scannez le QR code avec une application Authenticator. Si le scan est impossible,
+   utilisez la clé Base32 affichée sous le QR code.
+5. Saisissez le code actuel à six chiffres puis cliquez sur **Activer**.
+6. Conservez les huit codes de secours affichés. Ils ne seront plus consultables après le
+   rechargement de la page et chacun ne peut être utilisé qu'une seule fois.
+
+Le statut de la section doit maintenant être **Activée** et indiquer huit codes de secours
+disponibles.
+
+#### Vérifier la connexion TOTP
+
+1. Déconnectez-vous puis saisissez de nouveau votre e-mail et votre mot de passe.
+2. L'application doit afficher **Vérification en deux étapes** sans encore créer de session.
+3. Vérifiez qu'un code incorrect est refusé.
+4. Saisissez le code actuel de l'application Authenticator : la connexion doit aboutir.
+
+L'heure automatique doit être activée sur le téléphone et la machine qui héberge le backend.
+Un décalage d'horloge peut rendre les codes TOTP invalides.
+
+#### Vérifier les codes de secours
+
+1. Recommencez une connexion et utilisez un code de secours à la place du code TOTP.
+2. La connexion doit réussir et le compteur du profil doit diminuer d'une unité.
+3. Déconnectez-vous et réutilisez le même code : il doit être refusé.
+4. Le bouton **Régénérer les codes** permet de remplacer tous les codes restants après
+   validation d'un code TOTP actuel. Les anciens codes deviennent immédiatement invalides.
+
+Pour désactiver la protection, cliquez sur **Désactiver**, puis confirmez avec le mot de
+passe actuel et un code TOTP ou un code de secours. La connexion suivante ne doit plus
+demander de second facteur.
+
+En cas d'erreur, consultez les journaux du backend avec :
+
+```bash
+docker compose logs -f backend
+```

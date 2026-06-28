@@ -1,4 +1,10 @@
-import { generateAccessToken, generateRefreshToken, verifyToken } from '../utils/jwt';
+import {
+  generateAccessToken,
+  generateRefreshToken,
+  generateTwoFactorChallengeToken,
+  verifyToken,
+  verifyTwoFactorChallengeToken,
+} from '../utils/jwt';
 
 describe('JWT utils', () => {
   const payload = { userId: 1, email: 'test@test.com', role: 'PARTICIPANT' };
@@ -35,5 +41,12 @@ describe('JWT utils', () => {
     expect(decoded).toHaveProperty('role');
     expect(decoded).toHaveProperty('iat');
     expect(decoded).toHaveProperty('exp');
+  });
+
+  it('accepte un challenge 2FA uniquement avec le vérificateur dédié', () => {
+    const challenge = generateTwoFactorChallengeToken(payload);
+
+    expect(verifyTwoFactorChallengeToken(challenge)).toEqual(expect.objectContaining(payload));
+    expect(() => verifyToken(challenge)).toThrow('Invalid access token purpose.');
   });
 });

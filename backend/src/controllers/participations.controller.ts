@@ -239,9 +239,9 @@ export const getMyParticipantStats = async (req: AuthenticatedRequest, res: Resp
     const [participationStats] = await pool.query<RowDataPacket[]>(
       `SELECT 
         COUNT(*) as total_participations,
-        SUM(CASE WHEN status = 'APPROVED' THEN 1 ELSE 0 END) as approved_participations,
-        SUM(CASE WHEN status = 'PENDING' THEN 1 ELSE 0 END) as pending_participations,
-        SUM(CASE WHEN status = 'REFUSED' THEN 1 ELSE 0 END) as refused_participations
+        COALESCE(SUM(CASE WHEN status = 'APPROVED' THEN 1 ELSE 0 END), 0) as approved_participations,
+        COALESCE(SUM(CASE WHEN status = 'PENDING' THEN 1 ELSE 0 END), 0) as pending_participations,
+        COALESCE(SUM(CASE WHEN status = 'REFUSED' THEN 1 ELSE 0 END), 0) as refused_participations
       FROM participations
       WHERE user_id = ?`,
       [userId]
@@ -346,16 +346,19 @@ export const getMyParticipantStats = async (req: AuthenticatedRequest, res: Resp
       [userId]
     );
 
+    const rawStats = participationStats[0] || {};
+    const rawZoneAccess = zoneAccessStats[0] || {};
+
     res.json({
-      stats: participationStats[0] || {
-        total_participations: 0,
-        approved_participations: 0,
-        pending_participations: 0,
-        refused_participations: 0
+      stats: {
+        total_participations: Number(rawStats.total_participations ?? 0),
+        approved_participations: Number(rawStats.approved_participations ?? 0),
+        pending_participations: Number(rawStats.pending_participations ?? 0),
+        refused_participations: Number(rawStats.refused_participations ?? 0)
       },
-      zoneAccess: zoneAccessStats[0] || {
-        unique_zones_visited: 0,
-        total_zone_accesses: 0
+      zoneAccess: {
+        unique_zones_visited: Number(rawZoneAccess.unique_zones_visited ?? 0),
+        total_zone_accesses: Number(rawZoneAccess.total_zone_accesses ?? 0)
       },
       myParticipations: myParticipations || [],
       availableEvents: availableEvents || [],

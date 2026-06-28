@@ -24,6 +24,14 @@ export const resetPasswordLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+export const twoFactorLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 10,
+  message: { error: 'Trop de tentatives de vérification. Réessayez dans 10 minutes.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 export const searchLimiter = rateLimit({
   windowMs: 60 * 1000,
   max: 60,

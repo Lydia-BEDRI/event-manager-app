@@ -26,6 +26,10 @@ describe('ProfilePage', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    (authService.getTwoFactorStatus as jest.Mock).mockResolvedValue({
+      enabled: false,
+      backupCodesRemaining: 0,
+    });
     (useAuth as jest.Mock).mockReturnValue({
       user: mockUser,
       accessToken: mockAccessToken,
@@ -152,15 +156,15 @@ describe('ProfilePage', () => {
       const submitButton = screen.getByText(/enregistrer les modifications/i);
 
       fireEvent.change(currentPasswordInput, { target: { value: 'oldPassword123' } });
-      fireEvent.change(newPasswordInput, { target: { value: 'newPassword456' } });
-      fireEvent.change(confirmPasswordInput, { target: { value: 'newPassword456' } });
+      fireEvent.change(newPasswordInput, { target: { value: 'NewPassword456!' } });
+      fireEvent.change(confirmPasswordInput, { target: { value: 'NewPassword456!' } });
       fireEvent.click(submitButton);
 
       await waitFor(() => {
         expect(authService.updateProfile).toHaveBeenCalledWith(
           {
             currentPassword: 'oldPassword123',
-            newPassword: 'newPassword456',
+            newPassword: 'NewPassword456!',
           },
           mockAccessToken
         );
@@ -189,8 +193,8 @@ describe('ProfilePage', () => {
 
       fireEvent.change(firstNameInput, { target: { value: 'Alice' } });
       fireEvent.change(currentPasswordInput, { target: { value: 'oldPassword123' } });
-      fireEvent.change(newPasswordInput, { target: { value: 'newPassword456' } });
-      fireEvent.change(confirmPasswordInput, { target: { value: 'newPassword456' } });
+      fireEvent.change(newPasswordInput, { target: { value: 'NewPassword456!' } });
+      fireEvent.change(confirmPasswordInput, { target: { value: 'NewPassword456!' } });
       fireEvent.click(submitButton);
 
       await waitFor(() => {
@@ -198,7 +202,7 @@ describe('ProfilePage', () => {
           {
             firstName: 'Alice',
             currentPassword: 'oldPassword123',
-            newPassword: 'newPassword456',
+            newPassword: 'NewPassword456!',
           },
           mockAccessToken
         );
@@ -227,8 +231,8 @@ describe('ProfilePage', () => {
       const confirmPasswordInput = screen.getAllByPlaceholderText(/••••••••/)[2];
       const submitButton = screen.getByText(/enregistrer les modifications/i);
 
-      fireEvent.change(newPasswordInput, { target: { value: 'newPassword456' } });
-      fireEvent.change(confirmPasswordInput, { target: { value: 'newPassword456' } });
+      fireEvent.change(newPasswordInput, { target: { value: 'NewPassword456!' } });
+      fireEvent.change(confirmPasswordInput, { target: { value: 'NewPassword456!' } });
       fireEvent.click(submitButton);
 
       await waitFor(() => {
@@ -247,7 +251,7 @@ describe('ProfilePage', () => {
       const submitButton = screen.getByText(/enregistrer les modifications/i);
 
       fireEvent.change(currentPasswordInput, { target: { value: 'oldPassword123' } });
-      fireEvent.change(newPasswordInput, { target: { value: 'newPassword456' } });
+      fireEvent.change(newPasswordInput, { target: { value: 'NewPassword456!' } });
       fireEvent.change(confirmPasswordInput, { target: { value: 'differentPassword' } });
       fireEvent.click(submitButton);
 
@@ -272,7 +276,7 @@ describe('ProfilePage', () => {
       fireEvent.click(submitButton);
 
       await waitFor(() => {
-        expect(screen.getByText(/au moins 8 caractères/i)).toBeInTheDocument();
+        expect(screen.getByText(/au moins 12 caractères/i)).toBeInTheDocument();
       });
 
       expect(authService.updateProfile).not.toHaveBeenCalled();
@@ -333,8 +337,8 @@ describe('ProfilePage', () => {
       const submitButton = screen.getByText(/enregistrer les modifications/i);
 
       fireEvent.change(currentPasswordInput, { target: { value: 'wrongPassword' } });
-      fireEvent.change(newPasswordInput, { target: { value: 'newPassword456' } });
-      fireEvent.change(confirmPasswordInput, { target: { value: 'newPassword456' } });
+      fireEvent.change(newPasswordInput, { target: { value: 'NewPassword456!' } });
+      fireEvent.change(confirmPasswordInput, { target: { value: 'NewPassword456!' } });
       fireEvent.click(submitButton);
 
       await waitFor(() => {
@@ -392,8 +396,8 @@ describe('ProfilePage', () => {
       const submitButton = screen.getByText(/enregistrer les modifications/i);
 
       fireEvent.change(currentPasswordInput, { target: { value: 'oldPassword123' } });
-      fireEvent.change(newPasswordInput, { target: { value: 'newPassword456' } });
-      fireEvent.change(confirmPasswordInput, { target: { value: 'newPassword456' } });
+      fireEvent.change(newPasswordInput, { target: { value: 'NewPassword456!' } });
+      fireEvent.change(confirmPasswordInput, { target: { value: 'NewPassword456!' } });
       fireEvent.click(submitButton);
 
       await waitFor(() => {
