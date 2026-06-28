@@ -16,6 +16,13 @@ export interface AuthResponse {
   accessToken: string;
   refreshToken: string;
   passwordExpired?: boolean;
+  backupCodeUsed?: boolean;
+}
+
+export interface TwoFactorChallengeResponse {
+  message: string;
+  requiresTwoFactor: true;
+  challengeToken: string;
 }
 
 export interface RegisterData {
@@ -42,7 +49,13 @@ export const authService = {
     api.post<AuthResponse>('/auth/register', data as unknown as Record<string, unknown>),
 
   login: (data: LoginData) =>
-    api.post<AuthResponse>('/auth/login', data as unknown as Record<string, unknown>),
+    api.post<AuthResponse | TwoFactorChallengeResponse>(
+      '/auth/login',
+      data as unknown as Record<string, unknown>,
+    ),
+
+  verifyTwoFactorLogin: (challengeToken: string, code: string) =>
+    api.post<AuthResponse>('/auth/2fa/login/verify', { challengeToken, code }),
 
   logout: (refreshToken: string, accessToken: string) =>
     api.post<{ message: string }>('/auth/logout', { refreshToken }, accessToken),
@@ -64,4 +77,19 @@ export const authService = {
 
   updateProfile: (data: UpdateProfileData, token: string) =>
     api.patch<{ message: string; user: User }>('/auth/profile', data, token),
+
+  getTwoFactorStatus: (token: string) =>
+    api.get<{ enabled: boolean; backupCodesRemaining: number }>('/auth/2fa/status', token),
+
+  setupTwoFactor: (token: string) =>
+    api.post<{ secret: string; qrCodeDataUrl: string }>('/auth/2fa/setup', {}, token),
+
+  enableTwoFactor: (code: string, token: string) =>
+    api.post<{ message: string; backupCodes: string[] }>('/auth/2fa/enable', { code }, token),
+
+  disableTwoFactor: (password: string, code: string, token: string) =>
+    api.post<{ message: string }>('/auth/2fa/disable', { password, code }, token),
+
+  regenerateBackupCodes: (code: string, token: string) =>
+    api.post<{ backupCodes: string[] }>('/auth/2fa/backup-codes', { code }, token),
 };

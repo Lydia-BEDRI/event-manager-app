@@ -230,6 +230,35 @@ describe('ParticipantDashboard', () => {
   });
 
   describe('Rendering - Empty States', () => {
+    it('devrait afficher des compteurs à zéro lorsque l’API renvoie des agrégats null', async () => {
+      const newUserStats = {
+        ...mockStats,
+        stats: {
+          total_participations: 0,
+          approved_participations: null,
+          pending_participations: null,
+          refused_participations: null,
+        },
+        zoneAccess: {
+          unique_zones_visited: 0,
+          total_zone_accesses: 0,
+        },
+        myParticipations: [],
+        upcomingEvents: [],
+        pastEvents: [],
+      };
+
+      (getMyParticipantStats as jest.Mock).mockResolvedValue(newUserStats);
+
+      render(<ParticipantDashboard />);
+
+      await waitFor(() => {
+        expect(screen.getByText('Mon espace participant')).toBeInTheDocument();
+      });
+      expect(screen.getAllByText('0').length).toBeGreaterThanOrEqual(3);
+      expect(screen.getByText('Aucune participation')).toBeInTheDocument();
+    });
+
     it('devrait ne pas afficher la section QR codes si aucun QR code disponible', async () => {
       const emptyStats = {
         ...mockStats,

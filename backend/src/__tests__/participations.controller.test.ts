@@ -428,16 +428,16 @@ describe('Participations Controller', () => {
     it('devrait retourner des statistiques vides pour un nouveau participant', async () => {
       (pool.query as jest.Mock)
         .mockResolvedValueOnce([[{
-          total_participations: 0,
-          approved_participations: 0,
-          pending_participations: 0,
-          refused_participations: 0
+          total_participations: '0',
+          approved_participations: null,
+          pending_participations: null,
+          refused_participations: null
         }]])
         .mockResolvedValueOnce([[]])
         .mockResolvedValueOnce([[]])
         .mockResolvedValueOnce([[{
-          unique_zones_visited: 0,
-          total_zone_accesses: 0
+          unique_zones_visited: '0',
+          total_zone_accesses: '0'
         }]])
         .mockResolvedValueOnce([[]])
         .mockResolvedValueOnce([[]]);

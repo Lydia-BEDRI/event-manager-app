@@ -18,7 +18,15 @@ interface AuthContextType {
   accessToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (data: LoginData) => Promise<{ passwordExpired?: boolean }>;
+  login: (data: LoginData) => Promise<{
+    passwordExpired?: boolean;
+    requiresTwoFactor?: boolean;
+    challengeToken?: string;
+  }>;
+  verifyTwoFactorLogin: (
+    challengeToken: string,
+    code: string,
+  ) => Promise<{ passwordExpired?: boolean; backupCodeUsed?: boolean }>;
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   forgotPassword: (email: string) => Promise<void>;
@@ -125,11 +133,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const login = async (data: LoginData) => {
     const response = await authService.login(data);
+
+    if ('requiresTwoFactor' in response && response.requiresTwoFactor) {
+      return {
+        requiresTwoFactor: true,
+        challengeToken: response.challengeToken,
+      };
+    }
+
     setUser(response.user);
     setAccessToken(response.accessToken);
     localStorage.setItem("accessToken", response.accessToken);
     localStorage.setItem("refreshToken", response.refreshToken);
     return { passwordExpired: response.passwordExpired };
+  };
+
+  const verifyTwoFactorLogin = async (challengeToken: string, code: string) => {
+    const response = await authService.verifyTwoFactorLogin(challengeToken, code);
+    setUser(response.user);
+    setAccessToken(response.accessToken);
+    localStorage.setItem('accessToken', response.accessToken);
+    localStorage.setItem('refreshToken', response.refreshToken);
+    return {
+      passwordExpired: response.passwordExpired,
+      backupCodeUsed: response.backupCodeUsed,
+    };
   };
 
   const register = async (data: RegisterData) => {
@@ -172,6 +200,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         isAuthenticated: !!user,
         isLoading,
         login,
+        verifyTwoFactorLogin,
         register,
         logout,
         forgotPassword,
