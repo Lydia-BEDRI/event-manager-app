@@ -491,7 +491,7 @@ export const requestParticipation = async (req: AuthenticatedRequest, res: Respo
     }
 
     await connection.commit();
-    notifications.forEach(emitNotification);
+    notifications.forEach((createdNotification) => emitNotification(createdNotification));
 
     res.status(201).json(participations[0]);
   } catch (error) {

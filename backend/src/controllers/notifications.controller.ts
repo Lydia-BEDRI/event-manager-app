@@ -158,7 +158,7 @@ export async function createSystemNotification(
         type: "SYSTEM",
       })),
     );
-    notifications.forEach(emitNotification);
+    notifications.forEach((notification) => emitNotification(notification));
 
     res.status(201).json({ createdCount: notifications.length });
   } catch (error) {

@@ -301,7 +301,7 @@ export const updateEvent = async (req: Request, res: Response) => {
     }
 
     await connection.commit();
-    notifications.forEach(emitNotification);
+    notifications.forEach((notification) => emitNotification(notification));
 
     const [updatedEvent] = await connection.query<RowDataPacket[]>(
       'SELECT * FROM events WHERE id = ?',

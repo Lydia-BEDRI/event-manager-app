@@ -47,5 +47,5 @@ export async function notifyChatMentions(
       referenceId: message.eventId,
     })),
   );
-  notifications.forEach(onCreated);
+  notifications.forEach((notification) => onCreated(notification));
 }
