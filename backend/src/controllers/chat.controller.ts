@@ -16,7 +16,9 @@ import {
   emitMessageDeleted,
   emitMessageUpdated,
   emitNewMessage,
+  emitNotification,
 } from "../sockets/server.socket";
+import { notifyChatMentions } from "../services/chat-mention.service";
 
 function parseEventId(value: string): number {
   return Number.parseInt(value, 10);
@@ -130,6 +132,11 @@ export async function postMessage(
 
     const message = await createMessage(eventId, req.user.userId, content);
     emitNewMessage(eventId, message);
+    try {
+      await notifyChatMentions(message, emitNotification);
+    } catch (notificationError) {
+      console.error("Erreur notifications de mention:", notificationError);
+    }
 
     res.status(201).json({ message });
   } catch (error) {

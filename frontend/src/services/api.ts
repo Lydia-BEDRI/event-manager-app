@@ -15,9 +15,9 @@ async function toApiError(response: Response): Promise<ApiError> {
 
   try {
     const data = await response.json();
-    if (data?.error) {
+    if (typeof data?.error === "string") {
       message = data.error;
-    } else if (data?.message) {
+    } else if (typeof data?.message === "string") {
       message = data.message;
     }
   } catch {

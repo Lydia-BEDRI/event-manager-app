@@ -4,6 +4,8 @@ import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { AuthenticatedRequest } from '../middlewares/authenticate';
 import crypto from 'crypto';
 import QRCode from 'qrcode';
+import { createNotification, Notification } from '../services/notification.service';
+import { emitNotification } from '../sockets/server.socket';
 
 export const getAllParticipations = async (_req: Request, res: Response) => {
   try {
@@ -77,6 +79,7 @@ export const getParticipationsByEvent = async (req: Request, res: Response) => {
 
 export const updateParticipationStatus = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
   const connection = await pool.getConnection();
+  let notification: Notification | null = null;
 
   try {
     if (!req.user) {
@@ -175,21 +178,23 @@ export const updateParticipationStatus = async (req: AuthenticatedRequest, res: 
       ]
     );
 
-    await connection.query(
-      `INSERT INTO notifications (user_id, title, body, type, reference_type, reference_id)
-       VALUES (?, ?, ?, ?, 'participation', ?)`,
-      [
-        participation.user_id,
-        status === 'APPROVED' ? 'Participation approuvée' : 'Participation refusée',
-        status === 'APPROVED'
+    if (participation.status !== status) {
+      notification = await createNotification({
+        userId: participation.user_id,
+        title: status === 'APPROVED' ? 'Participation approuvée' : 'Participation refusée',
+        body: status === 'APPROVED'
           ? `Votre participation à "${participation.event_name}" a été approuvée.`
           : `Votre participation à "${participation.event_name}" a été refusée.`,
-        status === 'APPROVED' ? 'PARTICIPATION_APPROVED' : 'PARTICIPATION_REFUSED',
-        participationId
-      ]
-    );
+        type: status === 'APPROVED' ? 'PARTICIPATION_APPROVED' : 'PARTICIPATION_REFUSED',
+        referenceType: 'participation',
+        referenceId: participationId,
+      }, connection);
+    }
 
     await connection.commit();
+    if (notification) {
+      emitNotification(notification);
+    }
 
     const [updatedParticipation] = await connection.query<RowDataPacket[]>(
       `SELECT 
@@ -372,6 +377,7 @@ export const getMyParticipantStats = async (req: AuthenticatedRequest, res: Resp
 };
 
 export const requestParticipation = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
+  const connection = await pool.getConnection();
   try {
     if (!req.user) {
       res.status(401).json({ message: 'Non authentifié' });
@@ -433,13 +439,15 @@ export const requestParticipation = async (req: AuthenticatedRequest, res: Respo
       return;
     }
 
-    const [result] = await pool.query<ResultSetHeader>(
+    await connection.beginTransaction();
+
+    const [result] = await connection.query<ResultSetHeader>(
       `INSERT INTO participations (user_id, event_id, status, created_at, updated_at)
        VALUES (?, ?, 'PENDING', NOW(), NOW())`,
       [userId, eventId]
     );
 
-    const [participations] = await pool.query<RowDataPacket[]>(
+    const [participations] = await connection.query<RowDataPacket[]>(
       `SELECT 
         p.id,
         p.status,
@@ -459,10 +467,39 @@ export const requestParticipation = async (req: AuthenticatedRequest, res: Respo
       [result.insertId]
     );
 
+    const [recipients] = await connection.query<RowDataPacket[]>(
+      `SELECT id FROM users WHERE role = 'ADMIN' AND is_active = TRUE`
+    );
+    const [requesters] = await connection.query<RowDataPacket[]>(
+      `SELECT first_name, last_name FROM users WHERE id = ?`,
+      [userId]
+    );
+    const requesterName = requesters.length > 0
+      ? `${requesters[0].first_name} ${requesters[0].last_name}`
+      : 'Un participant';
+    const notifications: Notification[] = [];
+
+    for (const recipient of recipients) {
+      notifications.push(await createNotification({
+        userId: recipient.id,
+        title: 'Nouvelle demande de participation',
+        body: `${requesterName} souhaite participer à "${event.name}".`,
+        type: 'PARTICIPATION_REQUEST',
+        referenceType: 'participation',
+        referenceId: result.insertId,
+      }, connection));
+    }
+
+    await connection.commit();
+    notifications.forEach(emitNotification);
+
     res.status(201).json(participations[0]);
   } catch (error) {
+    await connection.rollback();
     console.error('Error requesting participation:', error);
     res.status(500).json({ message: 'Erreur serveur', error });
+  } finally {
+    connection.release();
   }
 };
 

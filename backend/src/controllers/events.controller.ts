@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import pool from '../config/database';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
+import { createNotification, Notification } from '../services/notification.service';
+import { emitNotification } from '../sockets/server.socket';
 
 export const getAllEvents = async (_req: Request, res: Response) => {
   try {
@@ -138,6 +140,7 @@ export const createEvent = async (req: Request, res: Response) => {
 
 export const updateEvent = async (req: Request, res: Response) => {
   const connection = await pool.getConnection();
+  const notifications: Notification[] = [];
   
   try {
     const { id } = req.params;
@@ -233,26 +236,72 @@ export const updateEvent = async (req: Request, res: Response) => {
       );
     }
 
-    // Gérer la mise à jour des zones si présentes
+    // Mettre à jour les zones en place pour préserver les accès et historiques.
     if (zones !== undefined) {
-      // Supprimer les anciennes zones
-      await connection.query('DELETE FROM zones WHERE event_id = ?', [id]);
+      const [existingZones] = await connection.query<RowDataPacket[]>(
+        'SELECT id FROM zones WHERE event_id = ? ORDER BY id ASC',
+        [id]
+      );
+      const submittedZones = Array.isArray(zones) ? zones : [];
+      const sharedLength = Math.min(existingZones.length, submittedZones.length);
 
-      // Ajouter les nouvelles zones
-      if (Array.isArray(zones) && zones.length > 0) {
-        await Promise.all(
-          zones.map(zone => 
-            connection.query<ResultSetHeader>(
-              `INSERT INTO zones (event_id, name, description, capacity, created_at) 
-               VALUES (?, ?, ?, ?, NOW())`,
-              [id, zone.name, zone.description || null, zone.capacity]
-            )
-          )
+      for (let index = 0; index < sharedLength; index += 1) {
+        const zone = submittedZones[index];
+        await connection.query(
+          `UPDATE zones
+           SET name = ?, description = ?, capacity = ?
+           WHERE id = ? AND event_id = ?`,
+          [zone.name, zone.description || null, zone.capacity, existingZones[index].id, id]
+        );
+      }
+
+      for (let index = sharedLength; index < submittedZones.length; index += 1) {
+        const zone = submittedZones[index];
+        await connection.query<ResultSetHeader>(
+          `INSERT INTO zones (event_id, name, description, capacity, created_at)
+           VALUES (?, ?, ?, ?, NOW())`,
+          [id, zone.name, zone.description || null, zone.capacity]
+        );
+      }
+
+      if (existingZones.length > submittedZones.length) {
+        const zoneIdsToDelete = existingZones
+          .slice(submittedZones.length)
+          .map(zone => zone.id);
+        const placeholders = zoneIdsToDelete.map(() => '?').join(', ');
+        await connection.query(
+          `DELETE FROM zones WHERE event_id = ? AND id IN (${placeholders})`,
+          [id, ...zoneIdsToDelete]
         );
       }
     }
 
+    if (updates.length > 0 || zones !== undefined) {
+      const [participants] = await connection.query<RowDataPacket[]>(
+        `SELECT DISTINCT user_id
+         FROM participations
+         WHERE event_id = ? AND status = 'APPROVED'`,
+        [id]
+      );
+      const eventName = name ?? events[0].name;
+      const cancelled = status === 'CANCELLED' && events[0].status !== 'CANCELLED';
+
+      for (const participant of participants) {
+        notifications.push(await createNotification({
+          userId: participant.user_id,
+          title: cancelled ? 'Événement annulé' : 'Événement mis à jour',
+          body: cancelled
+            ? `L'événement "${eventName}" a été annulé.`
+            : `Les informations de l'événement "${eventName}" ont été modifiées.`,
+          type: 'EVENT_UPDATE',
+          referenceType: 'event',
+          referenceId: Number(id),
+        }, connection));
+      }
+    }
+
     await connection.commit();
+    notifications.forEach(emitNotification);
 
     const [updatedEvent] = await connection.query<RowDataPacket[]>(
       'SELECT * FROM events WHERE id = ?',
@@ -271,6 +320,11 @@ export const updateEvent = async (req: Request, res: Response) => {
   } catch (error) {
     await connection.rollback();
     console.error('Error updating event:', error);
+    if ((error as { errno?: number }).errno === 1451) {
+      return res.status(409).json({
+        message: "Une zone possédant un historique d'accès ne peut pas être supprimée."
+      });
+    }
     return res.status(500).json({ message: 'Erreur serveur', error });
   } finally {
     connection.release();

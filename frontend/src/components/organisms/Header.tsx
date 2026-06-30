@@ -36,7 +36,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           <div className="hidden xl:block w-64">
             <SearchBar />
           </div>
-          <NotificationBell hasNotification={true} />
+          <NotificationBell />
           <UserProfile  />
         </div>
       </div>
