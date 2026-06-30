@@ -8,6 +8,8 @@ import {
   getEventById,
 } from "../services/chat.service";
 import { TokenPayload } from "../utils/jwt";
+import type { Notification } from "../services/notification.service";
+import { notifyChatMentions } from "../services/chat-mention.service";
 
 interface AuthenticatedSocket extends Socket {
   data: {
@@ -28,6 +30,10 @@ let io: Server | null = null;
 
 function roomName(eventId: number): string {
   return `event:${eventId}`;
+}
+
+function userRoomName(userId: number): string {
+  return `user:${userId}`;
 }
 
 function emitSocketError(socket: Socket, message: string): void {
@@ -63,6 +69,11 @@ export function initSocketServer(server: HttpServer): Server {
   });
 
   io.on("connection", (socket: AuthenticatedSocket) => {
+    const connectedUser = socket.data.user;
+    if (connectedUser) {
+      socket.join(userRoomName(connectedUser.userId));
+    }
+
     socket.on("chat:join", async (payload: JoinPayload) => {
       const user = socket.data.user;
       const eventId = Number(payload?.eventId);
@@ -137,6 +148,11 @@ export function initSocketServer(server: HttpServer): Server {
 
         const message = await createMessage(eventId, user.userId, content);
         io?.to(roomName(eventId)).emit("chat:message:new", { message });
+        try {
+          await notifyChatMentions(message, emitNotification);
+        } catch (notificationError) {
+          console.error("Erreur notifications de mention:", notificationError);
+        }
       } catch {
         emitSocketError(socket, "Erreur serveur.");
       }
@@ -159,4 +175,10 @@ export function emitMessageUpdated(
   payload: Record<string, unknown>,
 ): void {
   io?.to(roomName(eventId)).emit("chat:message:updated", payload);
+}
+
+export function emitNotification(notification: Notification): void {
+  io?.to(userRoomName(notification.user_id)).emit("notification:new", {
+    notification,
+  });
 }

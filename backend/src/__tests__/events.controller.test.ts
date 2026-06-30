@@ -7,6 +7,7 @@ import {
   deleteEvent
 } from '../controllers/events.controller';
 import pool from '../config/database';
+import { createNotification } from '../services/notification.service';
 
 jest.mock('../config/database', () => ({
   __esModule: true,
@@ -14,6 +15,12 @@ jest.mock('../config/database', () => ({
     query: jest.fn(),
     getConnection: jest.fn(),
   },
+}));
+jest.mock('../services/notification.service', () => ({
+  createNotification: jest.fn(),
+}));
+jest.mock('../sockets/server.socket', () => ({
+  emitNotification: jest.fn(),
 }));
 
 describe('Events Controller', () => {
@@ -33,6 +40,7 @@ describe('Events Controller', () => {
     };
     
     jest.clearAllMocks();
+    (createNotification as jest.Mock).mockResolvedValue({ id: 99, user_id: 3 });
   });
 
   describe('getAllEvents', () => {
@@ -191,6 +199,7 @@ describe('Events Controller', () => {
       mockConnection.query
         .mockResolvedValueOnce([mockEvent])
         .mockResolvedValueOnce([{}])
+        .mockResolvedValueOnce([[]])
         .mockResolvedValueOnce([mockUpdatedEvent])
         .mockResolvedValueOnce([mockZones]);
 

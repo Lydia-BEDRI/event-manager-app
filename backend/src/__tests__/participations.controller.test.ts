@@ -6,6 +6,7 @@ import {
   updateParticipationStatus
 } from '../controllers/participations.controller';
 import pool from '../config/database';
+import { createNotification } from '../services/notification.service';
 import { AuthenticatedRequest } from '../middlewares/authenticate';
 
 jest.mock('../config/database', () => ({
@@ -14,6 +15,12 @@ jest.mock('../config/database', () => ({
     query: jest.fn(),
     getConnection: jest.fn(),
   },
+}));
+jest.mock('../services/notification.service', () => ({
+  createNotification: jest.fn(),
+}));
+jest.mock('../sockets/server.socket', () => ({
+  emitNotification: jest.fn(),
 }));
 
 describe('Participations Controller', () => {
@@ -43,6 +50,7 @@ describe('Participations Controller', () => {
     (pool.getConnection as jest.Mock).mockResolvedValue(mockConnection);
     
     jest.clearAllMocks();
+    (createNotification as jest.Mock).mockResolvedValue({ id: 99, user_id: 3 });
     (pool.getConnection as jest.Mock).mockResolvedValue(mockConnection);
   });
 
@@ -286,7 +294,6 @@ describe('Participations Controller', () => {
         }]])
         .mockResolvedValueOnce([{ affectedRows: 1 }])
         .mockResolvedValueOnce([{ affectedRows: 1 }])
-        .mockResolvedValueOnce([{ insertId: 1 }])
         .mockResolvedValueOnce([{ insertId: 1 }])
         .mockResolvedValueOnce([[updatedParticipation]]);
 

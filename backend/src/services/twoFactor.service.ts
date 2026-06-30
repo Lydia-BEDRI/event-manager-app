@@ -4,6 +4,19 @@ import { generateSecret, generateURI, verify } from 'otplib';
 const ENCRYPTION_ALGORITHM = 'aes-256-gcm';
 const BACKUP_CODE_COUNT = 8;
 
+function decodeCanonicalBase64Url(value: string): Buffer {
+  if (!/^[A-Za-z0-9_-]+$/.test(value)) {
+    throw new Error('Invalid encrypted two-factor secret.');
+  }
+
+  const decoded = Buffer.from(value, 'base64url');
+  if (decoded.length === 0 || decoded.toString('base64url') !== value) {
+    throw new Error('Invalid encrypted two-factor secret.');
+  }
+
+  return decoded;
+}
+
 function getKey(purpose: string): Buffer {
   const material = process.env.TWO_FACTOR_ENCRYPTION_KEY
     || process.env.JWT_SECRET
@@ -44,21 +57,30 @@ export function encryptTwoFactorSecret(secret: string): string {
 }
 
 export function decryptTwoFactorSecret(payload: string): string {
-  const [ivValue, authTagValue, encryptedValue] = payload.split('.');
+  const parts = payload.split('.');
 
-  if (!ivValue || !authTagValue || !encryptedValue) {
+  if (parts.length !== 3 || parts.some((part) => !part)) {
+    throw new Error('Invalid encrypted two-factor secret.');
+  }
+
+  const [ivValue, authTagValue, encryptedValue] = parts;
+  const iv = decodeCanonicalBase64Url(ivValue);
+  const authTag = decodeCanonicalBase64Url(authTagValue);
+  const encrypted = decodeCanonicalBase64Url(encryptedValue);
+
+  if (iv.length !== 12 || authTag.length !== 16) {
     throw new Error('Invalid encrypted two-factor secret.');
   }
 
   const decipher = crypto.createDecipheriv(
     ENCRYPTION_ALGORITHM,
     getKey('totp'),
-    Buffer.from(ivValue, 'base64url'),
+    iv,
   );
-  decipher.setAuthTag(Buffer.from(authTagValue, 'base64url'));
+  decipher.setAuthTag(authTag);
 
   return Buffer.concat([
-    decipher.update(Buffer.from(encryptedValue, 'base64url')),
+    decipher.update(encrypted),
     decipher.final(),
   ]).toString('utf8');
 }
