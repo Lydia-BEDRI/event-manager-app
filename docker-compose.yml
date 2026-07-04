@@ -80,6 +80,10 @@ services:
       - SMTP_USER=${SMTP_USER:-}
       - SMTP_PASSWORD=${SMTP_PASSWORD:-}
       - SMTP_FROM=${SMTP_FROM:-EventManager <no-reply@eventmanager.local>}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - SENTRY_ENVIRONMENT=${SENTRY_ENVIRONMENT:-local}
+      - SENTRY_TRACES_SAMPLE_RATE=${SENTRY_TRACES_SAMPLE_RATE:-0.1}
+      - APP_VERSION=${APP_VERSION:-local}
     depends_on:
       db:
         condition: service_healthy
@@ -106,6 +110,14 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        REACT_APP_API_URL: ${REACT_APP_API_URL:-http://localhost:5000/api}
+        REACT_APP_SENTRY_DSN: ${REACT_APP_SENTRY_DSN:-}
+        REACT_APP_SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-local}
+        REACT_APP_SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE:-0.1}
+        REACT_APP_VERSION: ${APP_VERSION:-local}
+        REACT_APP_MATOMO_URL: ${REACT_APP_MATOMO_URL:-http://localhost:8081}
+        REACT_APP_MATOMO_SITE_ID: ${REACT_APP_MATOMO_SITE_ID:-1}
     container_name: eventmanager-frontend
     restart: unless-stopped
     ports:
@@ -129,9 +141,122 @@ services:
       retries: 3
       start_period: 40s
 
+  prometheus:
+    image: prom/prometheus:v3.4.1
+    container_name: eventmanager-prometheus
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+    ports:
+      - "127.0.0.1:9090:9090"
+    volumes:
+      - ./observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - eventmanager-prometheus-data:/prometheus
+    depends_on:
+      backend:
+        condition: service_healthy
+      cadvisor:
+        condition: service_started
+    networks:
+      - eventmanager-network
+
+  grafana:
+    image: grafana/grafana:12.0.2
+    container_name: eventmanager-grafana
+    restart: unless-stopped
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-change-me}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    ports:
+      - "127.0.0.1:3001:3000"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - eventmanager-grafana-data:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - eventmanager-network
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.52.1
+    container_name: eventmanager-cadvisor
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "127.0.0.1:8082:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker:/var/lib/docker:ro
+      - /dev/disk:/dev/disk:ro
+    devices:
+      - /dev/kmsg
+    networks:
+      - eventmanager-network
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:1.23.16
+    container_name: eventmanager-uptime-kuma
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3002:3001"
+    volumes:
+      - eventmanager-uptime-kuma-data:/app/data
+    networks:
+      - eventmanager-network
+
+  matomo-db:
+    image: mariadb:11.4
+    container_name: eventmanager-matomo-db
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${MATOMO_DATABASE:-matomo}
+      MARIADB_USER: ${MATOMO_DATABASE_USER:-matomo}
+      MARIADB_PASSWORD: ${MATOMO_DATABASE_PASSWORD:-change-me}
+      MARIADB_ROOT_PASSWORD: ${MATOMO_DATABASE_ROOT_PASSWORD:-change-me-root}
+    volumes:
+      - eventmanager-matomo-db-data:/var/lib/mysql
+    networks:
+      - eventmanager-network
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  matomo:
+    image: matomo:5-apache
+    container_name: eventmanager-matomo
+    restart: unless-stopped
+    environment:
+      MATOMO_DATABASE_HOST: matomo-db
+      MATOMO_DATABASE_DBNAME: ${MATOMO_DATABASE:-matomo}
+      MATOMO_DATABASE_USERNAME: ${MATOMO_DATABASE_USER:-matomo}
+      MATOMO_DATABASE_PASSWORD: ${MATOMO_DATABASE_PASSWORD:-change-me}
+    ports:
+      - "127.0.0.1:8081:80"
+    volumes:
+      - eventmanager-matomo-data:/var/www/html
+    depends_on:
+      matomo-db:
+        condition: service_healthy
+    networks:
+      - eventmanager-network
+
 networks:
   eventmanager-network:
     driver: bridge
 
 volumes:
   eventmanager-db-data:
+  eventmanager-prometheus-data:
+  eventmanager-grafana-data:
+  eventmanager-uptime-kuma-data:
+  eventmanager-matomo-db-data:
+  eventmanager-matomo-data:

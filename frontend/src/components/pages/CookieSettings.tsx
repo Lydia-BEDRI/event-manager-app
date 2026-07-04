@@ -1,48 +1,41 @@
 import { useState } from 'react';
 import { Check, Info, ExternalLink, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { getCookiePreferences, saveCookiePreferences } from '../../services/cookieConsent.service';
 
 const CookieSettings = () => {
-  const [essentialCookies, setEssentialCookies] = useState(true);
-  const [functionalCookies, setFunctionalCookies] = useState(true);
-  const [analyticsCookies, setAnalyticsCookies] = useState(false);
+  const initialPreferences = getCookiePreferences();
+  const [functionalCookies, setFunctionalCookies] = useState(initialPreferences?.functional ?? true);
+  const [analyticsCookies, setAnalyticsCookies] = useState(initialPreferences?.analytics ?? false);
   const [saved, setSaved] = useState(false);
 
   const handleSave = () => {
-    localStorage.setItem('cookiePreferences', JSON.stringify({
-      essential: essentialCookies,
+    saveCookiePreferences({
       functional: functionalCookies,
-      analytics: analyticsCookies,
-      timestamp: new Date().toISOString()
-    }));
+      analytics: analyticsCookies
+    });
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
 
   const handleAcceptAll = () => {
-    setEssentialCookies(true);
     setFunctionalCookies(true);
     setAnalyticsCookies(true);
-    localStorage.setItem('cookiePreferences', JSON.stringify({
-      essential: true,
+    saveCookiePreferences({
       functional: true,
-      analytics: true,
-      timestamp: new Date().toISOString()
-    }));
+      analytics: true
+    });
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
 
   const handleRejectAll = () => {
-    setEssentialCookies(true);
     setFunctionalCookies(false);
     setAnalyticsCookies(false);
-    localStorage.setItem('cookiePreferences', JSON.stringify({
-      essential: true,
+    saveCookiePreferences({
       functional: false,
-      analytics: false,
-      timestamp: new Date().toISOString()
-    }));
+      analytics: false
+    });
     setSaved(true);
     setTimeout(() => setSaved(false), 3000);
   };
