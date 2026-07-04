@@ -39,6 +39,7 @@ EventManager est une application web destinée à la gestion d’événements in
 - **Backend** : API REST avec gestion des rôles et des droits.
 - **Base de données** : Stockage des utilisateurs, événements, accès et messages.
 - **Infrastructure** : Conteneurisation et déploiement sécurisé avec SSL.
+- **Observabilité** : Prometheus, Grafana, cAdvisor, Uptime Kuma, Sentry et Matomo.
 
 ## Sécurité et conformité
 
@@ -105,6 +106,132 @@ EventManager est une application web destinée à la gestion d’événements in
    - Backend : [http://localhost:5000](http://localhost:5000)
    - Health check : [http://localhost:5000/health](http://localhost:5000/health)
    - Boîte e-mail locale Mailpit : [http://localhost:8025](http://localhost:8025)
+
+### Services, ports et responsabilités
+
+Les consoles techniques sont liées à `127.0.0.1` par défaut. Elles ne sont donc pas
+accessibles depuis une autre machine sans tunnel SSH ou reverse proxy authentifié. En
+production, seuls les ports publics HTTP/HTTPS du reverse proxy doivent être ouverts.
+
+| Service | Port hôte | Port interne | Exposition | Rôle |
+|---|---:|---:|---|---|
+| `frontend` | `3000` | `80` | Application | Interface React servie par Nginx. |
+| `backend` | `5000` | `5000` | API | API REST, Socket.IO, `/health` et `/metrics`. |
+| `db` | `3307` | `3306` | Développement | Base MySQL métier d’EventManager. À ne pas exposer sur le VPS. |
+| `mailpit` | `1025` | `1025` | Local uniquement | Serveur SMTP de développement. |
+| `mailpit` | `8025` | `8025` | Local uniquement | Interface de consultation des e-mails de test. |
+| `prometheus` | `9090` | `9090` | Local/admin | Collecte et conserve les métriques pendant 15 jours. |
+| `grafana` | `3001` | `3000` | Local/admin | Visualise les métriques et fournit le dashboard EventManager. |
+| `cadvisor` | `8082` | `8080` | Local/admin | Expose CPU, mémoire, réseau et état des conteneurs à Prometheus. |
+| `uptime-kuma` | `3002` | `3001` | Local/admin | Surveille la disponibilité HTTP et déclenche des alertes. |
+| `matomo` | `8081` | `80` | Local/admin | Analytique web auto-hébergée soumise au consentement utilisateur. |
+| `matomo-db` | aucun | `3306` | Réseau Docker | Base MariaDB dédiée à Matomo, isolée de la base métier. |
+
+Le réseau Docker `eventmanager-network` permet aux services de se joindre par leur nom,
+par exemple `http://backend:5000/health`. Les volumes nommés conservent les bases, les
+dashboards, l’historique Prometheus et la configuration Uptime Kuma.
+
+## Observabilité
+
+### Métriques et état de santé
+
+Le backend expose deux endpoints non authentifiés destinés aux sondes internes :
+
+- `GET /health` vérifie simultanément le processus API et la connexion MySQL. Il renvoie
+  `200` lorsque les deux sont disponibles et `503` si MySQL est indisponible.
+- `GET /metrics` expose les métriques au format Prometheus.
+
+Les métriques principales sont :
+
+- `eventmanager_http_requests_total` : requêtes par méthode, route et statut ;
+- `eventmanager_http_request_duration_seconds` : histogramme de latence HTTP ;
+- `eventmanager_database_up` : disponibilité de MySQL ;
+- les métriques Node.js préfixées par `eventmanager_` : mémoire, CPU, event loop et GC.
+
+Prometheus collecte le backend et cAdvisor toutes les 15 secondes. Des règles sont
+préconfigurées pour détecter un backend ou une base indisponible, plus de 5 % d’erreurs
+HTTP 5xx et une latence p95 supérieure à une seconde. Grafana provisionne automatiquement
+la source Prometheus et le dashboard **EventManager - Vue d’ensemble**.
+
+Accès local :
+
+- Prometheus : [http://localhost:9090](http://localhost:9090)
+- Grafana : [http://localhost:3001](http://localhost:3001)
+- cAdvisor : [http://localhost:8082](http://localhost:8082)
+
+Les identifiants Grafana proviennent de `GRAFANA_ADMIN_USER` et
+`GRAFANA_ADMIN_PASSWORD`. La valeur par défaut `change-me` doit impérativement être
+remplacée sur un environnement partagé.
+
+### Surveillance Uptime Kuma
+
+À la première ouverture de [Uptime Kuma](http://localhost:3002), créez le compte
+administrateur puis ajoutez au minimum ces moniteurs HTTP depuis le réseau Docker :
+
+| Moniteur | URL interne | Résultat attendu |
+|---|---|---|
+| Backend et MySQL | `http://backend:5000/health` | HTTP `200` |
+| Frontend | `http://frontend:80` | HTTP `200` |
+| Prometheus | `http://prometheus:9090/-/healthy` | HTTP `200` |
+| Matomo | `http://matomo:80` | HTTP `200` |
+
+Configurez ensuite un canal de notification e-mail, Slack ou Discord dans Uptime Kuma.
+Sa configuration est conservée dans le volume `eventmanager-uptime-kuma-data`.
+
+### Signalement des erreurs avec Sentry
+
+Sentry est optionnel en local et s’active uniquement lorsqu’un DSN est fourni. Le backend
+signale les exceptions non gérées, les erreurs du health check et les réponses HTTP 5xx.
+Le frontend signale les erreurs JavaScript et peut envoyer un échantillon de traces.
+
+```env
+SENTRY_DSN=https://cle@organisation.ingest.sentry.io/projet-backend
+REACT_APP_SENTRY_DSN=https://cle@organisation.ingest.sentry.io/projet-frontend
+SENTRY_ENVIRONMENT=production
+SENTRY_TRACES_SAMPLE_RATE=0.1
+APP_VERSION=1.0.0
+```
+
+Les variables `REACT_APP_*` sont intégrées au bundle lors du build du frontend. Il faut
+donc reconstruire l’image après leur modification. Les données personnelles ne sont pas
+envoyées par défaut (`sendDefaultPii: false`).
+
+### Analytique Matomo et consentement
+
+Matomo utilise une base MariaDB séparée. Ouvrez [http://localhost:8081](http://localhost:8081)
+au premier démarrage et terminez l’assistant avec les paramètres suivants :
+
+```text
+Serveur de base de données : matomo-db
+Base : valeur de MATOMO_DATABASE
+Utilisateur : valeur de MATOMO_DATABASE_USER
+Mot de passe : valeur de MATOMO_DATABASE_PASSWORD
+```
+
+Créez ensuite le site EventManager et reportez son identifiant dans
+`REACT_APP_MATOMO_SITE_ID`. Le tracker n’est chargé que lorsque l’utilisateur accepte les
+cookies analytiques dans la page **Gestion des cookies**. Un refus ou un retrait du
+consentement désactive les cookies Matomo.
+
+### Démarrage ciblé
+
+Pour démarrer uniquement la supervision avec l’application :
+
+```bash
+docker compose up -d --build backend frontend cadvisor prometheus grafana uptime-kuma
+```
+
+Pour inclure l’analytique auto-hébergée :
+
+```bash
+docker compose up -d matomo-db matomo
+```
+
+Pour vérifier la configuration sans lancer les conteneurs :
+
+```bash
+docker compose config --quiet
+```
 
 ### Réinitialisation du mot de passe en local
 

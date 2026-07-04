@@ -1,5 +1,8 @@
 import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { trackPageView } from "./observability/matomo";
+import CookieConsentBanner from "./components/organisms/CookieConsentBanner";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Layout from "./components/templates/Layout";
 import AdminDashboard from "./components/pages/AdminDashboard";
@@ -312,9 +315,21 @@ const AppRoutes: React.FC = () => {
   );
 };
 
+const AnalyticsTracker: React.FC = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    trackPageView(`${location.pathname}${location.search}`);
+  }, [location.pathname, location.search]);
+
+  return null;
+};
+
 const App: React.FC = () => {
   return (
     <BrowserRouter>
+      <AnalyticsTracker />
+      <CookieConsentBanner />
       <AuthProvider>
         <AppRoutes />
       </AuthProvider>

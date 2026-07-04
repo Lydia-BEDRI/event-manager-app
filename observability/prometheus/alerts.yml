@@ -1,0 +1,40 @@
+groups:
+  - name: eventmanager
+    rules:
+      - alert: EventManagerBackendDown
+        expr: up{job="eventmanager-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Le backend EventManager est indisponible"
+
+      - alert: EventManagerDatabaseDown
+        expr: eventmanager_database_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "La base MySQL EventManager est indisponible"
+
+      - alert: EventManagerHighErrorRate
+        expr: |
+          sum(rate(eventmanager_http_requests_total{status_code=~"5.."}[5m]))
+          /
+          clamp_min(sum(rate(eventmanager_http_requests_total[5m])), 0.001) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Plus de 5 % des requêtes EventManager échouent"
+
+      - alert: EventManagerHighLatency
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le) (rate(eventmanager_http_request_duration_seconds_bucket[5m]))
+          ) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Le p95 HTTP du backend dépasse une seconde"

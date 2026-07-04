@@ -1,4 +1,5 @@
-import express, { Application, Request, Response } from "express";
+import "./observability/instrument";
+import express, { Application, NextFunction, Request, Response } from "express";
 import { createServer } from "http";
 import cors from "cors";
 import helmet from "helmet";
@@ -13,6 +14,9 @@ import chatRoutes from "./routes/chat.routes";
 import searchRoutes from "./routes/search.routes";
 import notificationRoutes from "./routes/notifications.routes";
 import { initSocketServer } from "./sockets/server.socket";
+import pool from "./config/database";
+import { databaseHealth, metricsMiddleware, metricsRegistry } from "./observability/metrics";
+import { Sentry } from "./observability/instrument";
 
 dotenv.config();
 
@@ -29,13 +33,39 @@ app.use(
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-app.get("/health", (_req: Request, res: Response) => {
-  res.status(200).json({
-    status: "OK",
-    message: "EventManager API is running",
-    timestamp: new Date().toISOString(),
+app.use(metricsMiddleware);
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.on("finish", () => {
+    if (res.statusCode >= 500) {
+      Sentry.captureMessage(`HTTP ${res.statusCode} ${req.method} ${req.originalUrl}`, "error");
+    }
   });
+  next();
+});
+
+app.get("/health", async (_req: Request, res: Response) => {
+  try {
+    await pool.query("SELECT 1");
+    databaseHealth.set(1);
+    res.status(200).json({
+      status: "OK",
+      services: { api: "up", database: "up" },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    databaseHealth.set(0);
+    Sentry.captureException(error);
+    res.status(503).json({
+      status: "DEGRADED",
+      services: { api: "up", database: "down" },
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
+app.get("/metrics", async (_req: Request, res: Response) => {
+  res.setHeader("Content-Type", metricsRegistry.contentType);
+  res.send(await metricsRegistry.metrics());
 });
 
 app.get("/", (_req: Request, res: Response) => {
@@ -60,6 +90,8 @@ app.use((_req: Request, res: Response) => {
     error: "Route not found",
   });
 });
+
+Sentry.setupExpressErrorHandler(app);
 
 initSocketServer(server);
 
