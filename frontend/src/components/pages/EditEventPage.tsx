@@ -134,7 +134,7 @@ const EditEventPage = () => {
 
       await updateEvent(Number(id), {
         ...formData,
-        zones: zones.length > 0 ? zones : undefined
+        zones
       });
       navigate('/events');
     } catch (err: any) {
@@ -341,6 +341,7 @@ const EditEventPage = () => {
                     type="button"
                     onClick={() => removeZone(index)}
                     className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    aria-label={`Supprimer la zone ${zone.name}`}
                   >
                     <Trash2 size={18} />
                   </button>
