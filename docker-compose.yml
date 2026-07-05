@@ -66,6 +66,8 @@ services:
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
       - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
       - JWT_EXPIRES_IN=7d
+      - QR_CODE_PRIVATE_KEY=${QR_CODE_PRIVATE_KEY:-your-qr-code-private-key-change-in-production}
+      - QR_CODE_TOKEN_TTL=${QR_CODE_TOKEN_TTL:-365d}
       - TWO_FACTOR_ENCRYPTION_KEY=${TWO_FACTOR_ENCRYPTION_KEY:-}
       - CORS_ORIGIN=${FRONTEND_URL:-http://localhost:3000}
       - DB_HOST=db
