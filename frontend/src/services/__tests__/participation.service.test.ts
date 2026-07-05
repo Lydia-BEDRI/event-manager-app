@@ -12,6 +12,7 @@ import {
   verifyPresence
 } from '../participation.service';
 import { api } from '../api';
+import { verifyAccessToken } from '../access.service';
 
 jest.mock('../api', () => ({
   api: {
@@ -19,6 +20,9 @@ jest.mock('../api', () => ({
     post: jest.fn(),
     patch: jest.fn(),
   },
+}));
+jest.mock('../access.service', () => ({
+  verifyAccessToken: jest.fn(),
 }));
 
 describe('Participation Service', () => {
@@ -531,15 +535,11 @@ describe('Participation Service', () => {
         zone_name: 'Hall Principal',
         scanned_at: '2026-06-23T10:00:00Z',
       };
-      (api.post as jest.Mock).mockResolvedValueOnce(mockResult);
+      (verifyAccessToken as jest.Mock).mockResolvedValueOnce(mockResult);
 
       const result = await verifyPresence('QR-EVT1-USR3', 1);
 
-      expect(api.post).toHaveBeenCalledWith(
-        '/participations/verify-presence',
-        { qr_code: 'QR-EVT1-USR3', zone_id: 1 },
-        mockAccessToken
-      );
+      expect(verifyAccessToken).toHaveBeenCalledWith({ token: 'QR-EVT1-USR3', zoneId: 1 });
       expect(result).toEqual(mockResult);
     });
   });

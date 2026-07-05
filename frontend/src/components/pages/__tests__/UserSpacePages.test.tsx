@@ -254,7 +254,7 @@ describe('User space pages', () => {
         expect(verifyPresence).toHaveBeenCalledWith('QR-EVT10-USR3', 5);
       });
       await waitFor(() => {
-        expect(screen.getByText('Présence validée')).toBeInTheDocument();
+        expect(screen.getByText('Accès autorisé')).toBeInTheDocument();
       });
     });
 

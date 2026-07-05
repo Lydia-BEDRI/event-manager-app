@@ -135,7 +135,7 @@ CREATE TABLE participations (
     user_id BIGINT UNSIGNED NOT NULL,
     event_id BIGINT UNSIGNED NOT NULL,
     status ENUM('PENDING', 'APPROVED', 'REFUSED') NOT NULL DEFAULT 'PENDING',
-    qr_code VARCHAR(255) DEFAULT NULL UNIQUE,
+    qr_code VARCHAR(512) DEFAULT NULL UNIQUE,
     qr_code_data TEXT DEFAULT NULL,
     approved_by BIGINT UNSIGNED DEFAULT NULL,
     approved_at DATETIME DEFAULT NULL,
@@ -152,8 +152,8 @@ CREATE TABLE participations (
 
 CREATE TABLE zone_access (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    participation_id BIGINT UNSIGNED NOT NULL,
-    zone_id BIGINT UNSIGNED NOT NULL,
+    participation_id BIGINT UNSIGNED DEFAULT NULL,
+    zone_id BIGINT UNSIGNED DEFAULT NULL,
     granted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_zone_access_participation FOREIGN KEY (participation_id) REFERENCES participations(id) ON DELETE CASCADE,
     CONSTRAINT fk_zone_access_zone FOREIGN KEY (zone_id) REFERENCES zones(id) ON DELETE CASCADE,
@@ -174,6 +174,7 @@ CREATE TABLE access_logs (
     CONSTRAINT fk_access_logs_scanner FOREIGN KEY (scanned_by) REFERENCES users(id),
     INDEX idx_access_logs_participation (participation_id),
     INDEX idx_access_logs_zone (zone_id),
+    INDEX idx_access_logs_participation_zone_valid (participation_id, zone_id, is_valid),
     INDEX idx_access_logs_scanned_at (scanned_at)
 ) ENGINE=InnoDB;
 

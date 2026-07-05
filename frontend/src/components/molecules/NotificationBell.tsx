@@ -59,7 +59,9 @@ const NotificationBell: React.FC = () => {
         setUnreadCount((count) => count + (notification.isRead ? 0 : 1));
       },
     );
-    return () => socket.disconnect();
+    return () => {
+      socket.disconnect();
+    };
   }, [accessToken]);
 
   const destination = (notification: Notification): string | null => {

@@ -51,10 +51,10 @@ INSERT INTO zones (event_id, name, description, capacity) VALUES
 -- =============================================
 
 INSERT INTO participations (user_id, event_id, status, qr_code, approved_by, approved_at) VALUES
-(3, 1, 'APPROVED', 'QR-EVT1-USR3-a1b2c3d4', 1, NOW()),
-(4, 1, 'APPROVED', 'QR-EVT1-USR4-e5f6g7h8', 1, NOW()),
+(3, 1, 'APPROVED', NULL, 1, NOW()),
+(4, 1, 'APPROVED', NULL, 1, NOW()),
 (5, 1, 'PENDING', NULL, NULL, NULL),
-(3, 3, 'APPROVED', 'QR-EVT3-USR3-i9j0k1l2', 2, NOW()),
+(3, 3, 'APPROVED', NULL, 2, NOW()),
 (4, 3, 'REFUSED', NULL, 2, NOW());
 
 -- =============================================

@@ -12,6 +12,13 @@ dist/
 build/
 */dist/
 */build/
+frontend/android/.gradle/
+frontend/android/app/build/
+frontend/android/build/
+frontend/android/capacitor-cordova-android-plugins/
+frontend/android/app/src/main/assets/public/
+frontend/android/app/src/main/assets/capacitor.config.json
+frontend/android/app/src/main/assets/capacitor.plugins.json
 
 # Logs
 logs/
@@ -34,6 +41,12 @@ Thumbs.db
 
 # Docker
 docker-compose.override.yml
+
+# Android / Capacitor local files
+frontend/android/local.properties
+*.apk
+*.aab
+releases/
 
 # Database
 *.sql.gz

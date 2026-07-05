@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, MapPin, QrCode, RefreshCw, Ticket } from 'lucide-react';
+import { CalendarDays, Download, MapPin, QrCode, RefreshCw, Ticket } from 'lucide-react';
 import {
   generateParticipationQrCode,
   getMyParticipantStats,
@@ -54,6 +54,18 @@ const MyQrCodesPage: React.FC = () => {
     } finally {
       setGeneratingId(null);
     }
+  };
+
+  const handleDownloadQr = (qrCode: ParticipantQrCode) => {
+    if (!qrCode.qr_code_data) {
+      setError('Image QR indisponible. Regénérez le QR code.');
+      return;
+    }
+
+    const link = document.createElement('a');
+    link.href = qrCode.qr_code_data;
+    link.download = `eventmanager-qr-${qrCode.event_id}-${qrCode.id}.png`;
+    link.click();
   };
 
   if (loading) {
@@ -134,6 +146,16 @@ const MyQrCodesPage: React.FC = () => {
                   {qrCode.qr_code}
                 </p>
               </div>
+
+              <button
+                type="button"
+                onClick={() => handleDownloadQr(qrCode)}
+                disabled={!qrCode.qr_code_data}
+                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-primary-accent px-4 py-2 text-sm font-semibold text-primary-accent transition hover:bg-primary-light disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <Download size={16} />
+                Télécharger
+              </button>
             </article>
           ))}
         </div>

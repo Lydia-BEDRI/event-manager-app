@@ -7,6 +7,7 @@ import {
   Participation,
   PresenceVerificationResult,
 } from '../types/participation.types';
+import { verifyAccessToken } from './access.service';
 
 export const getAllParticipations = async () => {
   const token = localStorage.getItem('accessToken');
@@ -68,13 +69,5 @@ export const generateParticipationQrCode = async (participationId: number) => {
 };
 
 export const verifyPresence = async (qrCode: string, zoneId: number) => {
-  const token = localStorage.getItem('accessToken');
-  if (!token) {
-    throw new Error('Token manquant. Veuillez vous reconnecter.');
-  }
-  return await api.post<PresenceVerificationResult>(
-    '/participations/verify-presence',
-    { qr_code: qrCode, zone_id: zoneId },
-    token
-  );
+  return await verifyAccessToken({ token: qrCode, zoneId }) as PresenceVerificationResult;
 };

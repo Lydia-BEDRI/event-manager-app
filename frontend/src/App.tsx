@@ -31,6 +31,8 @@ import MyParticipationsPage from "./components/pages/MyParticipationsPage";
 import MyQrCodesPage from "./components/pages/MyQrCodesPage";
 import PresenceVerificationPage from "./components/pages/PresenceVerificationPage";
 import AdminSettingsPage from "./components/pages/AdminSettingsPage";
+import KioskPage from "./components/pages/KioskPage";
+import BadgeWriterPage from "./components/pages/BadgeWriterPage";
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated, user, isLoading } = useAuth();
@@ -212,9 +214,27 @@ const AppRoutes: React.FC = () => {
       <Route
         path="/presence"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute allowedRoles={["ADMIN"]}>
             <Layout role={userRole || "PARTICIPANT"}>
               <PresenceVerificationPage />
+            </Layout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/kiosk"
+        element={
+          <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <KioskPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/badge-writer"
+        element={
+          <ProtectedRoute allowedRoles={["ADMIN"]}>
+            <Layout role="ADMIN">
+              <BadgeWriterPage />
             </Layout>
           </ProtectedRoute>
         }
