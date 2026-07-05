@@ -134,7 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const login = async (data: LoginData) => {
     const response = await authService.login(data);
 
-    if ('requiresTwoFactor' in response && response.requiresTwoFactor) {
+    if ('requiresTwoFactor' in response) {
       return {
         requiresTwoFactor: true,
         challengeToken: response.challengeToken,

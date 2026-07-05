@@ -102,10 +102,26 @@ export interface GeneratedQrCode {
 }
 
 export interface PresenceVerificationResult {
-  id: number;
+  id?: number;
+  authorized?: boolean;
+  reason?: string;
   is_valid: boolean;
-  participant_name: string;
-  event_name: string;
-  zone_name: string;
+  participant_name?: string;
+  event_name?: string;
+  zone_name?: string;
+  participant?: {
+    id: number;
+    fullName: string;
+    email: string;
+    avatarUrl: string | null;
+  };
+  event?: {
+    id: number;
+    name: string;
+  };
+  zone?: {
+    id: number;
+    name: string;
+  };
   scanned_at: string;
 }

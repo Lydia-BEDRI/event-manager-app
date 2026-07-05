@@ -2,10 +2,37 @@ import { Request, Response } from 'express';
 import pool from '../config/database';
 import { ResultSetHeader, RowDataPacket } from 'mysql2';
 import { AuthenticatedRequest } from '../middlewares/authenticate';
-import crypto from 'crypto';
-import QRCode from 'qrcode';
 import { createNotification, Notification } from '../services/notification.service';
 import { emitNotification } from '../sockets/server.socket';
+import {
+  generateSignedAccessQr,
+  isReusableAccessQrToken,
+  renderAccessQrDataUrl,
+} from '../services/access-qr.service';
+import { verifyAccessScan } from '../services/access-control.service';
+
+interface ParticipationQrSubject {
+  id: number;
+  user_id: number;
+  event_id: number;
+  qr_code: string | null;
+  qr_code_data?: string | null;
+}
+
+async function buildQrForParticipation(participation: ParticipationQrSubject) {
+  if (isReusableAccessQrToken(participation.qr_code, participation)) {
+    return {
+      qrCode: participation.qr_code,
+      qrCodeData: participation.qr_code_data || await renderAccessQrDataUrl(participation.qr_code as string),
+    };
+  }
+
+  const generated = await generateSignedAccessQr(participation);
+  return {
+    qrCode: generated.token,
+    qrCodeData: generated.dataUrl,
+  };
+}
 
 export const getAllParticipations = async (_req: Request, res: Response) => {
   try {
@@ -109,6 +136,7 @@ export const updateParticipationStatus = async (req: AuthenticatedRequest, res: 
         p.event_id,
         p.status,
         p.qr_code,
+        p.qr_code_data,
         e.capacity,
         e.name as event_name,
         COUNT(CASE WHEN approved_p.status = 'APPROVED' THEN 1 END) as approved_count
@@ -138,10 +166,15 @@ export const updateParticipationStatus = async (req: AuthenticatedRequest, res: 
       return;
     }
 
-    const qrCode = status === 'APPROVED'
-      ? participation.qr_code || `QR-EVT${participation.event_id}-USR${participation.user_id}-${crypto.randomBytes(8).toString('hex')}`
-      : null;
-    const qrCodeData = status === 'APPROVED' && qrCode ? await QRCode.toDataURL(qrCode) : null;
+    const qrPayload = status === 'APPROVED'
+      ? await buildQrForParticipation({
+          id: participation.id,
+          user_id: participation.user_id,
+          event_id: participation.event_id,
+          qr_code: participation.qr_code,
+          qr_code_data: participation.qr_code_data,
+        })
+      : { qrCode: null, qrCodeData: null };
 
     await connection.query(
       `UPDATE participations
@@ -152,7 +185,7 @@ export const updateParticipationStatus = async (req: AuthenticatedRequest, res: 
            approved_at = NOW(),
            updated_at = NOW()
        WHERE id = ?`,
-      [status, qrCode, qrCodeData, req.user.userId, participationId]
+      [status, qrPayload.qrCode, qrPayload.qrCodeData, req.user.userId, participationId]
     );
 
     if (status === 'APPROVED') {
@@ -576,17 +609,22 @@ export const generateParticipationQrCode = async (req: AuthenticatedRequest, res
       return;
     }
 
-    const code = participation.qr_code || `QR-EVT${participation.event_id}-USR${participation.user_id}-${crypto.randomBytes(8).toString('hex')}`;
-    const qrCodeData = await QRCode.toDataURL(code);
+    const qrPayload = await buildQrForParticipation({
+      id: participation.id,
+      user_id: participation.user_id,
+      event_id: participation.event_id,
+      qr_code: participation.qr_code,
+      qr_code_data: participation.qr_code_data,
+    });
 
     await pool.query(
       `UPDATE participations
        SET qr_code = ?, qr_code_data = ?, updated_at = NOW()
        WHERE id = ?`,
-      [code, qrCodeData, participationId]
+      [qrPayload.qrCode, qrPayload.qrCodeData, participationId]
     );
 
-    res.json({ id: participationId, qr_code: code, qr_code_data: qrCodeData });
+    res.json({ id: participationId, qr_code: qrPayload.qrCode, qr_code_data: qrPayload.qrCodeData });
   } catch (error) {
     console.error('Error generating QR code:', error);
     res.status(500).json({ message: 'Erreur serveur', error });
@@ -600,14 +638,27 @@ export const verifyPresence = async (req: AuthenticatedRequest, res: Response): 
       return;
     }
 
-    const { qr_code, zone_id } = req.body;
-    const zoneId = Number(zone_id);
+    const { qr_code, token, zone_id, zoneId: zoneIdBody } = req.body;
+    const rawToken = String(token || qr_code || '').trim();
+    const zoneId = Number(zoneIdBody ?? zone_id);
 
-    if (!qr_code || !Number.isInteger(zoneId) || zoneId <= 0) {
+    if (!rawToken || !Number.isInteger(zoneId) || zoneId <= 0) {
       res.status(400).json({ message: 'QR code et zone requis' });
       return;
     }
 
+    const verification = await verifyAccessScan({
+      token: rawToken,
+      zoneId,
+      scannedBy: req.user.userId,
+      ipAddress: req.ip,
+      expectedUserId: req.user.role === 'ADMIN' ? undefined : req.user.userId,
+    });
+
+    res.status(verification.statusCode).json(verification);
+    return;
+
+    /*
     const [participations] = await pool.query<RowDataPacket[]>(
       `SELECT 
         p.id,
@@ -685,6 +736,7 @@ export const verifyPresence = async (req: AuthenticatedRequest, res: Response): 
       zone_name: zones[0].name,
       scanned_at: new Date().toISOString()
     });
+    */
   } catch (error) {
     console.error('Error verifying presence:', error);
     res.status(500).json({ message: 'Erreur serveur', error });

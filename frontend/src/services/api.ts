@@ -1,4 +1,4 @@
-const BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+export const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
 export class ApiError extends Error {
   status: number;
@@ -37,7 +37,7 @@ export const api = {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: "GET",
       headers,
     });
@@ -63,7 +63,7 @@ export const api = {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: "POST",
       headers,
       body: JSON.stringify(body),
@@ -90,7 +90,7 @@ export const api = {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: "PUT",
       headers,
       body: JSON.stringify(body),
@@ -117,7 +117,7 @@ export const api = {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
       method: "PATCH",
       headers,
       body: JSON.stringify(body),
@@ -139,7 +139,7 @@ export const api = {
       headers.Authorization = `Bearer ${token}`;
     }
 
-    const url = `${BASE_URL}${endpoint}`;
+    const url = `${API_BASE_URL}${endpoint}`;
 
     const response = await fetch(url, {
       method: "DELETE",
