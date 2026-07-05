@@ -161,14 +161,14 @@ const ProfilePage: React.FC = () => {
         </div>
 
         {success && (
-          <div className="mb-6 bg-green-50 border border-green-200 rounded-2xl p-4 flex items-start gap-3">
+          <div role="status" aria-live="polite" className="mb-6 bg-green-50 border border-green-200 rounded-2xl p-4 flex items-start gap-3">
             <CheckCircle className="text-green-600 flex-shrink-0 mt-0.5" size={20} />
             <p className="text-green-700 text-sm">{success}</p>
           </div>
         )}
 
         {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3">
+          <div role="alert" className="mb-6 bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3">
             <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
             <p className="text-red-700 text-sm">{error}</p>
           </div>

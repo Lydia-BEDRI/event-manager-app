@@ -168,7 +168,7 @@ const BadgeWriterPage: React.FC = () => {
       </label>
 
       {error && (
-        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">
+        <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-800">
           <span className="flex items-center gap-2">
             <AlertCircle size={18} />
             {error}
@@ -177,7 +177,7 @@ const BadgeWriterPage: React.FC = () => {
       )}
 
       {success && (
-        <div className="rounded-xl border border-green-200 bg-green-50 p-4 text-green-800">
+        <div role="status" aria-live="polite" className="rounded-xl border border-green-200 bg-green-50 p-4 text-green-800">
           <span className="flex items-center gap-2">
             <CheckCircle2 size={18} />
             {success}

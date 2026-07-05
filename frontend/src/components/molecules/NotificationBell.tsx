@@ -164,7 +164,7 @@ const NotificationBell: React.FC = () => {
 
           <div className="max-h-96 overflow-y-auto">
             {loading && <p className="p-4 text-sm text-primary-gray">Chargement...</p>}
-            {!loading && error && <p className="p-4 text-sm text-red-600">{error}</p>}
+            {!loading && error && <p role="alert" className="p-4 text-sm text-red-800">{error}</p>}
             {!loading && !error && notifications.length === 0 && (
               <p className="p-4 text-sm text-primary-gray">Aucune notification.</p>
             )}

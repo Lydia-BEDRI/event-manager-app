@@ -12,6 +12,12 @@ const Layout: React.FC<LayoutProps> = ({ children, role = 'PARTICIPANT' }) => {
 
 return (
     <div className="min-h-screen bg-primary-dark p-0 sm:p-4 xl:p-6 xl:pl-0 flex flex-col xl:flex-row relative">
+      <a
+        href="#main-content"
+        className="fixed left-3 top-3 z-[100] -translate-y-24 rounded-lg bg-white px-4 py-3 font-semibold text-primary-dark shadow-lg transition-transform focus:translate-y-0"
+      >
+        Aller au contenu principal
+      </a>
       {isSidebarOpen && (
         <button
           type="button"
@@ -41,7 +47,7 @@ return (
         
         <div className="flex-1 flex flex-col">
           <Header onMenuClick={() => setIsSidebarOpen(true)} />
-          <main className="flex-1 overflow-y-auto">
+          <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto">
             <div className="p-4 sm:p-6 xl:p-8">
               {children}
             </div>

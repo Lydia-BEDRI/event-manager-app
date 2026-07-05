@@ -140,7 +140,7 @@ const RegisterPage: React.FC = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+              <div role="alert" className="flex items-start gap-3 bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded-xl text-sm">
                 <AlertTriangle className="flex-shrink-0 mt-0.5" size={16} />
                 <span>{error}</span>
               </div>

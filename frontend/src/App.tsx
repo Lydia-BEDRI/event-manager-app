@@ -345,10 +345,51 @@ const AnalyticsTracker: React.FC = () => {
   return null;
 };
 
+const pageTitles: Record<string, string> = {
+  '/login': 'Connexion',
+  '/register': 'Inscription',
+  '/forgot-password': 'Mot de passe oublié',
+  '/reset-password': 'Réinitialisation du mot de passe',
+  '/privacy': 'Politique de confidentialité',
+  '/legal': 'Mentions légales',
+  '/cookies': 'Gestion des cookies',
+  '/dashboard': 'Tableau de bord',
+  '/exports': 'Exports',
+  '/events': 'Événements',
+  '/events/create': 'Créer un événement',
+  '/available-events': 'Événements disponibles',
+  '/my-participations': 'Mes participations',
+  '/my-qr-codes': 'Mes QR codes',
+  '/presence': 'Vérifier une présence',
+  '/kiosk': 'Kiosque d’accès',
+  '/badge-writer': 'Encoder un badge',
+  '/zones': 'Zones',
+  '/zones/create': 'Créer une zone',
+  '/participants': 'Participants',
+  '/admin/settings': 'Paramètres',
+  '/profile': 'Mon profil',
+  '/chats': 'Discussions',
+};
+
+const PageMetadata: React.FC = () => {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    let title = pageTitles[pathname];
+    if (!title && /^\/events\/[^/]+\/edit$/.test(pathname)) title = 'Modifier un événement';
+    if (!title && /^\/zones\/[^/]+\/edit$/.test(pathname)) title = 'Modifier une zone';
+    if (!title && /^\/chats\/[^/]+$/.test(pathname)) title = 'Discussion d’événement';
+    document.title = `${title || 'EventManager'} | EventManager`;
+  }, [pathname]);
+
+  return null;
+};
+
 const App: React.FC = () => {
   return (
     <BrowserRouter>
       <AnalyticsTracker />
+      <PageMetadata />
       <CookieConsentBanner />
       <AuthProvider>
         <AppRoutes />

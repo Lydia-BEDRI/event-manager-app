@@ -1,13 +1,6 @@
 import React from 'react';
 
-interface InputProps {
-  type?: string;
-  placeholder?: string;
-  value?: string;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  className?: string;
-  disabled?: boolean;
-}
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 const Input: React.FC<InputProps> = ({
   type = 'text',
@@ -16,6 +9,7 @@ const Input: React.FC<InputProps> = ({
   onChange,
   className = '',
   disabled = false,
+  ...inputProps
 }) => {
   return (
     <input
@@ -24,7 +18,8 @@ const Input: React.FC<InputProps> = ({
       value={value}
       onChange={onChange}
       disabled={disabled}
-      className={`w-full bg-primary-light border border-primary-gray/30 rounded-2xl px-4 py-2 text-primary-dark placeholder-primary-gray focus:outline-none focus:border-primary-accent transition-colors ${disabled ? 'opacity-60 cursor-not-allowed' : ''} ${className}`}
+      {...inputProps}
+      className={`min-h-11 w-full rounded-2xl border border-primary-gray/50 bg-primary-light px-4 py-2 text-primary-dark placeholder-gray-600 transition-colors focus:border-primary-accent focus:outline-none focus:ring-2 focus:ring-primary-accent/30 ${disabled ? 'opacity-60 cursor-not-allowed' : ''} ${className}`}
     />
   );
 };

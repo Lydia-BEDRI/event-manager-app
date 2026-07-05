@@ -309,7 +309,7 @@ const PresenceVerificationPage: React.FC = () => {
           </div>
           <h2 className="mt-4 font-heading text-xl font-bold text-primary-dark">Résultat</h2>
 
-          {error && <div className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">{error}</div>}
+          {error && <div role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</div>}
 
           {result ? (
             <div className={`mt-4 rounded-xl border p-4 ${isAuthorized ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-800'}`}>

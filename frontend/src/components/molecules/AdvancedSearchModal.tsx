@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import Input from '../atoms/Input';
 import Button from '../atoms/Button';
@@ -23,6 +23,10 @@ const AdvancedSearchModal: React.FC<Props> = ({ isOpen, onClose, onResultSelect 
   const [dateTo, setDateTo] = useState<string>('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
 
   const reset = () => {
     setQuery('');
@@ -33,6 +37,7 @@ const AdvancedSearchModal: React.FC<Props> = ({ isOpen, onClose, onResultSelect 
     setDateTo('');
     setResults([]);
     setLoading(false);
+    setError('');
   };
 
   useEffect(() => {
@@ -41,6 +46,45 @@ const AdvancedSearchModal: React.FC<Props> = ({ isOpen, onClose, onResultSelect 
       reset();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
+    closeButtonRef.current?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+
+      if (event.key !== 'Tab' || !dialogRef.current) return;
+      const focusable = Array.from(dialogRef.current.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), [href], [tabindex]:not([tabindex="-1"])',
+      ));
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previouslyFocusedRef.current?.focus();
+    };
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -62,6 +106,7 @@ const AdvancedSearchModal: React.FC<Props> = ({ isOpen, onClose, onResultSelect 
 
   const handleSearch = async () => {
     setLoading(true);
+    setError('');
     try {
       const filters: any = {};
       if (type) filters.type = type;
@@ -77,6 +122,7 @@ const AdvancedSearchModal: React.FC<Props> = ({ isOpen, onClose, onResultSelect 
     } catch (err) {
       console.error('Advanced search error', err);
       setResults([]);
+      setError('La recherche a échoué. Veuillez réessayer.');
     } finally {
       setLoading(false);
     }
@@ -85,24 +131,24 @@ const AdvancedSearchModal: React.FC<Props> = ({ isOpen, onClose, onResultSelect 
   return createPortal(
     (
       <div className="fixed inset-0 z-[9999] flex items-start justify-center px-4 pt-20">
-        <div className="absolute inset-0 bg-black/40 z-[9999] pointer-events-auto" onClick={() => { onClose(); reset(); }} />
-        <div className="relative w-full max-w-3xl bg-white rounded-xl shadow-lg p-4 z-[10000]">
+        <div aria-hidden="true" className="absolute inset-0 bg-black/60 z-[9999] pointer-events-auto" onClick={() => { onClose(); reset(); }} />
+        <div ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="advanced-search-title" className="relative max-h-[calc(100vh-6rem)] w-full max-w-3xl overflow-y-auto bg-white rounded-xl shadow-lg p-4 z-[10000]">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-lg font-semibold">Recherche avancée</h3>
-          <button onClick={onClose} aria-label="Fermer" className="text-gray-500 hover:text-gray-700">
-            <X />
+          <h2 id="advanced-search-title" className="text-lg font-semibold">Recherche avancée</h2>
+          <button ref={closeButtonRef} type="button" onClick={onClose} aria-label="Fermer la recherche avancée" className="min-h-11 min-w-11 rounded-lg text-gray-700 hover:bg-gray-100">
+            <X aria-hidden="true" />
           </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <label className="text-xs text-gray-600">Terme</label>
-            <Input placeholder="Rechercher..." value={query} onChange={(e) => setQuery(e.target.value)} />
+            <label htmlFor="advanced-query" className="text-sm font-medium text-gray-700">Terme</label>
+            <Input id="advanced-query" placeholder="Rechercher..." value={query} onChange={(e) => setQuery(e.target.value)} />
           </div>
 
           <div>
-            <label className="text-xs text-gray-600">Type</label>
-            <select value={type} onChange={(e) => setType(e.target.value as any)} className="w-full bg-primary-light border border-primary-gray/30 rounded-2xl px-4 py-2 text-primary-dark">
+            <label htmlFor="advanced-type" className="text-sm font-medium text-gray-700">Type</label>
+            <select id="advanced-type" value={type} onChange={(e) => setType(e.target.value as any)} className="min-h-11 w-full bg-primary-light border border-primary-gray/50 rounded-2xl px-4 py-2 text-primary-dark">
               <option value="">Tous</option>
               <option value="event">Événement</option>
               <option value="user">Personne</option>
@@ -112,13 +158,13 @@ const AdvancedSearchModal: React.FC<Props> = ({ isOpen, onClose, onResultSelect 
           </div>
 
           <div>
-            <label className="text-xs text-gray-600">Event ID</label>
-            <Input placeholder="ID de l'événement" value={eventId} onChange={(e) => setEventId(e.target.value)} />
+            <label htmlFor="advanced-event" className="text-sm font-medium text-gray-700">Identifiant de l’événement</label>
+            <Input id="advanced-event" inputMode="numeric" placeholder="Identifiant" value={eventId} onChange={(e) => setEventId(e.target.value)} />
           </div>
 
           <div>
-            <label className="text-xs text-gray-600">Statut</label>
-            <select value={status} onChange={(e) => setStatus(e.target.value)} className="w-full bg-primary-light border border-primary-gray/30 rounded-2xl px-4 py-2 text-primary-dark">
+            <label htmlFor="advanced-status" className="text-sm font-medium text-gray-700">Statut</label>
+            <select id="advanced-status" value={status} onChange={(e) => setStatus(e.target.value)} className="min-h-11 w-full bg-primary-light border border-primary-gray/50 rounded-2xl px-4 py-2 text-primary-dark">
               <option value="">Tous</option>
               <option value="PUBLISHED">PUBLISHED</option>
               <option value="DRAFT">DRAFT</option>
@@ -129,26 +175,28 @@ const AdvancedSearchModal: React.FC<Props> = ({ isOpen, onClose, onResultSelect 
           </div>
 
           <div>
-            <label className="text-xs text-gray-600">Date de début (from)</label>
-            <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="w-full bg-primary-light border border-primary-gray/30 rounded-2xl px-4 py-2 text-primary-dark" />
+            <label htmlFor="advanced-date-from" className="text-sm font-medium text-gray-700">Date de début</label>
+            <input id="advanced-date-from" type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="min-h-11 w-full bg-primary-light border border-primary-gray/50 rounded-2xl px-4 py-2 text-primary-dark" />
           </div>
 
           <div>
-            <label className="text-xs text-gray-600">Date de fin (to)</label>
-            <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="w-full bg-primary-light border border-primary-gray/30 rounded-2xl px-4 py-2 text-primary-dark" />
+            <label htmlFor="advanced-date-to" className="text-sm font-medium text-gray-700">Date de fin</label>
+            <input id="advanced-date-to" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="min-h-11 w-full bg-primary-light border border-primary-gray/50 rounded-2xl px-4 py-2 text-primary-dark" />
           </div>
         </div>
 
-        <div className="flex items-center gap-3 justify-end mt-4">
+        {error && <p role="alert" className="mt-4 rounded-lg bg-red-50 p-3 text-sm font-medium text-red-800">{error}</p>}
+
+        <div className="flex flex-col-reverse gap-3 mt-4 sm:flex-row sm:items-center sm:justify-end">
           <Button variant="secondary" onClick={() => { onClose(); reset(); }}>Annuler</Button>
           <Button variant="secondary" onClick={() => reset()}>Réinitialiser</Button>
-          <Button onClick={handleSearch} className="flex items-center" >{loading ? 'Recherche...' : 'Rechercher'}</Button>
+          <Button onClick={handleSearch} disabled={loading} aria-busy={loading}>{loading ? 'Recherche...' : 'Rechercher'}</Button>
         </div>
 
         <div className="mt-4">
           {results.length > 0 && (
             <div className="border-t border-primary-gray/20 pt-3">
-              <p className="text-sm text-gray-600 mb-2">{results.length} résultat{results.length > 1 ? 's' : ''}</p>
+              <p role="status" aria-live="polite" className="text-sm text-gray-700 mb-2">{results.length} résultat{results.length > 1 ? 's' : ''}</p>
               <div className="space-y-2 max-h-64 overflow-auto">
                 {results.map((r) => (
                   <button key={`${r.type}-${r.id}`} onClick={() => { onResultSelect?.(r); onClose(); }} className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 text-left">
