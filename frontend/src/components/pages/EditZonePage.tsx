@@ -123,7 +123,7 @@ const EditZonePage = () => {
 
         <form onSubmit={handleSubmit} className="bg-white/90 backdrop-blur-sm rounded-2xl p-6 sm:p-8 shadow-md border border-primary-gray/10">
           {error && (
-            <div className="bg-red-50 border border-red-300 text-red-800 px-4 py-3 rounded-xl mb-6">
+            <div role="alert" className="bg-red-50 border border-red-300 text-red-800 px-4 py-3 rounded-xl mb-6">
               <p className="text-sm font-medium">{error}</p>
             </div>
           )}

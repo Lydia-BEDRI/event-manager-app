@@ -91,6 +91,7 @@ const MyParticipationsPage: React.FC = () => {
 
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <label className="relative w-full lg:w-80">
+          <span className="sr-only">Rechercher dans mes participations</span>
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-primary-gray" size={18} />
           <input
             value={searchTerm}
@@ -118,7 +119,7 @@ const MyParticipationsPage: React.FC = () => {
         </div>
       </div>
 
-      {error && <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>}
+      {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-800">{error}</div>}
 
       {filteredParticipations.length === 0 ? (
         <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-primary-gray">

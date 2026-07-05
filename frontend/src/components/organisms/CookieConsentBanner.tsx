@@ -35,8 +35,6 @@ const CookieConsentBanner: React.FC = () => {
 
   return (
     <section
-      role="dialog"
-      aria-modal="false"
       aria-labelledby="cookie-consent-title"
       aria-describedby="cookie-consent-description"
       className="fixed inset-x-3 bottom-3 z-[100] mx-auto max-w-5xl rounded-2xl border border-primary-gray/30 bg-primary-dark p-4 text-primary-white shadow-2xl sm:p-5"

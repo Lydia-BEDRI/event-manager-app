@@ -26,8 +26,8 @@ const NavItem: React.FC<NavItemProps> = ({ icon: Icon, label, active = false, on
 
   if (to) {
     return (
-      <Link to={to} className={classes} onClick={onClick}>
-        <Icon size={20} className="flex-shrink-0" />
+      <Link to={to} className={classes} onClick={onClick} aria-current={isActive ? 'page' : undefined}>
+        <Icon size={20} className="flex-shrink-0" aria-hidden="true" />
         <span className="text-sm leading-tight">{label}</span>
       </Link>
     );
@@ -35,10 +35,11 @@ const NavItem: React.FC<NavItemProps> = ({ icon: Icon, label, active = false, on
 
   return (
     <button
+      type="button"
       onClick={onClick}
       className={classes}
     >
-      <Icon size={20} className="flex-shrink-0" />
+      <Icon size={20} className="flex-shrink-0" aria-hidden="true" />
       <span className="text-sm leading-tight">{label}</span>
     </button>
   );

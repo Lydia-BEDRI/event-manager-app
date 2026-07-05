@@ -1,14 +1,11 @@
 import React from 'react';
 import { LucideIcon } from 'lucide-react';
 
-interface ButtonProps {
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
-  onClick?: () => void;
   variant?: 'primary' | 'secondary' | 'danger';
   icon?: LucideIcon;
   className?: string;
-  type?: 'button' | 'submit' | 'reset';
-  disabled?: boolean;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -19,6 +16,7 @@ const Button: React.FC<ButtonProps> = ({
   className = '',
   type = 'button',
   disabled = false,
+  ...buttonProps
 }) => {
   const variants = {
     primary: 'bg-primary-accent hover:bg-[#0098C7] text-primary-white',
@@ -31,9 +29,10 @@ const Button: React.FC<ButtonProps> = ({
       type={type}
       onClick={onClick}
       disabled={disabled}
-      className={`flex items-center justify-center gap-2 font-medium px-6 py-3 rounded-2xl transition duration-200 ${variants[variant]} ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+      {...buttonProps}
+      className={`flex min-h-11 items-center justify-center gap-2 rounded-2xl px-6 py-3 font-medium transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-accent focus-visible:ring-offset-2 ${variants[variant]} ${className} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
     >
-      {Icon && <Icon size={20} />}
+      {Icon && <Icon size={20} aria-hidden="true" />}
       {children}
     </button>
   );

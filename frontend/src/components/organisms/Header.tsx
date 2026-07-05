@@ -26,9 +26,9 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           </button>
           <div className="min-w-0">
             <p className="text-primary-gray text-xs sm:text-sm">Bonjour,</p>
-            <h2 className="text-primary-dark font-heading font-bold text-sm sm:text-lg truncate max-w-[45vw] sm:max-w-none">
+            <p className="text-primary-dark font-heading font-bold text-sm sm:text-lg truncate max-w-[45vw] sm:max-w-none">
               {user ? `${user.firstName} ${user.lastName}` : 'Utilisateur'}
-            </h2>
+            </p>
           </div>
         </div>
 

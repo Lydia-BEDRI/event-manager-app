@@ -173,7 +173,7 @@ const EditEventPage = () => {
         </div>
 
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-300 text-red-800 rounded-xl flex items-start gap-3">
+          <div role="alert" className="mb-6 p-4 bg-red-50 border border-red-300 text-red-800 rounded-xl flex items-start gap-3">
             <AlertTriangle size={20} className="flex-shrink-0 mt-0.5" />
             <p className="text-sm font-medium">{error}</p>
           </div>

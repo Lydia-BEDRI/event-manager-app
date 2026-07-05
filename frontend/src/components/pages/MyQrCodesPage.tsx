@@ -81,7 +81,7 @@ const MyQrCodesPage: React.FC = () => {
         </p>
       </div>
 
-      {error && <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-700">{error}</div>}
+      {error && <div role="alert" className="rounded-xl border border-red-200 bg-red-50 p-4 text-red-800">{error}</div>}
 
       {participationsWithoutQr.length > 0 && (
         <section className="rounded-2xl border border-yellow-200 bg-yellow-50 p-5">

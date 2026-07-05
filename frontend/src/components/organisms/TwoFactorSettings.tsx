@@ -179,13 +179,13 @@ const TwoFactorSettings: React.FC<TwoFactorSettingsProps> = ({ accessToken }) =>
       </div>
 
       {error && (
-        <div className="mt-5 flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl text-red-700 p-3 text-sm">
+        <div role="alert" className="mt-5 flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl text-red-800 p-3 text-sm">
           <AlertCircle className="flex-none mt-0.5" size={16} />
           {error}
         </div>
       )}
       {message && (
-        <div className="mt-5 flex items-start gap-2 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-700 p-3 text-sm">
+        <div role="status" aria-live="polite" className="mt-5 flex items-start gap-2 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 p-3 text-sm">
           <CheckCircle2 className="flex-none mt-0.5" size={16} />
           {message}
         </div>

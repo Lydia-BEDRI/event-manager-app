@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useId } from 'react';
 import { Search, X, ChevronRight, Calendar, User, MapPin, MessageCircle, Filter } from 'lucide-react';
 import AdvancedSearchModal from './AdvancedSearchModal';
 import { useNavigate } from 'react-router-dom';
@@ -26,6 +26,8 @@ const SearchBar: React.FC<SearchBarProps> = ({
   className = '',
   fullWidth = false,
 }) => {
+  const inputId = useId();
+  const resultsId = `${inputId}-results`;
   const navigate = useNavigate();
   const { accessToken } = useAuth();
   const [query, setQuery] = useState('');
@@ -36,6 +38,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const closeAdvancedSearch = useCallback(() => setAdvancedOpen(false), []);
 
   const performSearch = useCallback(async (searchQuery: string) => {
     if (searchQuery.trim().length === 0) {
@@ -187,9 +190,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
     <>
     <div ref={searchRef} className={`relative ${containerClass} ${className}`}>
       <div className="flex items-center rounded-lg border border-gray-300 bg-white px-3 py-2 shadow-sm transition-all focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
-        <Search className="h-5 w-5 text-gray-400" />
+        <Search className="h-5 w-5 text-gray-600" aria-hidden="true" />
+        <label htmlFor={inputId} className="sr-only">Rechercher dans EventManager</label>
         <input
+          id={inputId}
           type="text"
+          role="combobox"
           value={query}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
@@ -197,31 +203,36 @@ const SearchBar: React.FC<SearchBarProps> = ({
           placeholder={placeholder}
           className="ml-2 flex-1 bg-transparent outline-none text-sm text-gray-900 placeholder-gray-500"
           autoComplete="off"
+          aria-expanded={showResults}
+          aria-controls={resultsId}
+          aria-autocomplete="list"
         />
         {query && (
           <button
+            type="button"
             onClick={handleClear}
-            className="ml-2 text-gray-400 hover:text-gray-600 transition-colors"
+            className="ml-1 flex min-h-11 min-w-11 items-center justify-center text-gray-700 hover:text-primary-dark transition-colors"
             aria-label="Effacer la recherche"
           >
             <X className="h-4 w-4" />
           </button>
         )}
         <button
+          type="button"
           onClick={() => setAdvancedOpen(true)}
           title="Recherche avancée"
-          className="ml-2 text-gray-400 hover:text-gray-600 transition-colors"
+          className="ml-1 flex min-h-11 min-w-11 items-center justify-center text-gray-700 hover:text-primary-dark transition-colors"
           aria-label="Recherche avancée"
         >
           <Filter className="h-4 w-4" />
         </button>
         {loading && (
-          <div className="ml-2 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-500" />
+          <div role="status" aria-label="Recherche en cours" className="ml-2 h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
         )}
       </div>
 
       {showResults && results.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg z-50">
+        <div id={resultsId} className="absolute top-full left-0 right-0 mt-1 rounded-lg border border-gray-200 bg-white shadow-lg z-50">
           <div className="max-h-96 overflow-y-auto">
             {results.filter((r) => r.type === 'event').length > 0 && (
               <div>
@@ -362,7 +373,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
       )}
     </div>
 
-      <AdvancedSearchModal isOpen={advancedOpen} onClose={() => setAdvancedOpen(false)} onResultSelect={handleResultSelect} />
+      <AdvancedSearchModal isOpen={advancedOpen} onClose={closeAdvancedSearch} onResultSelect={handleResultSelect} />
     </>
   );
 };

@@ -24,7 +24,7 @@ describe("CookieConsentBanner", () => {
 
   it("s’affiche lorsqu’aucun choix n’a encore été enregistré", () => {
     renderBanner();
-    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(screen.getByRole("region", { name: "Votre confidentialité compte" })).toBeTruthy();
     expect(screen.getByText("Votre confidentialité compte")).toBeTruthy();
   });
 

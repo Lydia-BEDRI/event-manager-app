@@ -294,7 +294,7 @@ const KioskPage: React.FC = () => {
         )}
 
         {error && (
-          <div className="mt-6 rounded-2xl border border-red-300 bg-red-50 p-5 text-red-800">
+          <div role="alert" className="mt-6 rounded-2xl border border-red-300 bg-red-50 p-5 text-red-800">
             <p className="flex items-center gap-2 font-semibold">
               <AlertCircle size={20} />
               {error}
