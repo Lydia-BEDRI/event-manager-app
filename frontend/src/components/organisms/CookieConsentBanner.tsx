@@ -24,7 +24,7 @@ const CookieConsentBanner: React.FC = () => {
   if (!visible) return null;
 
   const choose = (analytics: boolean) => {
-    saveCookiePreferences({ functional: analytics, analytics });
+    saveCookiePreferences({ functional: false, analytics });
     setVisible(false);
   };
 
