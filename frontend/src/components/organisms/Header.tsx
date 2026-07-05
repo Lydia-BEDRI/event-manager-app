@@ -2,6 +2,7 @@ import React from 'react';
 import SearchBar from '../molecules/SearchBar';
 import NotificationBell from '../molecules/NotificationBell';
 import UserProfile from '../molecules/UserProfile';
+import AccessibilityPanel from './AccessibilityPanel';
 import { useAuth } from '../../contexts/AuthContext';
 import { Menu } from 'lucide-react';
 
@@ -36,6 +37,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
           <div className="hidden xl:block w-64">
             <SearchBar />
           </div>
+          <AccessibilityPanel />
           <NotificationBell />
           <UserProfile  />
         </div>

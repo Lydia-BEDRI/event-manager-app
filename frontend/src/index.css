@@ -31,3 +31,39 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+html[data-accessibility-text='large'] {
+  font-size: 112.5%;
+}
+
+html[data-accessibility-text='extra-large'] {
+  font-size: 125%;
+}
+
+html[data-accessibility-links='underlined'] a:not([aria-hidden='true']) {
+  text-decoration: underline !important;
+  text-decoration-thickness: 2px !important;
+  text-underline-offset: 3px !important;
+}
+
+html[data-accessibility-motion='reduced'] *,
+html[data-accessibility-motion='reduced'] *::before,
+html[data-accessibility-motion='reduced'] *::after {
+  scroll-behavior: auto !important;
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+html[data-accessibility-contrast='high'] body {
+  background: #000 !important;
+  filter: contrast(1.35);
+}
+
+html[data-accessibility-contrast='high'] input,
+html[data-accessibility-contrast='high'] select,
+html[data-accessibility-contrast='high'] textarea,
+html[data-accessibility-contrast='high'] button,
+html[data-accessibility-contrast='high'] a {
+  border-color: currentColor;
+}
