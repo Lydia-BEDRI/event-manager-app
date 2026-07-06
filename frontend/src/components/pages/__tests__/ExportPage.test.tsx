@@ -77,6 +77,16 @@ describe('ExportPage', () => {
       expect(screen.getByText('Export complet')).toBeInTheDocument();
     });
 
+    it('affiche un fond colore pour l icone des evenements', () => {
+      render(<ExportPage />);
+
+      const title = screen.getByText('Événements');
+      const iconContainer = title.parentElement?.previousElementSibling;
+
+      expect(iconContainer).toHaveClass('bg-primary-accent/10');
+      expect(iconContainer).toHaveClass('text-primary-accent');
+    });
+
     it('devrait afficher les descriptions de chaque catégorie', () => {
       render(<ExportPage />);
       
