@@ -107,6 +107,36 @@ EventManager est une application web destinée à la gestion d’événements in
    - Health check : [http://localhost:5000/health](http://localhost:5000/health)
    - Boîte e-mail locale Mailpit : [http://localhost:8025](http://localhost:8025)
 
+## Tests end-to-end avec Playwright
+
+Les tests E2E couvrent les parcours stables suivants : inscription, connexion, mot de passe
+oublié, création d’un événement, approbation d’une participation, refus d’un QR invalide,
+acceptation d’un QR signé et protection des routes administrateur.
+
+Playwright démarre automatiquement le backend et le frontend. La base MySQL doit être
+disponible et initialisée avant l’exécution :
+
+```bash
+docker compose up -d db
+npm ci --prefix backend
+npm ci --prefix frontend
+cd frontend
+npx playwright install chromium
+npm run test:e2e
+```
+
+Les variables `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` et `JWT_SECRET`
+doivent correspondre à la base locale. Pour observer le navigateur ou utiliser l’interface
+interactive :
+
+```bash
+npm run test:e2e:headed
+npm run test:e2e:ui
+```
+
+En CI, les tests utilisent une base MySQL éphémère, un seul worker pour éviter les conflits
+de données et publient le rapport HTML Playwright comme artefact en cas d’échec.
+
 ### Services, ports et responsabilités
 
 Les consoles techniques sont liées à `127.0.0.1` par défaut. Elles ne sont donc pas

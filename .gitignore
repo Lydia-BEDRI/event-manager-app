@@ -57,6 +57,9 @@ db/data/
 coverage/
 *.lcov
 .nyc_output/
+frontend/playwright-report/
+frontend/test-results/
+frontend/playwright/.auth/
 
 # Temporary files
 *.tmp
