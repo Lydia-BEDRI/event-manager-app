@@ -1,8 +1,7 @@
-import { expect, request as playwrightRequest, test } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import {
   API_URL,
   TEST_PASSWORD,
-  AuthTokens,
   authenticatePage,
   createEvent,
   dismissCookies,
@@ -12,17 +11,7 @@ import {
   unique,
 } from './helpers';
 
-test.describe.configure({ mode: 'serial' });
-
 test.describe('Parcours métier stables', () => {
-  let adminTokens: AuthTokens;
-
-  test.beforeAll(async () => {
-    const api = await playwrightRequest.newContext();
-    adminTokens = await loginApi(api, 'admin@eventmanager.fr');
-    await api.dispose();
-  });
-
   test('un visiteur peut créer un compte participant', async ({ page }) => {
     const email = `${unique('participant')}@example.test`;
     await page.goto('/register');
@@ -33,7 +22,15 @@ test.describe('Parcours métier stables', () => {
     await page.getByLabel('Adresse email').fill(email);
     await page.getByLabel('Mot de passe', { exact: true }).fill(TEST_PASSWORD);
     await page.getByLabel('Confirmer le mot de passe').fill(TEST_PASSWORD);
-    await page.getByRole('button', { name: 'Créer mon compte' }).click();
+    const [registrationResponse] = await Promise.all([
+      page.waitForResponse((response) => response.url().endsWith('/api/auth/register')),
+      page.getByRole('button', { name: 'Créer mon compte' }).click(),
+    ]);
+    if (!registrationResponse.ok()) {
+      throw new Error(
+        `Inscription refusée (${registrationResponse.status()}): ${await registrationResponse.text()}`,
+      );
+    }
 
     await expect(page).toHaveURL(/\/dashboard$/);
     await expect(page.getByRole('heading', { name: 'Mon espace participant' })).toBeVisible();
@@ -61,7 +58,8 @@ test.describe('Parcours métier stables', () => {
     await expect(page.getByText(/Si un compte existe/)).toContainText(unknownEmail);
   });
 
-  test('un administrateur peut créer un événement', async ({ page }) => {
+  test('un administrateur peut créer un événement', async ({ page, request }) => {
+    const adminTokens = await loginApi(request, 'admin@eventmanager.fr');
     const eventName = unique('Conférence Playwright');
     const start = new Date();
     start.setFullYear(start.getFullYear() + 1);
@@ -87,6 +85,7 @@ test.describe('Parcours métier stables', () => {
   });
 
   test('un administrateur peut approuver une demande de participation', async ({ page, request }) => {
+    const adminTokens = await loginApi(request, 'admin@eventmanager.fr');
     const event = await createEvent(request, adminTokens.accessToken);
     const email = `${unique('approbation')}@example.test`;
     const participant = await registerParticipant(request, email);
@@ -107,6 +106,7 @@ test.describe('Parcours métier stables', () => {
   });
 
   test('le contrôle refuse un QR invalide puis accepte un QR signé autorisé', async ({ page, request }) => {
+    const adminTokens = await loginApi(request, 'admin@eventmanager.fr');
     const event = await createEvent(request, adminTokens.accessToken, { withZone: true });
     const zone = event.zones[0];
     const email = `${unique('controle')}@example.test`;
