@@ -12,17 +12,15 @@ interface ParticipationScanRow extends RowDataPacket {
   email: string;
   avatar_url: string | null;
   event_name: string;
+  event_status: string;
+  event_start_date: Date;
+  event_end_date: Date;
 }
 
 interface ZoneScanRow extends RowDataPacket {
   id: number;
   name: string;
   event_id: number;
-}
-
-interface ExistingScanRow extends RowDataPacket {
-  id: number;
-  scanned_at: Date;
 }
 
 export interface VerifyAccessScanInput {
@@ -161,7 +159,10 @@ export async function verifyAccessScan(input: VerifyAccessScanInput): Promise<Ac
         u.last_name,
         u.email,
         u.avatar_url,
-        e.name as event_name
+        e.name as event_name,
+        e.status as event_status,
+        e.start_date as event_start_date,
+        e.end_date as event_end_date
        FROM participations p
        JOIN users u ON u.id = p.user_id
        JOIN events e ON e.id = p.event_id
@@ -229,6 +230,44 @@ export async function verifyAccessScan(input: VerifyAccessScanInput): Promise<Ac
       return toResult(403, false, 'Participation non approuvee', result.insertId, participation, null);
     }
 
+    if (!['PUBLISHED', 'ONGOING'].includes(participation.event_status)) {
+      const [result] = await connection.query<ResultSetHeader>(
+        `INSERT INTO access_logs (participation_id, zone_id, scanned_by, is_valid, rejection_reason, ip_address)
+         VALUES (?, NULL, ?, FALSE, ?, ?)`,
+        [
+          participation.id,
+          input.scannedBy,
+          'Evenement non accessible',
+          input.ipAddress || null,
+        ],
+      );
+      await connection.commit();
+      return toResult(403, false, 'Evenement non accessible', result.insertId, participation, null);
+    }
+
+    const now = new Date();
+    if (now < new Date(participation.event_start_date) || now > new Date(participation.event_end_date)) {
+      const [result] = await connection.query<ResultSetHeader>(
+        `INSERT INTO access_logs (participation_id, zone_id, scanned_by, is_valid, rejection_reason, ip_address)
+         VALUES (?, NULL, ?, FALSE, ?, ?)`,
+        [
+          participation.id,
+          input.scannedBy,
+          'Evenement hors de sa periode d acces',
+          input.ipAddress || null,
+        ],
+      );
+      await connection.commit();
+      return toResult(
+        403,
+        false,
+        'Evenement hors de sa periode d acces',
+        result.insertId,
+        participation,
+        null,
+      );
+    }
+
     const [zones] = await connection.query<ZoneScanRow[]>(
       'SELECT id, name, event_id FROM zones WHERE id = ? LIMIT 1',
       [input.zoneId],
@@ -250,52 +289,6 @@ export async function verifyAccessScan(input: VerifyAccessScanInput): Promise<Ac
     }
 
     const zone = zones[0];
-
-    const [zoneAccess] = await connection.query<RowDataPacket[]>(
-      'SELECT id FROM zone_access WHERE participation_id = ? AND zone_id = ? LIMIT 1',
-      [participation.id, zone.id],
-    );
-
-    if (zoneAccess.length === 0) {
-      const [result] = await connection.query<ResultSetHeader>(
-        `INSERT INTO access_logs (participation_id, zone_id, scanned_by, is_valid, rejection_reason, ip_address)
-         VALUES (?, ?, ?, FALSE, ?, ?)`,
-        [
-          participation.id,
-          zone.id,
-          input.scannedBy,
-          'Acces non autorise a cette zone',
-          input.ipAddress || null,
-        ],
-      );
-      await connection.commit();
-      return toResult(403, false, 'Acces non autorise a cette zone', result.insertId, participation, zone);
-    }
-
-    const [existingScans] = await connection.query<ExistingScanRow[]>(
-      `SELECT id, scanned_at
-       FROM access_logs
-       WHERE participation_id = ? AND zone_id = ? AND is_valid = TRUE
-       LIMIT 1
-       FOR UPDATE`,
-      [participation.id, zone.id],
-    );
-
-    if (existingScans.length > 0) {
-      const [result] = await connection.query<ResultSetHeader>(
-        `INSERT INTO access_logs (participation_id, zone_id, scanned_by, is_valid, rejection_reason, ip_address)
-         VALUES (?, ?, ?, FALSE, ?, ?)`,
-        [
-          participation.id,
-          zone.id,
-          input.scannedBy,
-          'Deja scanne pour cette zone',
-          input.ipAddress || null,
-        ],
-      );
-      await connection.commit();
-      return toResult(409, false, 'Deja scanne pour cette zone', result.insertId, participation, zone);
-    }
 
     const [result] = await connection.query<ResultSetHeader>(
       `INSERT INTO access_logs (participation_id, zone_id, scanned_by, is_valid, ip_address)
