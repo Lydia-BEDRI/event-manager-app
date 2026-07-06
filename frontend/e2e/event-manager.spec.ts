@@ -17,9 +17,9 @@ test.describe('Parcours métier stables', () => {
     await page.goto('/register');
     await dismissCookies(page);
 
-    await page.getByLabel('Prénom').fill('Camille');
-    await page.getByLabel('Nom').fill('E2E');
-    await page.getByLabel('Adresse email').fill(email);
+    await page.getByLabel('Prénom', { exact: true }).fill('Camille');
+    await page.getByLabel('Nom', { exact: true }).fill('E2E');
+    await page.getByLabel('Adresse email', { exact: true }).fill(email);
     await page.getByLabel('Mot de passe', { exact: true }).fill(TEST_PASSWORD);
     await page.getByLabel('Confirmer le mot de passe').fill(TEST_PASSWORD);
     const [registrationResponse] = await Promise.all([

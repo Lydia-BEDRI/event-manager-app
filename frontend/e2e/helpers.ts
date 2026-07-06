@@ -12,6 +12,10 @@ export function unique(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function toMySqlDateTime(date: Date): string {
+  return date.toISOString().slice(0, 19).replace('T', ' ');
+}
+
 export async function expectApiSuccess(response: APIResponse): Promise<void> {
   if (!response.ok()) {
     throw new Error(`API ${response.status()} ${response.statusText()}: ${await response.text()}`);
@@ -85,8 +89,8 @@ export async function createEvent(
       name,
       description: 'Événement créé automatiquement par Playwright',
       location: 'Paris E2E',
-      start_date: start.toISOString(),
-      end_date: end.toISOString(),
+      start_date: toMySqlDateTime(start),
+      end_date: toMySqlDateTime(end),
       capacity: 20,
       status: 'PUBLISHED',
       zones: options.withZone
