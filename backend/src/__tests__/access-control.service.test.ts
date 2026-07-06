@@ -43,6 +43,9 @@ describe('Access control service', () => {
     email: 'charlie@test.local',
     avatar_url: null,
     event_name: 'Conference Tech',
+    event_status: 'PUBLISHED',
+    event_start_date: new Date('2000-01-01T00:00:00.000Z'),
+    event_end_date: new Date('2100-01-01T00:00:00.000Z'),
   };
 
   const zoneRow = {
@@ -64,8 +67,6 @@ describe('Access control service', () => {
     connection.query
       .mockResolvedValueOnce([[participationRow]])
       .mockResolvedValueOnce([[zoneRow]])
-      .mockResolvedValueOnce([[{ id: 99 }]])
-      .mockResolvedValueOnce([[]])
       .mockResolvedValueOnce([{ insertId: 50 }]);
 
     const result = await verifyAccessScan({
@@ -104,12 +105,10 @@ describe('Access control service', () => {
     );
   });
 
-  it('refuse un double scan sur la meme zone et journalise le replay', async () => {
+  it('accepte plusieurs scans dans la meme zone et journalise chacun', async () => {
     connection.query
       .mockResolvedValueOnce([[participationRow]])
       .mockResolvedValueOnce([[zoneRow]])
-      .mockResolvedValueOnce([[{ id: 99 }]])
-      .mockResolvedValueOnce([[{ id: 25, scanned_at: new Date() }]])
       .mockResolvedValueOnce([{ insertId: 52 }]);
 
     const result = await verifyAccessScan({
@@ -118,16 +117,15 @@ describe('Access control service', () => {
       scannedBy: 1,
     });
 
-    expect(result.authorized).toBe(false);
-    expect(result.statusCode).toBe(409);
-    expect(result.reason).toBe('Deja scanne pour cette zone');
+    expect(result.authorized).toBe(true);
+    expect(result.statusCode).toBe(201);
+    expect(result.id).toBe(52);
   });
 
-  it('refuse un acces a une zone non accordee', async () => {
+  it('autorise une zone de l evenement sans attribution zone_access', async () => {
     connection.query
       .mockResolvedValueOnce([[participationRow]])
       .mockResolvedValueOnce([[zoneRow]])
-      .mockResolvedValueOnce([[]])
       .mockResolvedValueOnce([{ insertId: 53 }]);
 
     const result = await verifyAccessScan({
@@ -136,9 +134,8 @@ describe('Access control service', () => {
       scannedBy: 1,
     });
 
-    expect(result.authorized).toBe(false);
-    expect(result.statusCode).toBe(403);
-    expect(result.reason).toBe('Acces non autorise a cette zone');
+    expect(result.authorized).toBe(true);
+    expect(result.statusCode).toBe(201);
   });
 
   it('refuse une zone qui ne correspond pas a l evenement du QR', async () => {
@@ -156,5 +153,57 @@ describe('Access control service', () => {
     expect(result.authorized).toBe(false);
     expect(result.statusCode).toBe(400);
     expect(result.reason).toBe('Zone invalide pour cet evenement');
+  });
+
+  it.each(['REJECTED', 'REVOKED', 'REFUSED'])('refuse une participation %s', async (status) => {
+    connection.query
+      .mockResolvedValueOnce([[{ ...participationRow, status }]])
+      .mockResolvedValueOnce([{ insertId: 55 }]);
+
+    const result = await verifyAccessScan({
+      token: await makeToken(),
+      zoneId: 5,
+      scannedBy: 1,
+    });
+
+    expect(result.authorized).toBe(false);
+    expect(result.statusCode).toBe(403);
+    expect(result.reason).toBe('Participation non approuvee');
+  });
+
+  it.each(['DRAFT', 'COMPLETED', 'CANCELLED'])('refuse un evenement %s', async (eventStatus) => {
+    connection.query
+      .mockResolvedValueOnce([[{ ...participationRow, event_status: eventStatus }]])
+      .mockResolvedValueOnce([{ insertId: 56 }]);
+
+    const result = await verifyAccessScan({
+      token: await makeToken(),
+      zoneId: 5,
+      scannedBy: 1,
+    });
+
+    expect(result.authorized).toBe(false);
+    expect(result.reason).toBe('Evenement non accessible');
+  });
+
+  it('refuse un scan en dehors des dates de l evenement', async () => {
+    connection.query
+      .mockResolvedValueOnce([[
+        {
+          ...participationRow,
+          event_start_date: new Date('2000-01-01T00:00:00.000Z'),
+          event_end_date: new Date('2000-01-02T00:00:00.000Z'),
+        },
+      ]])
+      .mockResolvedValueOnce([{ insertId: 57 }]);
+
+    const result = await verifyAccessScan({
+      token: await makeToken(),
+      zoneId: 5,
+      scannedBy: 1,
+    });
+
+    expect(result.authorized).toBe(false);
+    expect(result.reason).toBe('Evenement hors de sa periode d acces');
   });
 });

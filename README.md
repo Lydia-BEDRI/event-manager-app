@@ -29,9 +29,19 @@ EventManager est une application web destinée à la gestion d’événements in
 - Vérification par upload d'image QR code depuis l'application web.
 - Validation côté serveur de la signature cryptographique.
 - Contrôle de l'identité de l'utilisateur connecté.
-- Détection des tentatives de double utilisation.
+- Journalisation de chaque scan, y compris les scans répétés.
 - Impossibilité d'utilisation par un autre compte.
 - Marquage automatique de la présence et activation du chat.
+
+### Règles métier d’accès
+
+- Une participation approuvée donne accès à toutes les zones de l’événement, y compris celles créées ultérieurement.
+- Une participation refusée ou révoquée ne donne accès à aucune zone.
+- Un scan est accepté uniquement pendant un événement publié ou en cours et dans ses dates effectives.
+- La zone scannée doit appartenir à l’événement du participant.
+- Les scans répétés sont autorisés et journalisés individuellement.
+- QR code et NFC appliquent les mêmes règles d’autorisation.
+- La capacité des zones ne bloque pas les scans tant qu’aucun suivi entrée/sortie n’est disponible.
 
 ## Architecture technique
 
@@ -48,7 +58,7 @@ EventManager est une application web destinée à la gestion d’événements in
 - Codes de secours à usage unique et secrets TOTP chiffrés en base.
 - QR codes signés cryptographiquement et associés strictement au compte utilisateur.
 - Vérification côté serveur obligatoire avec validation de signature.
-- Invalidation automatique après scan et impossibilité de réutilisation.
+- Réutilisation contrôlée des QR codes avec journalisation de chaque passage.
 - Conformité RGPD avec gestion des données personnelles et consentement.
 
 ## Installation et exécution

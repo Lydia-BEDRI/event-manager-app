@@ -64,7 +64,7 @@ const ExportPage: React.FC = () => {
       title: 'Événements',
       description: 'Exporter la liste complète des événements avec leurs statistiques',
       icon: Calendar,
-      iconClass: 'text-primary-blue bg-primary-blue/10',
+      iconClass: 'text-primary-accent bg-primary-accent/10',
       hasFilters: true
     },
     {

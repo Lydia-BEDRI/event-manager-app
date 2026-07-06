@@ -116,7 +116,7 @@ const MyQrCodesPage: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 2xl:grid-cols-3">
           {qrCodes.map((qrCode) => (
-            <article key={qrCode.id} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+            <article key={qrCode.id} className="min-w-0 overflow-hidden rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
               <div className="flex min-h-56 items-center justify-center rounded-2xl bg-primary-light/40 p-5">
                 {qrCode.qr_code_data ? (
                   <img
@@ -141,9 +141,9 @@ const MyQrCodesPage: React.FC = () => {
                   <MapPin size={16} />
                   <span className="break-words">{qrCode.event_location}</span>
                 </p>
-                <p className="flex items-center gap-2 font-mono text-xs text-primary-dark">
-                  <Ticket size={16} />
-                  {qrCode.qr_code}
+                <p className="flex min-w-0 items-start gap-2 font-mono text-xs text-primary-dark">
+                  <Ticket size={16} className="mt-0.5 shrink-0" />
+                  <span className="min-w-0 break-all">{qrCode.qr_code}</span>
                 </p>
               </div>
 

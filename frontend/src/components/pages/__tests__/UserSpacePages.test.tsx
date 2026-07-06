@@ -180,9 +180,9 @@ describe('User space pages', () => {
 
       render(<MyQrCodesPage />);
 
-      await waitFor(() => {
-        expect(screen.getByText('QR-EVT10-USR3')).toBeInTheDocument();
-      });
+      const token = await screen.findByText('QR-EVT10-USR3');
+      expect(token).toHaveClass('break-all');
+      expect(token.closest('article')).toHaveClass('overflow-hidden');
       expect(screen.getByAltText('QR code Conférence Tech 2026')).toBeInTheDocument();
     });
 
