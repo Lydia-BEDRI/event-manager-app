@@ -18,6 +18,7 @@ import { initSocketServer } from "./sockets/server.socket";
 import pool from "./config/database";
 import { databaseHealth, metricsMiddleware, metricsRegistry } from "./observability/metrics";
 import { Sentry } from "./observability/instrument";
+import { getAllowedOrigins } from "./config/cors";
 
 dotenv.config();
 
@@ -28,7 +29,7 @@ const server = createServer(app);
 app.use(helmet());
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    origin: getAllowedOrigins(),
     credentials: true,
   }),
 );

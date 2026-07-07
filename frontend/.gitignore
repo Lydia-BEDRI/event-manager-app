@@ -15,6 +15,7 @@ yarn-debug.log*
 .env.local
 .env.development.local
 .env.test.local
+.env.production
 .env.production.local
 .env.*.local
 
@@ -45,6 +46,7 @@ yarn-debug.log*
 .env.local
 .env.development.local
 .env.test.local
+.env.production
 .env.production.local
 
 npm-debug.log*
