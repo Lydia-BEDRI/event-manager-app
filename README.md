@@ -168,6 +168,46 @@ Le backend lit `ALLOWED_ORIGINS` comme une liste séparée par des virgules pour
 Socket.IO. En production, elle devra au minimum contenir l'URL publique du site et
 `http://localhost`, qui est l'origine locale de l'application Capacitor Android.
 
+### Observabilité en production
+
+La stack d'observabilité est séparée dans `docker-compose.observability.prod.yml`. Elle
+ajoute Prometheus, Grafana, cAdvisor, Uptime Kuma et Matomo avec sa base MariaDB, sans
+modifier les services applicatifs ni exposer leurs interfaces au-delà de `127.0.0.1`.
+
+Après avoir renseigné les variables Grafana, Matomo et Sentry dans `.env.production` :
+
+```bash
+docker compose --env-file .env.production \
+  -f docker-compose.prod.yml \
+  -f docker-compose.observability.prod.yml \
+  config --quiet
+
+docker compose --env-file .env.production \
+  -f docker-compose.prod.yml \
+  -f docker-compose.observability.prod.yml \
+  up -d --build
+
+docker compose --env-file .env.production \
+  -f docker-compose.prod.yml \
+  -f docker-compose.observability.prod.yml \
+  ps
+```
+
+Depuis un poste local, créez les tunnels SSH suivants en remplaçant `USER` et `VPS_IP` :
+
+```bash
+ssh -N \
+  -L 9090:127.0.0.1:9090 \
+  -L 3001:127.0.0.1:3001 \
+  -L 8082:127.0.0.1:8082 \
+  -L 3002:127.0.0.1:3002 \
+  -L 8081:127.0.0.1:8081 \
+  USER@VPS_IP
+```
+
+Les interfaces deviennent alors accessibles localement sur les ports `9090` (Prometheus),
+`3001` (Grafana), `8082` (cAdvisor), `3002` (Uptime Kuma) et `8081` (Matomo).
+
 Les scripts de `/docker-entrypoint-initdb.d` ne s'exécutent que lors de la création d'un
 volume MySQL vide. Pour mettre à niveau une base créée avant l'ajout du contrôle d'accès
 QR, appliquez une fois la migration `db/migrations/002-update-qr-and-access-logs.sql` :
