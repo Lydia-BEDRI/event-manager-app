@@ -82,6 +82,7 @@ const PresenceVerificationPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [scanning, setScanning] = useState(false);
+  const [scanReady, setScanReady] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<PresenceVerificationResult | null>(null);
 
@@ -135,18 +136,6 @@ const PresenceVerificationPage: React.FC = () => {
     }
   }, [selectedEvent]);
 
-  useEffect(() => {
-    if (!result) return;
-
-    const timeout = window.setTimeout(() => {
-      setResult(null);
-      setError('');
-      setQrCode('');
-    }, 3000);
-
-    return () => window.clearTimeout(timeout);
-  }, [result]);
-
   const submitVerification = async (tokenOverride?: string) => {
     const token = (tokenOverride || qrCode).trim();
     setError('');
@@ -161,6 +150,7 @@ const PresenceVerificationPage: React.FC = () => {
       setSubmitting(true);
       const verification = await verifyPresence(token, Number(selectedZoneId));
       setResult(verification);
+      setScanReady(false);
 
       if (verification.authorized === false || verification.is_valid === false) {
         setError(verification.reason || 'Acces refuse');
@@ -181,10 +171,12 @@ const PresenceVerificationPage: React.FC = () => {
     try {
       setScanning(true);
       setError('');
+      setResult(null);
       const token = await scanQrWithCapacitor();
       setQrCode(token);
-      await submitVerification(token);
+      setScanReady(true);
     } catch (err: any) {
+      setScanReady(false);
       setError(err.message || 'Scan camera impossible');
     } finally {
       setScanning(false);
@@ -200,10 +192,12 @@ const PresenceVerificationPage: React.FC = () => {
     try {
       setScanning(true);
       setError('');
+      setResult(null);
       const token = await decodeQrFromImage(file);
       setQrCode(token);
-      await submitVerification(token);
+      setScanReady(true);
     } catch (err: any) {
+      setScanReady(false);
       setError(err.message || 'Image QR illisible');
     } finally {
       setScanning(false);
@@ -215,21 +209,28 @@ const PresenceVerificationPage: React.FC = () => {
   const eventName = result?.event?.name || result?.event_name;
   const zoneName = result?.zone?.name || result?.zone_name;
 
+  const resetVerification = () => {
+    setQrCode('');
+    setResult(null);
+    setError('');
+    setScanReady(false);
+  };
+
   if (loading) {
     return <div className="text-primary-gray">Chargement de la vérification...</div>;
   }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="font-heading text-3xl font-bold text-primary-dark">Vérifier une présence</h1>
-        <p className="mt-2 text-primary-gray">
+    <div className="space-y-5 sm:space-y-6">
+      <div className="text-center sm:text-left">
+        <h1 className="font-heading text-2xl font-bold text-primary-dark sm:text-3xl">Vérifier une présence</h1>
+        <p className="mx-auto mt-2 max-w-xl text-sm text-primary-gray sm:mx-0 sm:text-base">
           Validez un accès à une zone avec un QR code signé.
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1fr)_22rem]">
-        <form onSubmit={handleSubmit} className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+        <form onSubmit={handleSubmit} className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="space-y-5">
             {!isAdmin && (
               <label className="block">
@@ -272,17 +273,27 @@ const PresenceVerificationPage: React.FC = () => {
                 type="button"
                 onClick={handleCameraScan}
                 disabled={submitting || scanning}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-primary-accent px-4 py-3 text-sm font-semibold text-primary-accent transition hover:bg-primary-light disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex min-h-14 items-center justify-center gap-2 rounded-2xl border border-primary-accent px-4 py-3 text-sm font-semibold text-primary-accent transition hover:bg-primary-light disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Camera size={18} />
                 Scanner caméra
               </button>
-              <label className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-2xl border border-gray-200 px-4 py-3 text-sm font-semibold text-primary-dark transition hover:bg-gray-50">
+              <label className="inline-flex min-h-14 cursor-pointer items-center justify-center gap-2 rounded-2xl border border-gray-200 px-4 py-3 text-sm font-semibold text-primary-dark transition hover:bg-gray-50">
                 <ImageUp size={18} />
                 Importer image
                 <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
               </label>
             </div>
+
+            {scanReady && !result && (
+              <div role="status" className="flex flex-col items-center rounded-xl border border-blue-200 bg-blue-50 p-4 text-center text-sm text-blue-900 sm:items-start sm:text-left">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100">
+                  <QrCode size={20} aria-hidden="true" />
+                </div>
+                <p className="mt-2 font-semibold">QR code détecté</p>
+                <p className="mt-1 max-w-sm">Vérifiez la zone sélectionnée, puis confirmez la présence.</p>
+              </div>
+            )}
 
             <label className="block">
               <span className="mb-2 flex items-center gap-2 text-sm font-semibold text-primary-dark">
@@ -291,41 +302,66 @@ const PresenceVerificationPage: React.FC = () => {
               </span>
               <textarea
                 value={qrCode}
-                onChange={(event) => setQrCode(event.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setQrCode(value);
+                  setResult(null);
+                  setError('');
+                  setScanReady(Boolean(value.trim()));
+                }}
                 className="min-h-28 w-full resize-y rounded-2xl border border-gray-200 bg-white px-4 py-3 font-mono text-sm outline-none focus:border-primary-accent"
                 placeholder="Coller le token QR"
               />
             </label>
 
             <Button type="submit" icon={ScanLine} disabled={submitting || scanning} className="w-full sm:w-auto">
-              {submitting || scanning ? 'Vérification...' : 'Valider la présence'}
+              {submitting || scanning
+                ? 'Vérification...'
+                : scanReady
+                  ? 'Confirmer et valider la présence'
+                  : 'Valider la présence'}
             </Button>
           </div>
         </form>
 
-        <aside className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-light text-primary-accent">
+        <aside className="rounded-2xl border border-gray-200 bg-white p-5 text-center shadow-sm sm:text-left">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary-light text-primary-accent sm:mx-0">
             <ScanLine size={28} />
           </div>
           <h2 className="mt-4 font-heading text-xl font-bold text-primary-dark">Résultat</h2>
 
-          {error && <div role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">{error}</div>}
+          {error && <div role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-center text-sm text-red-800 sm:text-left">{error}</div>}
 
           {result ? (
-            <div className={`mt-4 rounded-xl border p-4 ${isAuthorized ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-800'}`}>
-              <p className="flex items-center gap-2 font-semibold">
-                {isAuthorized ? <CheckCircle size={18} /> : <XCircle size={18} />}
+            <div className={`mt-4 flex flex-col items-center rounded-xl border p-4 text-center sm:items-start sm:text-left ${isAuthorized ? 'border-green-200 bg-green-50 text-green-800' : 'border-red-200 bg-red-50 text-red-800'}`}>
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80">
+                {isAuthorized ? <CheckCircle size={26} /> : <XCircle size={26} />}
+              </div>
+              <p className="mt-3 font-semibold">
                 {isAuthorized ? 'Accès autorisé' : 'Accès refusé'}
               </p>
-              <div className="mt-3 space-y-1 text-sm">
+              <div className="mt-3 w-full space-y-1 text-sm">
                 {participantName && <p>{participantName}</p>}
                 {eventName && <p>{eventName}</p>}
                 {zoneName && <p>{zoneName}</p>}
                 {result.reason && <p>{result.reason}</p>}
               </div>
+              <button
+                type="button"
+                onClick={resetVerification}
+                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-current px-3 py-2 text-sm font-semibold transition hover:bg-white/60"
+              >
+                <ScanLine size={16} />
+                Scanner un autre QR code
+              </button>
             </div>
           ) : (
-            !error && <p className="mt-4 text-sm text-primary-gray">Aucune vérification effectuée.</p>
+            !error && (
+              <div className="mx-auto mt-4 flex max-w-xs flex-col items-center text-center sm:mx-0 sm:items-start sm:text-left">
+                <p className="text-sm font-medium text-primary-dark">En attente d’un scan</p>
+                <p className="mt-1 text-sm text-primary-gray">Le résultat de la prochaine vérification apparaîtra ici.</p>
+              </div>
+            )
           )}
         </aside>
       </div>
