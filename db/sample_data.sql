@@ -7,8 +7,6 @@ SET character_set_results = utf8mb4;
 
 USE eventmanager;
 
--- Mot de passe pour tous les users de test : "Test@12345678"
--- Hash bcrypt de "Test@12345678" (12 rounds)
 SET @pwd = '$2b$12$bGvWrifjQwqVm2Ewz96Tu.0XAepCuXA2X9RXFp7x2/6hUECz07NsK';
 
 -- =============================================
