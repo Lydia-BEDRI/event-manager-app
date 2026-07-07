@@ -117,6 +117,67 @@ EventManager est une application web destinée à la gestion d’événements in
    - Health check : [http://localhost:5000/health](http://localhost:5000/health)
    - Boîte e-mail locale Mailpit : [http://localhost:8025](http://localhost:8025)
 
+### Validation de la configuration de production minimale
+
+Le fichier `docker-compose.prod.yml` ne démarre que MySQL, l'API et le frontend. Il
+n'inclut ni Mailpit ni service d'observabilité. MySQL et
+l'API restent accessibles uniquement sur le réseau Docker ; Nginx expose le frontend et
+transmet `/api`, `/socket.io` et `/health` au backend.
+
+Lors de la création d'un volume vide, `db/sample_data.sql` ajoute les comptes et événements
+de démonstration. Ces comptes utilisent un mot de passe public documenté dans le script :
+changez leurs mots de passe ou supprimez-les avant d'ouvrir l'application au public.
+
+```bash
+cp .env.production.example .env.production
+# Remplacer toutes les valeurs CHANGE_ME et adapter FRONTEND_URL/SMTP.
+
+docker compose --env-file .env.production -f docker-compose.prod.yml config --quiet
+docker compose --env-file .env.production -f docker-compose.prod.yml build
+docker compose --env-file .env.production -f docker-compose.prod.yml up -d
+docker compose --env-file .env.production -f docker-compose.prod.yml ps
+curl --fail http://localhost:8080/health
+```
+
+Pour arrêter cette stack sans supprimer les données MySQL :
+
+```bash
+docker compose --env-file .env.production -f docker-compose.prod.yml down
+```
+
+Sur le VPS, `FRONTEND_URL` devra être l'URL HTTPS publique. Le port exposé sera ensuite
+placé derrière le reverse proxy chargé du certificat TLS.
+
+### Préparer le build Android
+
+Le site web utilise l'URL relative `/api`, mais une application Capacitor doit embarquer
+l'URL HTTPS absolue du backend. Cette valeur est injectée au moment du build :
+
+```bash
+cd frontend
+cp .env.android.example .env.android
+# Remplacer app.example.com par le domaine réel du futur VPS.
+npm run build:android
+```
+
+La commande refuse volontairement une URL relative, HTTP ou localhost, puis exécute le
+build React et `cap sync android`. Le fichier `.env.android` est ignoré par Git. Après un
+changement de domaine, l'APK doit être reconstruit.
+
+Le backend lit `ALLOWED_ORIGINS` comme une liste séparée par des virgules pour CORS et
+Socket.IO. En production, elle devra au minimum contenir l'URL publique du site et
+`http://localhost`, qui est l'origine locale de l'application Capacitor Android.
+
+Les scripts de `/docker-entrypoint-initdb.d` ne s'exécutent que lors de la création d'un
+volume MySQL vide. Pour mettre à niveau une base créée avant l'ajout du contrôle d'accès
+QR, appliquez une fois la migration `db/migrations/002-update-qr-and-access-logs.sql` :
+
+```bash
+docker compose --env-file .env.production -f docker-compose.prod.yml exec -T db \
+  sh -c 'mysql -u root -p"$MYSQL_ROOT_PASSWORD" eventmanager' \
+  < db/migrations/002-update-qr-and-access-logs.sql
+```
+
 ### Services, ports et responsabilités
 
 Les consoles techniques sont liées à `127.0.0.1` par défaut. Elles ne sont donc pas
