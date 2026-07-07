@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { AlertCircle, CheckCircle2, Nfc, QrCode, RotateCcw, ScanLine } from 'lucide-react';
+import { AlertCircle, ArrowLeft, CheckCircle2, Nfc, QrCode, RotateCcw, ScanLine } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { getAllEvents } from '../../services/event.service';
 import { getEventZones } from '../../services/zone.service';
 import { verifyAccessToken } from '../../services/access.service';
@@ -102,6 +103,7 @@ async function readNfcToken(): Promise<string> {
 }
 
 const KioskPage: React.FC = () => {
+  const navigate = useNavigate();
   const [events, setEvents] = useState<Event[]>([]);
   const [zones, setZones] = useState<Zone[]>([]);
   const [eventId, setEventId] = useState('');
@@ -228,14 +230,24 @@ const KioskPage: React.FC = () => {
             <h1 className="font-heading text-4xl font-bold">Kiosque accès</h1>
             <p className="mt-2 text-white/70">Scan QR et NFC</p>
           </div>
-          <button
-            type="button"
-            onClick={reset}
-            className="inline-flex items-center justify-center gap-2 rounded-2xl border border-white/20 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-          >
-            <RotateCcw size={18} />
-            Réinitialiser
-          </button>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => navigate('/dashboard')}
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-primary-dark transition hover:bg-primary-light"
+            >
+              <ArrowLeft size={18} />
+              Retour au dashboard
+            </button>
+            <button
+              type="button"
+              onClick={reset}
+              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl border border-white/20 px-4 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+            >
+              <RotateCcw size={18} />
+              Réinitialiser
+            </button>
+          </div>
         </header>
 
         <section className="grid gap-4 py-6 md:grid-cols-2">
