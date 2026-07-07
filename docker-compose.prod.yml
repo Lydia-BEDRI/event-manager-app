@@ -50,6 +50,10 @@ services:
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_FROM: ${SMTP_FROM:?SMTP_FROM is required}
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
+      SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE:-0.1}
+      APP_VERSION: ${APP_VERSION:-production}
     depends_on:
       db:
         condition: service_healthy
@@ -72,6 +76,12 @@ services:
       dockerfile: Dockerfile
       args:
         REACT_APP_API_URL: /api
+        REACT_APP_SENTRY_DSN: ${REACT_APP_SENTRY_DSN:-}
+        REACT_APP_SENTRY_ENVIRONMENT: ${SENTRY_ENVIRONMENT:-production}
+        REACT_APP_SENTRY_TRACES_SAMPLE_RATE: ${SENTRY_TRACES_SAMPLE_RATE:-0.1}
+        REACT_APP_VERSION: ${APP_VERSION:-production}
+        REACT_APP_MATOMO_URL: ${REACT_APP_MATOMO_URL:-}
+        REACT_APP_MATOMO_SITE_ID: ${REACT_APP_MATOMO_SITE_ID:-1}
     restart: unless-stopped
     ports:
       - "${HTTP_PORT:-8080}:80"
