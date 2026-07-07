@@ -119,10 +119,12 @@ EventManager est une application web destinée à la gestion d’événements in
 
 ### Validation de la configuration de production minimale
 
-Le fichier `docker-compose.prod.yml` ne démarre que MySQL, l'API et le frontend. Il
+Le fichier `docker-compose.prod.yml` démarre Caddy, MySQL, l'API et le frontend. Il
 n'inclut ni Mailpit ni service d'observabilité. MySQL et
-l'API restent accessibles uniquement sur le réseau Docker ; Nginx expose le frontend et
-transmet `/api`, `/socket.io` et `/health` au backend.
+l'API restent accessibles uniquement sur le réseau Docker. Caddy est le seul point d'entrée
+public sur les ports 80 et 443, obtient automatiquement le certificat TLS de
+`eventmanager.website` et transmet le trafic à Nginx ou au backend. L'endpoint `/metrics`
+n'est pas exposé publiquement.
 
 Lors de la création d'un volume vide, `db/sample_data.sql` ajoute les comptes et événements
 de démonstration. Ces comptes utilisent un mot de passe public documenté dans le script :
@@ -136,7 +138,7 @@ docker compose --env-file .env.production -f docker-compose.prod.yml config --qu
 docker compose --env-file .env.production -f docker-compose.prod.yml build
 docker compose --env-file .env.production -f docker-compose.prod.yml up -d
 docker compose --env-file .env.production -f docker-compose.prod.yml ps
-curl --fail http://localhost:8080/health
+curl --fail https://eventmanager.website/health
 ```
 
 Pour arrêter cette stack sans supprimer les données MySQL :
@@ -145,8 +147,9 @@ Pour arrêter cette stack sans supprimer les données MySQL :
 docker compose --env-file .env.production -f docker-compose.prod.yml down
 ```
 
-Sur le VPS, `FRONTEND_URL` devra être l'URL HTTPS publique. Le port exposé sera ensuite
-placé derrière le reverse proxy chargé du certificat TLS.
+Sur le VPS, `FRONTEND_URL` doit être `https://eventmanager.website`. Les enregistrements
+DNS doivent pointer vers le VPS et les ports TCP 80/443 ainsi que UDP 443 doivent être
+autorisés pour l'émission du certificat et HTTP/3.
 
 ### Préparer le build Android
 
