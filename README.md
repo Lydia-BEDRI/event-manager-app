@@ -3,473 +3,168 @@
 [![CI](https://github.com/Lydia-BEDRI/event-manager-app/actions/workflows/ci.yml/badge.svg)](https://github.com/Lydia-BEDRI/event-manager-app/actions/workflows/ci.yml)
 [![CD](https://github.com/Lydia-BEDRI/event-manager-app/actions/workflows/cd.yml/badge.svg)](https://github.com/Lydia-BEDRI/event-manager-app/actions/workflows/cd.yml)
 
-EventManager est une application web destinée à la gestion d’événements internes en entreprise. Elle permet aux organisateurs de créer, gérer et suivre des événements tout en offrant aux participants une expérience fluide et sécurisée.
+EventManager est une application web de gestion d’événements internes en entreprise. Elle permet aux organisateurs de créer et suivre leurs événements, et aux participants de s’inscrire, valider leur présence et échanger dans un espace sécurisé.
 
 ## Fonctionnalités principales
 
 ### Pour les organisateurs
 
 - Création, modification et suppression d’événements.
-- Gestion des inscriptions avec validation manuelle.
-- Génération de QR codes signés cryptographiquement pour les participants validés.
-- Suivi en temps réel des participants et des présences.
-- Tableau de bord avec statistiques et export des données.
-- Modération des discussions dans le chat événementiel.
+- Validation manuelle des demandes de participation.
+- Génération de QR codes signés pour les participants approuvés.
+- Suivi des participants, des présences et des passages.
+- Tableau de bord, statistiques et export des données.
+- Modération des discussions événementielles.
 
 ### Pour les participants
 
 - Consultation des événements disponibles.
-- Demande de participation avec validation par l’organisateur.
-- Réception d'un QR code signé cryptographiquement après validation.
-- Upload du QR code pour valider la présence via l'application web.
-- Participation aux discussions dans un chat dédié après validation de présence.
+- Demande de participation soumise à l’organisateur.
+- Réception d’un QR code signé après validation.
+- Validation de présence par lecture du QR code depuis l’application web ou Android.
+- Accès au chat après validation de la présence.
 
-### Module de vérification de présence
+### Vérification de présence
 
-- Vérification par upload d'image QR code depuis l'application web.
-- Validation côté serveur de la signature cryptographique.
-- Contrôle de l'identité de l'utilisateur connecté.
-- Journalisation de chaque scan, y compris les scans répétés.
-- Impossibilité d'utilisation par un autre compte.
-- Marquage automatique de la présence et activation du chat.
+- Vérification côté serveur de la signature du QR code.
+- Contrôle de l’identité de l’utilisateur connecté.
+- Vérification de l’événement et de la zone associés au QR code.
+- Journalisation de chaque scan, y compris les passages répétés.
+- Application des mêmes règles d’autorisation aux accès QR code et NFC.
 
-### Règles métier d’accès
+## Stack technique
 
-- Une participation approuvée donne accès à toutes les zones de l’événement, y compris celles créées ultérieurement.
-- Une participation refusée ou révoquée ne donne accès à aucune zone.
-- Un scan est accepté uniquement pendant un événement publié ou en cours et dans ses dates effectives.
-- La zone scannée doit appartenir à l’événement du participant.
-- Les scans répétés sont autorisés et journalisés individuellement.
-- QR code et NFC appliquent les mêmes règles d’autorisation.
-- La capacité des zones ne bloque pas les scans tant qu’aucun suivi entrée/sortie n’est disponible.
-
-## Architecture technique
-
-- **Frontend** : Application web moderne, responsive et accessible.
-- **Backend** : API REST avec gestion des rôles et des droits.
-- **Base de données** : Stockage des utilisateurs, événements, accès et messages.
-- **Infrastructure** : Conteneurisation et déploiement sécurisé avec SSL.
-- **Observabilité** : Prometheus, Grafana, cAdvisor, Uptime Kuma, Sentry et Matomo.
+- Frontend : React.
+- Backend : Node.js, TypeScript et API REST.
+- Base de données : MySQL.
+- Mobile : Capacitor Android.
+- Déploiement : Docker Compose sur VPS.
+- Reverse proxy : Caddy avec HTTPS.
+- Observabilité : Prometheus, Grafana, cAdvisor, Uptime Kuma, Matomo et Sentry.
 
 ## Sécurité et conformité
 
-- Authentification sécurisée avec politique de mot de passe fort.
-- Double authentification TOTP compatible avec les applications Authenticator.
-- Codes de secours à usage unique et secrets TOTP chiffrés en base.
-- QR codes signés cryptographiquement et associés strictement au compte utilisateur.
-- Vérification côté serveur obligatoire avec validation de signature.
-- Réutilisation contrôlée des QR codes avec journalisation de chaque passage.
-- Conformité RGPD avec gestion des données personnelles et consentement.
+- Authentification avec politique de mot de passe fort.
+- Double authentification TOTP et codes de secours à usage unique.
+- Chiffrement des secrets TOTP en base de données.
+- QR codes signés et liés au compte utilisateur.
+- Validation des autorisations exclusivement côté serveur.
+- Journalisation des passages.
+- Gestion du consentement analytique et des données personnelles.
 
-## Installation et exécution
+## Installation locale
 
 ### Prérequis
 
-- Node.js (v18 ou supérieur) et npm installés.
-- Docker (optionnel pour le déploiement).
+- Node.js 18 ou supérieur et npm.
+- Docker et Docker Compose pour l’exécution conteneurisée.
 
-### Étapes
-
-1. **Cloner le dépôt :**
-
-   ```bash
-   git clone https://github.com/Lydia-BEDRI/event-manager-app
-   cd event-manager-app
-   ```
-
-2. **Backend :**
-
-   ```bash
-   cd backend
-   npm install
-   cp .env.example .env
-   # Modifier .env avec vos valeurs
-   npm run dev
-   ```
-
-3. **Frontend :**
-
-   ```bash
-   cd frontend
-   npm install
-   cp .env.example .env
-   # Modifier .env avec vos valeurs
-   npm start
-   ```
-
-4. **Accéder à l'application :**
-   - Frontend : [http://localhost:3000](http://localhost:3000)
-   - Backend : [http://localhost:5000](http://localhost:5000)
-   - Health check : [http://localhost:5000/health](http://localhost:5000/health)
-
-## Execution avec Docker Compose
-
-1. **Construire et démarrer les conteneurs :**
-
-   ```bash  
-   docker compose up --build
-   ```
-
-2. **Accéder à l'application :**
-
-   - Frontend : [http://localhost:3000](http://localhost:3000)
-   - Backend : [http://localhost:5000](http://localhost:5000)
-   - Health check : [http://localhost:5000/health](http://localhost:5000/health)
-   - Boîte e-mail locale Mailpit : [http://localhost:8025](http://localhost:8025)
-
-### Validation de la configuration de production minimale
-
-Le fichier `docker-compose.prod.yml` démarre Caddy, MySQL, l'API et le frontend. Il
-n'inclut ni Mailpit ni service d'observabilité. MySQL et
-l'API restent accessibles uniquement sur le réseau Docker. Caddy est le seul point d'entrée
-public sur les ports 80 et 443, obtient automatiquement le certificat TLS de
-`eventmanager.website` et transmet le trafic à Nginx ou au backend. L'endpoint `/metrics`
-n'est pas exposé publiquement.
-
-Lors de la création d'un volume vide, `db/sample_data.sql` ajoute les comptes et événements
-de démonstration. Ces comptes utilisent un mot de passe public documenté dans le script :
-changez leurs mots de passe ou supprimez-les avant d'ouvrir l'application au public.
+### Avec npm
 
 ```bash
-cp .env.production.example .env.production
-# Remplacer toutes les valeurs CHANGE_ME et adapter FRONTEND_URL/SMTP.
+git clone https://github.com/Lydia-BEDRI/event-manager-app
+cd event-manager-app
 
-docker compose --env-file .env.production -f docker-compose.prod.yml config --quiet
-docker compose --env-file .env.production -f docker-compose.prod.yml build
-docker compose --env-file .env.production -f docker-compose.prod.yml up -d
-docker compose --env-file .env.production -f docker-compose.prod.yml ps
-curl --fail https://eventmanager.website/health
+cd backend
+npm install
+cp .env.example .env
+npm run dev
 ```
 
-Pour arrêter cette stack sans supprimer les données MySQL :
+Dans un second terminal :
 
 ```bash
-docker compose --env-file .env.production -f docker-compose.prod.yml down
+cd frontend
+npm install
+cp .env.example .env
+npm start
 ```
 
-Sur le VPS, `FRONTEND_URL` doit être `https://eventmanager.website`. Les enregistrements
-DNS doivent pointer vers le VPS et les ports TCP 80/443 ainsi que UDP 443 doivent être
-autorisés pour l'émission du certificat et HTTP/3.
+L’application est disponible sur [http://localhost:3000](http://localhost:3000), l’API sur [http://localhost:5000](http://localhost:5000) et son état de santé sur [http://localhost:5000/health](http://localhost:5000/health).
 
-### Préparer le build Android
+### Avec Docker Compose
 
-Le site web utilise l'URL relative `/api`, mais une application Capacitor doit embarquer
-l'URL HTTPS absolue du backend. Cette valeur est injectée au moment du build :
+```bash
+docker compose up --build
+```
+
+Les services locaux principaux sont :
+
+- frontend : [http://localhost:3000](http://localhost:3000) ;
+- backend : [http://localhost:5000](http://localhost:5000) ;
+- Mailpit : [http://localhost:8025](http://localhost:8025).
+
+## Réinitialisation du mot de passe en local
+
+Docker Compose configure automatiquement Mailpit comme serveur SMTP local. Depuis [http://localhost:3000/forgot-password](http://localhost:3000/forgot-password), demandez une réinitialisation, puis ouvrez [http://localhost:8025](http://localhost:8025) pour consulter le message et suivre son lien.
+
+Si le backend est lancé directement avec `npm run dev`, démarrez Mailpit avec `docker compose up -d mailpit` et utilisez les valeurs non sensibles de `backend/.env.example` comme base de configuration.
+
+En production, les paramètres `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASSWORD` et `SMTP_FROM` doivent être fournis uniquement par le fichier d’environnement du serveur ou un gestionnaire de secrets. Aucun identifiant réel ne doit être ajouté au dépôt.
+
+## Double authentification TOTP
+
+La double authentification s’active depuis la section sécurité du profil :
+
+1. Configurez une application Authenticator avec le QR code ou la clé Base32.
+2. Confirmez avec un premier code à six chiffres.
+3. Conservez hors de l’application les huit codes de secours affichés une seule fois.
+4. À la connexion suivante, validez le code TOTP ou un code de secours.
+
+En production, `TWO_FACTOR_ENCRYPTION_KEY` doit être une valeur aléatoire, dédiée et conservée entre les déploiements. Sa perte rend les secrets TOTP existants indéchiffrables. Les valeurs réelles de cette clé et de `JWT_SECRET` ne doivent jamais être publiées.
+
+## Préparer le build Android
+
+L’application Capacitor doit utiliser une URL HTTPS absolue pour joindre l’API :
 
 ```bash
 cd frontend
 cp .env.android.example .env.android
-# Remplacer app.example.com par le domaine réel du futur VPS.
+# Renseigner REACT_APP_API_URL avec l’URL HTTPS de l’API.
 npm run build:android
 ```
 
-La commande refuse volontairement une URL relative, HTTP ou localhost, puis exécute le
-build React et `cap sync android`. Le fichier `.env.android` est ignoré par Git. Après un
-changement de domaine, l'APK doit être reconstruit.
+Le fichier `frontend/.env.android` est local et ignoré par Git. Consultez [la documentation Android](docs/android.md) pour le build et l’exécution sur un appareil.
 
-Le backend lit `ALLOWED_ORIGINS` comme une liste séparée par des virgules pour CORS et
-Socket.IO. En production, elle devra au minimum contenir l'URL publique du site et
-`http://localhost`, qui est l'origine locale de l'application Capacitor Android.
-
-### Observabilité en production
-
-La stack d'observabilité est séparée dans `docker-compose.observability.prod.yml`. Elle
-ajoute Prometheus, Grafana, cAdvisor, Uptime Kuma et Matomo avec sa base MariaDB, sans
-modifier les services applicatifs ni exposer leurs interfaces au-delà de `127.0.0.1`.
-
-Après avoir renseigné les variables Grafana, Matomo et Sentry dans `.env.production` :
+## Commandes utiles
 
 ```bash
-docker compose --env-file .env.production \
-  -f docker-compose.prod.yml \
-  -f docker-compose.observability.prod.yml \
-  config --quiet
+# Tests backend
+cd backend && npm test
 
-docker compose --env-file .env.production \
-  -f docker-compose.prod.yml \
-  -f docker-compose.observability.prod.yml \
-  up -d --build
+# Tests frontend
+cd frontend && npm test
 
-docker compose --env-file .env.production \
-  -f docker-compose.prod.yml \
-  -f docker-compose.observability.prod.yml \
-  ps
+# Builds web
+cd backend && npm run build
+cd frontend && npm run build
+
+# Build Android
+cd frontend && npm run build:android
+
+# Healthcheck local
+curl --fail http://localhost:5000/health
 ```
 
-Depuis un poste local, créez les tunnels SSH suivants en remplaçant `USER` et `VPS_IP` :
+## Déploiement en production
 
-```bash
-ssh -N \
-  -L 9090:127.0.0.1:9090 \
-  -L 3001:127.0.0.1:3001 \
-  -L 8082:127.0.0.1:8082 \
-  -L 3002:127.0.0.1:3002 \
-  -L 8081:127.0.0.1:8081 \
-  USER@VPS_IP
-```
+Le déploiement utilise Docker Compose, Caddy comme point d’entrée HTTPS et un fichier `.env.production` présent uniquement sur le serveur. Les services applicatifs et d’observabilité sont séparés en deux fichiers Compose.
 
-Les interfaces deviennent alors accessibles localement sur les ports `9090` (Prometheus),
-`3001` (Grafana), `8082` (cAdvisor), `3002` (Uptime Kuma) et `8081` (Matomo).
+La procédure complète se trouve dans [docs/deploiement-production.md](docs/deploiement-production.md).
 
-Les scripts de `/docker-entrypoint-initdb.d` ne s'exécutent que lors de la création d'un
-volume MySQL vide. Pour mettre à niveau une base créée avant l'ajout du contrôle d'accès
-QR, appliquez une fois la migration `db/migrations/002-update-qr-and-access-logs.sql` :
+## Workflow Git
 
-```bash
-docker compose --env-file .env.production -f docker-compose.prod.yml exec -T db \
-  sh -c 'mysql -u root -p"$MYSQL_ROOT_PASSWORD" eventmanager' \
-  < db/migrations/002-update-qr-and-access-logs.sql
-```
-
-### Services, ports et responsabilités
-
-Les consoles techniques sont liées à `127.0.0.1` par défaut. Elles ne sont donc pas
-accessibles depuis une autre machine sans tunnel SSH ou reverse proxy authentifié. En
-production, seuls les ports publics HTTP/HTTPS du reverse proxy doivent être ouverts.
-
-| Service | Port hôte | Port interne | Exposition | Rôle |
-|---|---:|---:|---|---|
-| `frontend` | `3000` | `80` | Application | Interface React servie par Nginx. |
-| `backend` | `5000` | `5000` | API | API REST, Socket.IO, `/health` et `/metrics`. |
-| `db` | `3307` | `3306` | Développement | Base MySQL métier d’EventManager. À ne pas exposer sur le VPS. |
-| `mailpit` | `1025` | `1025` | Local uniquement | Serveur SMTP de développement. |
-| `mailpit` | `8025` | `8025` | Local uniquement | Interface de consultation des e-mails de test. |
-| `prometheus` | `9090` | `9090` | Local/admin | Collecte et conserve les métriques pendant 15 jours. |
-| `grafana` | `3001` | `3000` | Local/admin | Visualise les métriques et fournit le dashboard EventManager. |
-| `cadvisor` | `8082` | `8080` | Local/admin | Expose CPU, mémoire, réseau et état des conteneurs à Prometheus. |
-| `uptime-kuma` | `3002` | `3001` | Local/admin | Surveille la disponibilité HTTP et déclenche des alertes. |
-| `matomo` | `8081` | `80` | Local/admin | Analytique web auto-hébergée soumise au consentement utilisateur. |
-| `matomo-db` | aucun | `3306` | Réseau Docker | Base MariaDB dédiée à Matomo, isolée de la base métier. |
-
-Le réseau Docker `eventmanager-network` permet aux services de se joindre par leur nom,
-par exemple `http://backend:5000/health`. Les volumes nommés conservent les bases, les
-dashboards, l’historique Prometheus et la configuration Uptime Kuma.
-
-## Observabilité
-
-### Métriques et état de santé
-
-Le backend expose deux endpoints non authentifiés destinés aux sondes internes :
-
-- `GET /health` vérifie simultanément le processus API et la connexion MySQL. Il renvoie
-  `200` lorsque les deux sont disponibles et `503` si MySQL est indisponible.
-- `GET /metrics` expose les métriques au format Prometheus.
-
-Les métriques principales sont :
-
-- `eventmanager_http_requests_total` : requêtes par méthode, route et statut ;
-- `eventmanager_http_request_duration_seconds` : histogramme de latence HTTP ;
-- `eventmanager_database_up` : disponibilité de MySQL ;
-- les métriques Node.js préfixées par `eventmanager_` : mémoire, CPU, event loop et GC.
-
-Prometheus collecte le backend et cAdvisor toutes les 15 secondes. Des règles sont
-préconfigurées pour détecter un backend ou une base indisponible, plus de 5 % d’erreurs
-HTTP 5xx et une latence p95 supérieure à une seconde. Grafana provisionne automatiquement
-la source Prometheus et le dashboard **EventManager - Vue d’ensemble**.
-
-Accès local :
-
-- Prometheus : [http://localhost:9090](http://localhost:9090)
-- Grafana : [http://localhost:3001](http://localhost:3001)
-- cAdvisor : [http://localhost:8082](http://localhost:8082)
-
-Les identifiants Grafana proviennent de `GRAFANA_ADMIN_USER` et
-`GRAFANA_ADMIN_PASSWORD`. La valeur par défaut `change-me` doit impérativement être
-remplacée sur un environnement partagé.
-
-### Surveillance Uptime Kuma
-
-À la première ouverture de [Uptime Kuma](http://localhost:3002), créez le compte
-administrateur puis ajoutez au minimum ces moniteurs HTTP depuis le réseau Docker :
-
-| Moniteur | URL interne | Résultat attendu |
-|---|---|---|
-| Backend et MySQL | `http://backend:5000/health` | HTTP `200` |
-| Frontend | `http://frontend:80` | HTTP `200` |
-| Prometheus | `http://prometheus:9090/-/healthy` | HTTP `200` |
-| Matomo | `http://matomo:80` | HTTP `200` |
-
-Configurez ensuite un canal de notification e-mail, Slack ou Discord dans Uptime Kuma.
-Sa configuration est conservée dans le volume `eventmanager-uptime-kuma-data`.
-
-### Signalement des erreurs avec Sentry
-
-Sentry est optionnel en local et s’active uniquement lorsqu’un DSN est fourni. Le backend
-signale les exceptions non gérées, les erreurs du health check et les réponses HTTP 5xx.
-Le frontend signale les erreurs JavaScript et peut envoyer un échantillon de traces.
-
-```env
-SENTRY_DSN=https://cle@organisation.ingest.sentry.io/projet-backend
-REACT_APP_SENTRY_DSN=https://cle@organisation.ingest.sentry.io/projet-frontend
-SENTRY_ENVIRONMENT=production
-SENTRY_TRACES_SAMPLE_RATE=0.1
-APP_VERSION=1.0.0
-```
-
-Les variables `REACT_APP_*` sont intégrées au bundle lors du build du frontend. Il faut
-donc reconstruire l’image après leur modification. Les données personnelles ne sont pas
-envoyées par défaut (`sendDefaultPii: false`).
-
-### Analytique Matomo et consentement
-
-Matomo utilise une base MariaDB séparée. Ouvrez [http://localhost:8081](http://localhost:8081)
-au premier démarrage et terminez l’assistant avec les paramètres suivants :
+Le workflow du projet est :
 
 ```text
-Serveur de base de données : matomo-db
-Base : valeur de MATOMO_DATABASE
-Utilisateur : valeur de MATOMO_DATABASE_USER
-Mot de passe : valeur de MATOMO_DATABASE_PASSWORD
+feature/* → develop → main
 ```
 
-Créez ensuite le site EventManager et reportez son identifiant dans
-`REACT_APP_MATOMO_SITE_ID`. Le tracker n’est chargé que lorsque l’utilisateur accepte les
-cookies analytiques dans la page **Gestion des cookies**. Un refus ou un retrait du
-consentement désactive les cookies Matomo.
+Les Pull Requests sont fusionnées avec **Create a merge commit** afin de conserver l’historique entre `develop` et `main`.
 
-### Démarrage ciblé
+## Documentation
 
-Pour démarrer uniquement la supervision avec l’application :
-
-```bash
-docker compose up -d --build backend frontend cadvisor prometheus grafana uptime-kuma
-```
-
-Pour inclure l’analytique auto-hébergée :
-
-```bash
-docker compose up -d matomo-db matomo
-```
-
-Pour vérifier la configuration sans lancer les conteneurs :
-
-```bash
-docker compose config --quiet
-```
-
-### Réinitialisation du mot de passe en local
-
-Avec `docker compose up --build`, aucune configuration SMTP supplémentaire n'est
-nécessaire dans le fichier `.env`. Docker Compose démarre Mailpit et transmet au backend
-les valeurs locales `SMTP_HOST=mailpit`, `SMTP_PORT=1025` et `SMTP_SECURE=false`.
-
-Le parcours complet fonctionne ainsi :
-
-1. Depuis [http://localhost:3000/forgot-password](http://localhost:3000/forgot-password),
-   le frontend envoie l'adresse saisie à `POST /api/auth/forgot-password`.
-2. Le backend génère un token à usage unique valable 60 minutes. Seule son empreinte
-   SHA-256 est conservée dans MySQL.
-3. Nodemailer transmet à Mailpit un e-mail contenant un lien vers
-   `http://localhost:3000/reset-password?token=...`.
-4. L'e-mail est consultable dans [Mailpit](http://localhost:8025). En cliquant sur son lien,
-   le frontend ouvre le formulaire de nouveau mot de passe.
-5. Le frontend envoie le token et le nouveau mot de passe à `POST /api/auth/reset-password`.
-   Le backend valide le token, met à jour le mot de passe et révoque les sessions existantes.
-
-Pour tester avec les données de démonstration, utilisez par exemple
-`participant1@eventmanager.fr`. L'API renvoie volontairement le même message si l'adresse
-n'existe pas, afin de ne pas révéler les comptes enregistrés.
-
-Si le backend est lancé directement avec `npm run dev` au lieu de Docker, démarrez Mailpit
-séparément avec `docker compose up -d mailpit` et conservez dans `backend/.env` :
-
-```env
-SMTP_HOST=localhost
-SMTP_PORT=1025
-SMTP_SECURE=false
-SMTP_USER=
-SMTP_PASSWORD=
-SMTP_FROM=EventManager <no-reply@eventmanager.local>
-FRONTEND_URL=http://localhost:3000
-```
-
-### Configuration SMTP sur un VPS
-
-Le backend utilise Mailpit par défaut en local. Sur le VPS, configurez
-les variables `FRONTEND_URL`, `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`,
-`SMTP_PASSWORD` et `SMTP_FROM` dans le fichier `.env` du déploiement. `FRONTEND_URL`
-doit contenir l'URL HTTPS publique de l'application. Les identifiants SMTP ne doivent jamais
-être ajoutés au dépôt. Utilisez `SMTP_SECURE=true` avec le port 465, ou `false` avec le
-port 587 et STARTTLS. Le service Mailpit local reste inaccessible depuis Internet car ses
-ports sont liés uniquement à `127.0.0.1`.
-
-### Double authentification TOTP
-
-Chaque utilisateur peut activer la double authentification depuis la section sécurité de
-son profil. L'application affiche un QR code compatible avec Google Authenticator,
-Microsoft Authenticator, Authy et les gestionnaires de mots de passe prenant en charge TOTP.
-
-L'activation suit ce parcours :
-
-1. L'utilisateur scanne le QR code ou saisit manuellement la clé Base32.
-2. Il confirme l'installation avec le premier code à six chiffres.
-3. Huit codes de secours à usage unique lui sont affichés une seule fois.
-4. Aux connexions suivantes, aucun JWT de session n'est délivré avant la validation du
-   code TOTP ou d'un code de secours.
-
-Le secret TOTP est chiffré en AES-256-GCM avant son stockage. Les codes de secours ne sont
-jamais enregistrés en clair : seule leur empreinte HMAC est conservée. Le challenge de
-connexion expire après cinq minutes et ne peut pas être utilisé comme token d'accès.
-
-En local, aucune variable supplémentaire n'est obligatoire : le backend utilise
-`JWT_SECRET` comme clé de repli. Il est néanmoins recommandé de générer une clé dédiée
-avant la première activation :
-
-```bash
-openssl rand -hex 32
-```
-
-Ajoutez la valeur obtenue dans le fichier `.env` à la racine du projet. Sur un VPS, cette
-configuration avec une valeur distincte du secret JWT est obligatoire :
-
-```env
-TWO_FACTOR_ENCRYPTION_KEY=une-valeur-aleatoire-longue-et-unique
-```
-
-Cette clé doit être conservée entre les déploiements. Si elle est perdue ou remplacée, les
-secrets TOTP existants ne pourront plus être déchiffrés et les utilisateurs devront réactiver
-leur double authentification.
-
-#### Activer la 2FA en local
-
-1. Démarrez l'application avec `docker compose up --build` et attendez que les services
-   `db`, `backend` et `frontend` soient sains.
-2. Ouvrez [http://localhost:3000](http://localhost:3000), connectez-vous puis accédez à
-   **Mon profil**.
-3. Dans la section **Double authentification**, cliquez sur **Configurer**.
-4. Scannez le QR code avec une application Authenticator. Si le scan est impossible,
-   utilisez la clé Base32 affichée sous le QR code.
-5. Saisissez le code actuel à six chiffres puis cliquez sur **Activer**.
-6. Conservez les huit codes de secours affichés. Ils ne seront plus consultables après le
-   rechargement de la page et chacun ne peut être utilisé qu'une seule fois.
-
-Le statut de la section doit maintenant être **Activée** et indiquer huit codes de secours
-disponibles.
-
-#### Vérifier la connexion TOTP
-
-1. Déconnectez-vous puis saisissez de nouveau votre e-mail et votre mot de passe.
-2. L'application doit afficher **Vérification en deux étapes** sans encore créer de session.
-3. Vérifiez qu'un code incorrect est refusé.
-4. Saisissez le code actuel de l'application Authenticator : la connexion doit aboutir.
-
-L'heure automatique doit être activée sur le téléphone et la machine qui héberge le backend.
-Un décalage d'horloge peut rendre les codes TOTP invalides.
-
-#### Vérifier les codes de secours
-
-1. Recommencez une connexion et utilisez un code de secours à la place du code TOTP.
-2. La connexion doit réussir et le compteur du profil doit diminuer d'une unité.
-3. Déconnectez-vous et réutilisez le même code : il doit être refusé.
-4. Le bouton **Régénérer les codes** permet de remplacer tous les codes restants après
-   validation d'un code TOTP actuel. Les anciens codes deviennent immédiatement invalides.
-
-Pour désactiver la protection, cliquez sur **Désactiver**, puis confirmez avec le mot de
-passe actuel et un code TOTP ou un code de secours. La connexion suivante ne doit plus
-demander de second facteur.
-
-En cas d'erreur, consultez les journaux du backend avec :
-
-```bash
-docker compose logs -f backend
-```
+- [Déploiement en production](docs/deploiement-production.md) : VPS, HTTPS, Docker Compose et configuration.
+- [Observabilité](docs/observabilite.md) : métriques, tableaux de bord, disponibilité, analytique et erreurs.
+- [Sauvegardes](docs/sauvegardes.md) : sauvegarde chiffrée et procédure de restauration.
+- [Android](docs/android.md) : configuration, build et test sur un appareil.
