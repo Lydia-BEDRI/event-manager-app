@@ -7,7 +7,7 @@ import '@testing-library/jest-dom';
 
 import PresenceVerificationPage from '../PresenceVerificationPage';
 import { getAllZones } from '../../../services/zone.service';
-import { verifyPresence } from '../../../services/participation.service';
+import { verifyAccessScan } from '../../../services/participation.service';
 import { useAuth } from '../../../contexts/AuthContext';
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning';
 
@@ -44,7 +44,7 @@ describe('PresenceVerificationPage', () => {
     (BarcodeScanner.scan as jest.Mock).mockResolvedValue({
       barcodes: [{ rawValue: 'signed-qr-token' }],
     });
-    (verifyPresence as jest.Mock).mockResolvedValue({
+    (verifyAccessScan as jest.Mock).mockResolvedValue({
       authorized: true,
       is_valid: true,
       participant: {
@@ -68,12 +68,12 @@ describe('PresenceVerificationPage', () => {
 
     expect(await screen.findByText('QR code détecté')).toBeInTheDocument();
     expect(screen.getByDisplayValue('signed-qr-token')).toBeInTheDocument();
-    expect(verifyPresence).not.toHaveBeenCalled();
+    expect(verifyAccessScan).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('button', { name: 'Confirmer et valider la présence' }));
 
     await waitFor(() => {
-      expect(verifyPresence).toHaveBeenCalledWith('signed-qr-token', 7);
+      expect(verifyAccessScan).toHaveBeenCalledWith('signed-qr-token', 7);
     });
     expect(await screen.findByText('Accès autorisé')).toBeInTheDocument();
     expect(screen.getByText('Camille Martin')).toBeInTheDocument();

@@ -9,7 +9,7 @@ import {
   requestEventParticipation,
   getMyQrCodes,
   generateParticipationQrCode,
-  verifyPresence
+  verifyAccessScan
 } from '../participation.service';
 import { api } from '../api';
 import { verifyAccessToken } from '../access.service';
@@ -525,8 +525,8 @@ describe('Participation Service', () => {
     });
   });
 
-  describe('verifyPresence', () => {
-    it('devrait vérifier une présence', async () => {
+  describe('verifyAccessScan', () => {
+    it('devrait vérifier un passage via la route access', async () => {
       const mockResult = {
         id: 20,
         is_valid: true,
@@ -537,7 +537,7 @@ describe('Participation Service', () => {
       };
       (verifyAccessToken as jest.Mock).mockResolvedValueOnce(mockResult);
 
-      const result = await verifyPresence('QR-EVT1-USR3', 1);
+      const result = await verifyAccessScan('QR-EVT1-USR3', 1);
 
       expect(verifyAccessToken).toHaveBeenCalledWith({ token: 'QR-EVT1-USR3', zoneId: 1 });
       expect(result).toEqual(mockResult);

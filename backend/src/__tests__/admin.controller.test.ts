@@ -224,7 +224,7 @@ describe('Admin Controller - getDashboardStats', () => {
       );
       expect(responseStatus).toHaveBeenCalledWith(500);
       expect(responseJson).toHaveBeenCalledWith({
-        error: 'Erreur serveur lors de la récupération des statistiques.'
+        message: 'Une erreur interne est survenue.'
       });
 
       consoleErrorSpy.mockRestore();

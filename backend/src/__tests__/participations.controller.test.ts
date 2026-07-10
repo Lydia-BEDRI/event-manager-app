@@ -136,7 +136,7 @@ describe('Participations Controller', () => {
       expect(responseStatus).toHaveBeenCalledWith(500);
       expect(responseJson).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: 'Erreur serveur'
+          message: 'Une erreur interne est survenue.'
         })
       );
     });
@@ -214,7 +214,7 @@ describe('Participations Controller', () => {
       expect(responseStatus).toHaveBeenCalledWith(500);
       expect(responseJson).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: 'Erreur serveur'
+          message: 'Une erreur interne est survenue.'
         })
       );
     });
@@ -255,11 +255,11 @@ describe('Participations Controller', () => {
   });
 
   describe('updateParticipationStatus', () => {
-    it('devrait approuver une participation, générer le QR code et accorder les accès zones', async () => {
+    it('devrait approuver une participation et générer le QR code sans attribution individuelle de zone', async () => {
       const mockAuthRequest = {
         params: { participationId: '12' },
         body: { status: 'APPROVED' },
-        user: { userId: 1, email: 'admin@test.com', role: 'ADMIN' },
+        user: { userId: 1, role: 'ADMIN' },
         ip: '127.0.0.1'
       };
 
@@ -293,7 +293,6 @@ describe('Participations Controller', () => {
           approved_count: 20
         }]])
         .mockResolvedValueOnce([{ affectedRows: 1 }])
-        .mockResolvedValueOnce([{ affectedRows: 1 }])
         .mockResolvedValueOnce([{ insertId: 1 }])
         .mockResolvedValueOnce([[updatedParticipation]]);
 
@@ -304,9 +303,9 @@ describe('Participations Controller', () => {
 
       expect(mockConnection.beginTransaction).toHaveBeenCalled();
       expect(mockConnection.commit).toHaveBeenCalled();
-      expect(mockConnection.query).toHaveBeenCalledWith(
-        expect.stringContaining('INSERT IGNORE INTO zone_access'),
-        [12, 8]
+      expect(mockConnection.query).not.toHaveBeenCalledWith(
+        expect.stringContaining('zone_access'),
+        expect.any(Array)
       );
       expect(responseJson).toHaveBeenCalledWith(updatedParticipation);
     });
@@ -315,7 +314,7 @@ describe('Participations Controller', () => {
       const mockAuthRequest = {
         params: { participationId: '12' },
         body: { status: 'PENDING' },
-        user: { userId: 1, email: 'admin@test.com', role: 'ADMIN' },
+        user: { userId: 1, role: 'ADMIN' },
       };
 
       await updateParticipationStatus(
@@ -337,7 +336,6 @@ describe('Participations Controller', () => {
       mockAuthRequest = {
         user: {
           userId: 1,
-          email: 'participant@test.com',
           role: 'PARTICIPANT'
         }
       };
@@ -487,7 +485,7 @@ describe('Participations Controller', () => {
       expect(responseStatus).toHaveBeenCalledWith(500);
       expect(responseJson).toHaveBeenCalledWith(
         expect.objectContaining({
-          message: 'Erreur serveur'
+          message: 'Une erreur interne est survenue.'
         })
       );
     });
@@ -495,7 +493,6 @@ describe('Participations Controller', () => {
     it('devrait filtrer correctement par userId', async () => {
       mockAuthRequest.user = {
         userId: 42,
-        email: 'specific@test.com',
         role: 'PARTICIPANT'
       };
 

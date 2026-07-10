@@ -9,7 +9,6 @@ import {
   isReusableAccessQrToken,
   renderAccessQrDataUrl,
 } from '../services/access-qr.service';
-import { verifyAccessScan } from '../services/access-control.service';
 
 interface ParticipationQrSubject {
   id: number;
@@ -63,7 +62,7 @@ export const getAllParticipations = async (_req: Request, res: Response) => {
     res.json(participations);
   } catch (error) {
     console.error('Error fetching participations:', error);
-    res.status(500).json({ message: 'Erreur serveur', error });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 };
 
@@ -100,7 +99,7 @@ export const getParticipationsByEvent = async (req: Request, res: Response) => {
     res.json(participations);
   } catch (error) {
     console.error('Error fetching participations by event:', error);
-    res.status(500).json({ message: 'Erreur serveur', error });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 };
 
@@ -188,18 +187,6 @@ export const updateParticipationStatus = async (req: AuthenticatedRequest, res: 
       [status, qrPayload.qrCode, qrPayload.qrCodeData, req.user.userId, participationId]
     );
 
-    if (status === 'APPROVED') {
-      await connection.query(
-        `INSERT IGNORE INTO zone_access (participation_id, zone_id)
-         SELECT ?, z.id
-         FROM zones z
-         WHERE z.event_id = ?`,
-        [participationId, participation.event_id]
-      );
-    } else {
-      await connection.query('DELETE FROM zone_access WHERE participation_id = ?', [participationId]);
-    }
-
     await connection.query(
       `INSERT INTO audit_logs (user_id, action, entity_type, entity_id, ip_address)
        VALUES (?, ?, 'participation', ?, ?)`,
@@ -258,7 +245,7 @@ export const updateParticipationStatus = async (req: AuthenticatedRequest, res: 
   } catch (error) {
     await connection.rollback();
     console.error('Error updating participation status:', error);
-    res.status(500).json({ message: 'Erreur serveur', error });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   } finally {
     connection.release();
   }
@@ -405,7 +392,7 @@ export const getMyParticipantStats = async (req: AuthenticatedRequest, res: Resp
     });
   } catch (error) {
     console.error('Error fetching participant stats:', error);
-    res.status(500).json({ message: 'Erreur serveur', error });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 };
 
@@ -530,7 +517,7 @@ export const requestParticipation = async (req: AuthenticatedRequest, res: Respo
   } catch (error) {
     await connection.rollback();
     console.error('Error requesting participation:', error);
-    res.status(500).json({ message: 'Erreur serveur', error });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   } finally {
     connection.release();
   }
@@ -565,7 +552,7 @@ export const getMyQrCodes = async (req: AuthenticatedRequest, res: Response): Pr
     res.json(participations);
   } catch (error) {
     console.error('Error fetching QR codes:', error);
-    res.status(500).json({ message: 'Erreur serveur', error });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 };
 
@@ -627,118 +614,6 @@ export const generateParticipationQrCode = async (req: AuthenticatedRequest, res
     res.json({ id: participationId, qr_code: qrPayload.qrCode, qr_code_data: qrPayload.qrCodeData });
   } catch (error) {
     console.error('Error generating QR code:', error);
-    res.status(500).json({ message: 'Erreur serveur', error });
-  }
-};
-
-export const verifyPresence = async (req: AuthenticatedRequest, res: Response): Promise<void> => {
-  try {
-    if (!req.user) {
-      res.status(401).json({ message: 'Non authentifié' });
-      return;
-    }
-
-    const { qr_code, token, zone_id, zoneId: zoneIdBody } = req.body;
-    const rawToken = String(token || qr_code || '').trim();
-    const zoneId = Number(zoneIdBody ?? zone_id);
-
-    if (!rawToken || !Number.isInteger(zoneId) || zoneId <= 0) {
-      res.status(400).json({ message: 'QR code et zone requis' });
-      return;
-    }
-
-    const verification = await verifyAccessScan({
-      token: rawToken,
-      zoneId,
-      scannedBy: req.user.userId,
-      ipAddress: req.ip,
-      expectedUserId: req.user.role === 'ADMIN' ? undefined : req.user.userId,
-    });
-
-    res.status(verification.statusCode).json(verification);
-    return;
-
-    /*
-    const [participations] = await pool.query<RowDataPacket[]>(
-      `SELECT 
-        p.id,
-        p.user_id,
-        p.event_id,
-        p.status,
-        u.first_name,
-        u.last_name,
-        e.name as event_name,
-        e.status as event_status,
-        e.start_date,
-        e.end_date
-      FROM participations p
-      JOIN users u ON u.id = p.user_id
-      JOIN events e ON e.id = p.event_id
-      WHERE p.qr_code = ?`,
-      [qr_code]
-    );
-
-    if (participations.length === 0) {
-      res.status(404).json({ message: 'QR code inconnu' });
-      return;
-    }
-
-    const participation = participations[0];
-    const isOwner = Number(participation.user_id) === req.user.userId;
-    const isAdmin = req.user.role === 'ADMIN';
-
-    if (!isOwner && !isAdmin) {
-      res.status(403).json({ message: 'Ce QR code ne vous appartient pas' });
-      return;
-    }
-
-    if (participation.status !== 'APPROVED') {
-      res.status(400).json({ message: 'Participation non approuvée' });
-      return;
-    }
-
-    const [zones] = await pool.query<RowDataPacket[]>(
-      'SELECT id, name, event_id FROM zones WHERE id = ?',
-      [zoneId]
-    );
-
-    if (zones.length === 0 || Number(zones[0].event_id) !== Number(participation.event_id)) {
-      res.status(400).json({ message: 'Zone invalide pour cet événement' });
-      return;
-    }
-
-    const [access] = await pool.query<RowDataPacket[]>(
-      'SELECT id FROM zone_access WHERE participation_id = ? AND zone_id = ?',
-      [participation.id, zoneId]
-    );
-
-    if (access.length === 0) {
-      await pool.query(
-        `INSERT INTO access_logs (participation_id, zone_id, scanned_by, is_valid, rejection_reason, ip_address)
-         VALUES (?, ?, ?, FALSE, ?, ?)`,
-        [participation.id, zoneId, req.user.userId, 'Accès non autorisé à cette zone', req.ip]
-      );
-      res.status(403).json({ message: 'Accès non autorisé à cette zone' });
-      return;
-    }
-
-    const [result] = await pool.query<ResultSetHeader>(
-      `INSERT INTO access_logs (participation_id, zone_id, scanned_by, is_valid, ip_address)
-       VALUES (?, ?, ?, TRUE, ?)`,
-      [participation.id, zoneId, req.user.userId, req.ip]
-    );
-
-    res.status(201).json({
-      id: result.insertId,
-      is_valid: true,
-      participant_name: `${participation.first_name} ${participation.last_name}`,
-      event_name: participation.event_name,
-      zone_name: zones[0].name,
-      scanned_at: new Date().toISOString()
-    });
-    */
-  } catch (error) {
-    console.error('Error verifying presence:', error);
-    res.status(500).json({ message: 'Erreur serveur', error });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 };

@@ -14,7 +14,7 @@ import {
   getMyParticipantStats,
   getMyQrCodes,
   requestEventParticipation,
-  verifyPresence,
+  verifyAccessScan,
 } from '../../../services/participation.service';
 import { getAllZones, getEventZones } from '../../../services/zone.service';
 import { useAuth } from '../../../contexts/AuthContext';
@@ -226,7 +226,7 @@ describe('User space pages', () => {
       (getEventZones as jest.Mock).mockResolvedValue([
         { id: 5, event_id: 10, name: 'Hall Principal', capacity: 200, created_at: '2026-01-01T00:00:00Z' },
       ]);
-      (verifyPresence as jest.Mock).mockResolvedValue({
+      (verifyAccessScan as jest.Mock).mockResolvedValue({
         id: 30,
         is_valid: true,
         participant_name: 'Charlie Durand',
@@ -251,7 +251,7 @@ describe('User space pages', () => {
       fireEvent.click(screen.getByRole('button', { name: /Valider la présence/i }));
 
       await waitFor(() => {
-        expect(verifyPresence).toHaveBeenCalledWith('QR-EVT10-USR3', 5);
+        expect(verifyAccessScan).toHaveBeenCalledWith('QR-EVT10-USR3', 5);
       });
       await waitFor(() => {
         expect(screen.getByText('Accès autorisé')).toBeInTheDocument();

@@ -68,6 +68,6 @@ export const generateParticipationQrCode = async (participationId: number) => {
   return await api.post<GeneratedQrCode>(`/participations/${participationId}/qr-code`, {}, token);
 };
 
-export const verifyPresence = async (qrCode: string, zoneId: number) => {
+export const verifyAccessScan = async (qrCode: string, zoneId: number) => {
   return await verifyAccessToken({ token: qrCode, zoneId }) as PresenceVerificationResult;
 };
