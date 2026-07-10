@@ -102,7 +102,7 @@ describe('Export Controller', () => {
 
       expect(responseStatus).toHaveBeenCalledWith(500);
       expect(responseJson).toHaveBeenCalledWith({
-        error: 'Erreur lors de l\'export des événements'
+        message: 'Une erreur interne est survenue.'
       });
     });
   });
@@ -160,7 +160,7 @@ describe('Export Controller', () => {
 
       expect(responseStatus).toHaveBeenCalledWith(500);
       expect(responseJson).toHaveBeenCalledWith({
-        error: 'Erreur lors de l\'export des participations'
+        message: 'Une erreur interne est survenue.'
       });
     });
   });
@@ -331,7 +331,7 @@ describe('Export Controller', () => {
 
       expect(responseStatus).toHaveBeenCalledWith(500);
       expect(responseJson).toHaveBeenCalledWith({
-        error: 'Erreur lors de l\'export des statistiques'
+        message: 'Une erreur interne est survenue.'
       });
     });
   });
@@ -396,7 +396,7 @@ describe('Export Controller', () => {
 
       expect(responseStatus).toHaveBeenCalledWith(500);
       expect(responseJson).toHaveBeenCalledWith({
-        error: 'Erreur lors de l\'export complet'
+        message: 'Une erreur interne est survenue.'
       });
     });
   });

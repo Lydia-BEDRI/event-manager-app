@@ -17,7 +17,7 @@ export const getAllEvents = async (_req: Request, res: Response) => {
     return res.json(events);
   } catch (error) {
     console.error('Error fetching events:', error);
-    return res.status(500).json({ message: 'Erreur serveur', error });
+    return res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 };
 
@@ -37,7 +37,7 @@ export const getEventById = async (req: Request, res: Response) => {
     return res.json(events[0]);
   } catch (error) {
     console.error('Error fetching event:', error);
-    return res.status(500).json({ message: 'Erreur serveur', error });
+    return res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 };
 
@@ -132,7 +132,7 @@ export const createEvent = async (req: Request, res: Response) => {
   } catch (error) {
     await connection.rollback();
     console.error('Error creating event:', error);
-    return res.status(500).json({ message: 'Erreur serveur', error });
+    return res.status(500).json({ message: 'Une erreur interne est survenue.' });
   } finally {
     connection.release();
   }
@@ -325,7 +325,7 @@ export const updateEvent = async (req: Request, res: Response) => {
         message: "Une zone possédant un historique d'accès ne peut pas être supprimée."
       });
     }
-    return res.status(500).json({ message: 'Erreur serveur', error });
+    return res.status(500).json({ message: 'Une erreur interne est survenue.' });
   } finally {
     connection.release();
   }
@@ -349,6 +349,6 @@ export const deleteEvent = async (req: Request, res: Response) => {
 
     return res.json({ message: 'Événement supprimé avec succès' });
   } catch (error) {
-    return res.status(500).json({ message: 'Erreur serveur', error });
+    return res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 };
