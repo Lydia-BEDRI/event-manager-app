@@ -61,7 +61,6 @@ describe('Auth Controller - login with two-factor authentication', () => {
 
     expect(generateTwoFactorChallengeToken).toHaveBeenCalledWith({
       userId: user.id,
-      email: user.email,
       role: user.role,
     });
     expect(json).toHaveBeenCalledWith({

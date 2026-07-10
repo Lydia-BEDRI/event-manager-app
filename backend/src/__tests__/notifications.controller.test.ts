@@ -30,7 +30,7 @@ describe("notifications.controller", () => {
     json = jest.fn();
     status = jest.fn().mockReturnValue({ json });
     req = {
-      user: { userId: 3, email: "participant@test.fr", role: "PARTICIPANT" },
+      user: { userId: 3, role: "PARTICIPANT" },
       params: {},
       query: {},
       body: {},
@@ -77,7 +77,7 @@ describe("notifications.controller", () => {
   });
 
   it("crée une notification système pour un rôle et la diffuse", async () => {
-    req.user = { userId: 1, email: "admin@test.fr", role: "ADMIN" };
+    req.user = { userId: 1, role: "ADMIN" };
     req.body = { title: "Maintenance", body: "À 20 h", target: "PARTICIPANT" };
     (pool.query as jest.Mock).mockResolvedValueOnce([[{ id: 3 }, { id: 4 }]]);
     (notificationService.createNotification as jest.Mock)

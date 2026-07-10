@@ -8,11 +8,13 @@ jest.mock("../middlewares/authenticate", () => ({
   authenticate: (req: any, _res: any, next: any) => {
     req.user = {
       userId: req.headers["x-user-id"] ? Number(req.headers["x-user-id"]) : 3,
-      email: "user@test.fr",
       role: req.headers["x-role"] || "PARTICIPANT",
     };
     next();
   },
+}));
+jest.mock("../middlewares/requireFreshPassword", () => ({
+  requireFreshPassword: (_req: any, _res: any, next: any) => next(),
 }));
 jest.mock("../sockets/server.socket", () => ({
   emitNewMessage: jest.fn(),

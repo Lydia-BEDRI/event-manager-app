@@ -2,16 +2,19 @@ export const API_BASE_URL = process.env.REACT_APP_API_URL || "http://localhost:5
 
 export class ApiError extends Error {
   status: number;
+  code?: string;
 
-  constructor(message: string, status: number) {
+  constructor(message: string, status: number, code?: string) {
     super(message);
     this.name = "ApiError";
     this.status = status;
+    this.code = code;
   }
 }
 
 async function toApiError(response: Response): Promise<ApiError> {
   let message = "Erreur API";
+  let code: string | undefined;
 
   try {
     const data = await response.json();
@@ -20,11 +23,12 @@ async function toApiError(response: Response): Promise<ApiError> {
     } else if (typeof data?.message === "string") {
       message = data.message;
     }
+    code = typeof data?.code === "string" ? data.code : undefined;
   } catch {
     message = response.statusText || "Erreur API";
   }
 
-  return new ApiError(message, response.status);
+  return new ApiError(message, response.status, code);
 }
 
 export const api = {

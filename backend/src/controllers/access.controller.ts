@@ -44,7 +44,7 @@ export async function verifyAccess(req: AuthenticatedRequest, res: Response): Pr
     res.status(result.statusCode).json(result);
   } catch (error) {
     console.error('Error verifying access:', error);
-    res.status(500).json({ message: 'Erreur serveur', error });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -83,7 +83,7 @@ export async function listEventApprovedParticipants(
     res.json({ participants, count: participants.length });
   } catch (error) {
     console.error('Error listing approved participants:', error);
-    res.status(500).json({ message: 'Erreur serveur', error });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -159,6 +159,6 @@ export async function generateBadgeToken(req: AuthenticatedRequest, res: Respons
     });
   } catch (error) {
     console.error('Error generating badge token:', error);
-    res.status(500).json({ message: 'Erreur serveur', error });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }

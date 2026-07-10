@@ -186,9 +186,9 @@ export async function getDashboardStats(_req: Request, res: Response): Promise<v
     const [zoneDistribution] = await pool.query<RowDataPacket[]>(`
       SELECT 
         z.name as zone_name,
-        COUNT(DISTINCT za.participation_id) as authorized_participants
+        COUNT(DISTINCT al.participation_id) as authorized_participants
       FROM zones z
-      LEFT JOIN zone_access za ON z.id = za.zone_id
+      LEFT JOIN access_logs al ON z.id = al.zone_id AND al.is_valid = TRUE
       GROUP BY z.id, z.name
       ORDER BY authorized_participants DESC
     `);
@@ -448,7 +448,6 @@ export async function getDashboardStats(_req: Request, res: Response): Promise<v
     }));
   } catch (error) {
     console.error('Erreur lors de la récupération des statistiques:', error);
-    res.status(500).json({ error: 'Erreur serveur lors de la récupération des statistiques.' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
-

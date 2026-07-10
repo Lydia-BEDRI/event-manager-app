@@ -29,7 +29,6 @@ describe("Chat Controller", () => {
       body: {},
       user: {
         userId: 3,
-        email: "participant@test.fr",
         role: "PARTICIPANT",
       },
     };
@@ -150,7 +149,6 @@ describe("Chat Controller", () => {
     mockRequest.params = { messageId: "21" };
     mockRequest.user = {
       userId: 1,
-      email: "admin@test.fr",
       role: "ADMIN",
     };
 

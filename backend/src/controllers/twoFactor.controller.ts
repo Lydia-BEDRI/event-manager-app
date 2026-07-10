@@ -83,7 +83,7 @@ export async function getTwoFactorStatus(
     });
   } catch (error) {
     console.error('Erreur statut 2FA:', error);
-    res.status(500).json({ error: 'Erreur serveur.' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -101,9 +101,19 @@ export async function setupTwoFactor(
       return;
     }
 
+    const [users] = await pool.query<RowDataPacket[]>(
+      'SELECT email FROM users WHERE id = ? AND is_active = TRUE',
+      [userId],
+    );
+    const email = users[0]?.email;
+    if (!email) {
+      res.status(404).json({ error: 'Utilisateur introuvable.' });
+      return;
+    }
+
     const secret = createTwoFactorSecret();
     const encryptedSecret = encryptTwoFactorSecret(secret);
-    const uri = createTwoFactorUri(req.user.email, secret);
+    const uri = createTwoFactorUri(email, secret);
     const qrCodeDataUrl = await QRCode.toDataURL(uri, { width: 240, margin: 1 });
 
     await pool.query(
@@ -116,7 +126,7 @@ export async function setupTwoFactor(
     res.json({ secret, qrCodeDataUrl });
   } catch (error) {
     console.error('Erreur configuration 2FA:', error);
-    res.status(500).json({ error: 'Erreur serveur.' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -163,7 +173,7 @@ export async function enableTwoFactor(
     });
   } catch (error) {
     console.error('Erreur activation 2FA:', error);
-    res.status(500).json({ error: 'Erreur serveur.' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -217,7 +227,7 @@ export async function disableTwoFactor(
     res.json({ message: 'Double authentification désactivée.' });
   } catch (error) {
     console.error('Erreur désactivation 2FA:', error);
-    res.status(500).json({ error: 'Erreur serveur.' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -256,7 +266,7 @@ export async function regenerateBackupCodes(
     res.json({ backupCodes: backupCodes.plainCodes });
   } catch (error) {
     console.error('Erreur régénération codes 2FA:', error);
-    res.status(500).json({ error: 'Erreur serveur.' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -317,7 +327,7 @@ export async function verifyTwoFactorLogin(req: Request, res: Response): Promise
       }
     }
 
-    const tokenPayload = { userId: user.id, email: user.email, role: user.role };
+    const tokenPayload = { userId: user.id, role: user.role };
     const accessToken = generateAccessToken(tokenPayload);
     const refreshToken = generateRefreshToken(tokenPayload);
     await pool.query(
@@ -347,6 +357,6 @@ export async function verifyTwoFactorLogin(req: Request, res: Response): Promise
     });
   } catch (error) {
     console.error('Erreur vérification connexion 2FA:', error);
-    res.status(500).json({ error: 'Erreur serveur.' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }

@@ -150,16 +150,6 @@ CREATE TABLE participations (
     INDEX idx_participations_qr (qr_code)
 ) ENGINE=InnoDB;
 
-CREATE TABLE zone_access (
-    id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    participation_id BIGINT UNSIGNED DEFAULT NULL,
-    zone_id BIGINT UNSIGNED DEFAULT NULL,
-    granted_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT fk_zone_access_participation FOREIGN KEY (participation_id) REFERENCES participations(id) ON DELETE CASCADE,
-    CONSTRAINT fk_zone_access_zone FOREIGN KEY (zone_id) REFERENCES zones(id) ON DELETE CASCADE,
-    UNIQUE KEY uq_zone_access (participation_id, zone_id)
-) ENGINE=InnoDB;
-
 CREATE TABLE access_logs (
     id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     participation_id BIGINT UNSIGNED DEFAULT NULL,

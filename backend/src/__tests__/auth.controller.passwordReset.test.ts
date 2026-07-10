@@ -102,7 +102,7 @@ describe('Auth Controller - password reset', () => {
     } as Request, response as Response);
 
     expect(status).toHaveBeenCalledWith(500);
-    expect(json).toHaveBeenCalledWith({ error: 'Erreur serveur.' });
+    expect(json).toHaveBeenCalledWith({ message: 'Une erreur interne est survenue.' });
     expect(pool.query).toHaveBeenCalledTimes(3);
   });
 
