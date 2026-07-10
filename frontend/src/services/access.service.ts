@@ -1,4 +1,4 @@
-import { API_BASE_URL, ApiError } from './api';
+import { apiFetch, ApiError } from './api';
 import { AccessParticipant, AccessVerifyResponse } from '../types/access.types';
 
 function getToken(): string {
@@ -21,11 +21,11 @@ export async function verifyAccessToken(payload: {
   token: string;
   zoneId: number;
 }): Promise<AccessVerifyResponse> {
-  const response = await fetch(`${API_BASE_URL}/access/verify`, {
+  getToken();
+  const response = await apiFetch('/access/verify', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken()}`,
     },
     body: JSON.stringify(payload),
   });
@@ -44,11 +44,11 @@ export async function verifyAccessToken(payload: {
 }
 
 export async function listApprovedParticipants(eventId: number): Promise<AccessParticipant[]> {
-  const response = await fetch(`${API_BASE_URL}/access/events/${eventId}/participants`, {
+  getToken();
+  const response = await apiFetch(`/access/events/${eventId}/participants`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken()}`,
     },
   });
 
@@ -65,11 +65,11 @@ export async function generateBadgeToken(payload: {
   eventId: number;
   participationId: number;
 }): Promise<string> {
-  const response = await fetch(`${API_BASE_URL}/access/badge-token`, {
+  getToken();
+  const response = await apiFetch('/access/badge-token', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${getToken()}`,
     },
     body: JSON.stringify(payload),
   });
