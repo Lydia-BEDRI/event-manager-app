@@ -3,6 +3,7 @@ import { Bell, CheckCheck, Trash2, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import { useAuth } from "../../contexts/AuthContext";
+import { registerSocket } from "../../services/api";
 import {
   ApiNotification,
   deleteNotification,
@@ -48,6 +49,7 @@ const NotificationBell: React.FC = () => {
   useEffect(() => {
     if (!accessToken) return;
     const socket = io(socketUrl, { auth: { token: accessToken } });
+    const unregisterSocket = registerSocket(socket);
     socket.on(
       "notification:new",
       (payload: { notification: ApiNotification }) => {
@@ -60,6 +62,7 @@ const NotificationBell: React.FC = () => {
       },
     );
     return () => {
+      unregisterSocket();
       socket.disconnect();
     };
   }, [accessToken]);

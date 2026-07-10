@@ -11,7 +11,11 @@ import {
   RegisterData,
   LoginData,
 } from "../services/auth.service";
-import { ApiError } from "../services/api";
+import {
+  ApiError,
+  AUTH_SESSION_EXPIRED_EVENT,
+  AUTH_TOKEN_REFRESHED_EVENT,
+} from "../services/api";
 
 interface AuthContextType {
   user: User | null;
@@ -51,6 +55,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
   }, []);
+
+  useEffect(() => {
+    const onTokenRefreshed = (event: Event) => {
+      const accessToken = (event as CustomEvent<{ accessToken?: string }>).detail
+        ?.accessToken;
+      if (accessToken) {
+        setAccessToken(accessToken);
+      }
+    };
+
+    const onSessionExpired = (event: Event) => {
+      const message =
+        (event as CustomEvent<{ message?: string }>).detail?.message ||
+        "Votre session a expiré. Veuillez vous reconnecter.";
+      clearAuth();
+      sessionStorage.setItem("authMessage", message);
+      if (window.location.pathname !== "/login") {
+        window.location.assign("/login");
+      }
+    };
+
+    window.addEventListener(AUTH_TOKEN_REFRESHED_EVENT, onTokenRefreshed);
+    window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, onSessionExpired);
+    return () => {
+      window.removeEventListener(AUTH_TOKEN_REFRESHED_EVENT, onTokenRefreshed);
+      window.removeEventListener(AUTH_SESSION_EXPIRED_EVENT, onSessionExpired);
+    };
+  }, [clearAuth]);
 
   // Charger le profil au démarrage si un token existe
   useEffect(() => {

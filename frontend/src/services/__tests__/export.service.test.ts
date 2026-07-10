@@ -118,19 +118,13 @@ describe('Export Service', () => {
       await expect(exportService.exportEvents()).rejects.toThrow('Erreur serveur');
     });
 
-    it('devrait envoyer la requête sans token si non connecté', async () => {
+    it('devrait refuser l’export si non connecté', async () => {
       mockLocalStorage.getItem.mockReturnValue(null);
-      mockSuccessfulBlobResponse();
 
-      await exportService.exportEvents();
-
-      expect(global.fetch).toHaveBeenCalledWith(
-        expect.any(String),
-        {
-          method: 'GET',
-          headers: {},
-        }
+      await expect(exportService.exportEvents()).rejects.toThrow(
+        'Token manquant. Veuillez vous reconnecter.'
       );
+      expect(global.fetch).not.toHaveBeenCalled();
     });
   });
 
@@ -153,10 +147,12 @@ describe('Export Service', () => {
       expect(mockClick).toHaveBeenCalled();
     });
 
-    it('devrait gérer les erreurs 401', async () => {
+    it('devrait gérer les erreurs 401 avec refresh invalide', async () => {
       mockFailedResponse(401, 'Non autorisé');
 
-      await expect(exportService.exportParticipations()).rejects.toThrow('Non autorisé');
+      await expect(exportService.exportParticipations()).rejects.toThrow('Erreur API');
+      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('accessToken');
+      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('refreshToken');
     });
   });
 
