@@ -1,4 +1,4 @@
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
+import { apiBlob } from './api';
 
 export interface ExportFilters {
   startDate?: string;
@@ -32,23 +32,11 @@ const buildQueryParams = (filters: ExportFilters): string => {
 
 const fetchBlob = async (endpoint: string): Promise<Blob> => {
   const token = localStorage.getItem('accessToken');
-  const headers: Record<string, string> = {};
-  
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
+  if (!token) {
+    throw new Error('Token manquant. Veuillez vous reconnecter.');
   }
 
-  const response = await fetch(`${API_URL}${endpoint}`, {
-    method: 'GET',
-    headers
-  });
-
-  if (!response.ok) {
-    const text = await response.text();
-    throw new Error(text || 'Erreur lors de l\'export');
-  }
-
-  return response.blob();
+  return apiBlob(endpoint, token);
 };
 
 export const exportService = {

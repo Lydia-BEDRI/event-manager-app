@@ -11,6 +11,7 @@ import {
   getChatMessages,
   moderateMessage,
 } from "../../services/chat.service";
+import { registerSocket } from "../../services/api";
 import { getEventById } from "../../services/event.service";
 
 // Utility functions defined outside component to avoid dependency array issues
@@ -128,6 +129,7 @@ const EventChatPage: React.FC = () => {
       auth: { token },
       timeout: 8000,
     });
+    const unregisterSocket = registerSocket(socket);
     socketRef.current = socket;
 
     socket.on("connect", () => {
@@ -176,6 +178,7 @@ const EventChatPage: React.FC = () => {
 
     return () => {
       active = false;
+      unregisterSocket();
       socket.emit("chat:leave", { eventId: numericEventId });
       socket.disconnect();
       socketRef.current = null;
