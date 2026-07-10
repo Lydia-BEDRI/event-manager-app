@@ -52,10 +52,10 @@ jest.mock('../utils/jwt', () => ({
 
 describe('Two-factor controller', () => {
   const authenticatedRequest = {
-    user: { userId: 42, email: 'user@example.com', role: 'PARTICIPANT' },
+    user: { userId: 42, role: 'PARTICIPANT' },
     body: {},
     ip: '127.0.0.1',
-  } as AuthenticatedRequest;
+  } as unknown as AuthenticatedRequest;
   let json: jest.Mock;
   let status: jest.Mock;
   let response: Partial<Response>;
@@ -82,6 +82,7 @@ describe('Two-factor controller', () => {
   it('prépare un secret chiffré et un QR code sans activer immédiatement la 2FA', async () => {
     (pool.query as jest.Mock)
       .mockResolvedValueOnce([[]])
+      .mockResolvedValueOnce([[{ email: 'user@example.com' }]])
       .mockResolvedValueOnce([{ affectedRows: 1 }]);
     (createTwoFactorSecret as jest.Mock).mockReturnValue('BASE32SECRET');
     (encryptTwoFactorSecret as jest.Mock).mockReturnValue('encrypted-secret');

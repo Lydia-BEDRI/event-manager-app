@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { 
   User, 
   Mail, 
@@ -17,6 +18,7 @@ import TwoFactorSettings from '../organisms/TwoFactorSettings';
 
 const ProfilePage: React.FC = () => {
   const { user, accessToken, updateUser } = useAuth();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
@@ -171,6 +173,15 @@ const ProfilePage: React.FC = () => {
           <div role="alert" className="mb-6 bg-red-50 border border-red-200 rounded-2xl p-4 flex items-start gap-3">
             <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
             <p className="text-red-700 text-sm">{error}</p>
+          </div>
+        )}
+
+        {searchParams.get('passwordExpired') === 'true' && (
+          <div role="alert" className="mb-6 bg-yellow-50 border border-yellow-200 rounded-2xl p-4 flex items-start gap-3">
+            <AlertCircle className="text-yellow-600 flex-shrink-0 mt-0.5" size={20} />
+            <p className="text-yellow-800 text-sm">
+              Votre mot de passe a expiré. Renseignez votre mot de passe actuel et choisissez un nouveau mot de passe pour retrouver l’accès complet à l’application.
+            </p>
           </div>
         )}
 

@@ -65,7 +65,7 @@ services:
       - PORT=5000
       - FRONTEND_URL=${FRONTEND_URL:-http://localhost:3000}
       - JWT_SECRET=${JWT_SECRET:-your-secret-key-change-in-production}
-      - JWT_EXPIRES_IN=7d
+      - JWT_EXPIRES_IN=15m
       - QR_CODE_PRIVATE_KEY=${QR_CODE_PRIVATE_KEY:-your-qr-code-private-key-change-in-production}
       - QR_CODE_TOKEN_TTL=${QR_CODE_TOKEN_TTL:-365d}
       - TWO_FACTOR_ENCRYPTION_KEY=${TWO_FACTOR_ENCRYPTION_KEY:-}

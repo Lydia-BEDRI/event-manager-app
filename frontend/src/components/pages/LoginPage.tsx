@@ -36,7 +36,7 @@ const LoginPage: React.FC = () => {
         setChallengeToken(result.challengeToken);
         setPassword('');
       } else if (result.passwordExpired) {
-        navigate('/reset-password?expired=true');
+        navigate('/profile?passwordExpired=true');
       } else {
         navigate('/');
       }
@@ -55,7 +55,7 @@ const LoginPage: React.FC = () => {
     try {
       const result = await verifyTwoFactorLogin(challengeToken, twoFactorCode);
       if (result.passwordExpired) {
-        navigate('/reset-password?expired=true');
+        navigate('/profile?passwordExpired=true');
       } else {
         navigate('/');
       }
