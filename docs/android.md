@@ -51,7 +51,7 @@ Dans Android Studio, sélectionnez l’appareil physique, choisissez la configur
 - Affichage du QR code du participant.
 - Autorisation de la caméra et lecture sur un appareil réel.
 - Affichage des décisions d’accès autorisé et refusé.
-- Journalisation d’un second passage.
+- Journalisation d’un second passage, accepté volontairement.
 - Fonctionnement sur un réseau mobile et en Wi-Fi.
 - Absence de contenu mixte HTTP dans les journaux Android.
 

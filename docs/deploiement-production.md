@@ -141,6 +141,16 @@ docker compose --env-file .env.production -f docker-compose.prod.yml exec -T db 
   < db/migrations/002-update-qr-and-access-logs.sql
 ```
 
+Pour une base qui contient encore l’ancienne table d’attribution individuelle des zones, appliquez ensuite la migration de nettoyage :
+
+```bash
+docker compose --env-file .env.production -f docker-compose.prod.yml exec -T db \
+  sh -c 'mysql -u root -p"$MYSQL_ROOT_PASSWORD" eventmanager' \
+  < db/migrations/003-drop-zone-access.sql
+```
+
+Après cette migration, une participation approuvée donne accès à toutes les zones de l’événement. Les scans restent des passages journalisés, y compris lorsqu’ils sont répétés ou simultanés.
+
 ## Arrêt des services
 
 Pour arrêter les conteneurs sans supprimer les données :

@@ -56,15 +56,6 @@ INSERT INTO participations (user_id, event_id, status, qr_code, approved_by, app
 (4, 3, 'REFUSED', NULL, 2, NOW());
 
 -- =============================================
--- ZONE ACCESS
--- =============================================
-
-INSERT INTO zone_access (participation_id, zone_id) VALUES
-(1, 1), (1, 2), (1, 4),
-(2, 1), (2, 3), (2, 4),
-(4, 7), (4, 8);
-
--- =============================================
 -- ACCESS LOGS
 -- =============================================
 
