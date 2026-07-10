@@ -1,7 +1,16 @@
 import { Response, NextFunction } from 'express';
 import { authenticate, AuthenticatedRequest } from '../middlewares/authenticate';
 import { authorize } from '../middlewares/authorize';
+import { requireFreshPassword } from '../middlewares/requireFreshPassword';
 import { generateAccessToken } from '../utils/jwt';
+import pool from '../config/database';
+
+jest.mock('../config/database', () => ({
+  __esModule: true,
+  default: {
+    query: jest.fn(),
+  },
+}));
 
 describe('Middleware authenticate', () => {
   let mockReq: Partial<AuthenticatedRequest>;
@@ -37,7 +46,7 @@ describe('Middleware authenticate', () => {
   });
 
   it('accepte un token valide et attache le user', () => {
-    const payload = { userId: 1, email: 'test@test.com', role: 'PARTICIPANT' };
+    const payload = { userId: 1, role: 'PARTICIPANT' };
     const token = generateAccessToken(payload);
     mockReq.headers = { authorization: `Bearer ${token}` };
 
@@ -47,6 +56,82 @@ describe('Middleware authenticate', () => {
     expect(mockReq.user).toBeDefined();
     expect(mockReq.user!.userId).toBe(1);
     expect(mockReq.user!.role).toBe('PARTICIPANT');
+  });
+});
+
+describe('Middleware requireFreshPassword', () => {
+  let mockReq: Partial<AuthenticatedRequest>;
+  let mockRes: Partial<Response>;
+  let mockNext: NextFunction;
+  let jsonMock: jest.Mock;
+  let statusMock: jest.Mock;
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    jsonMock = jest.fn();
+    statusMock = jest.fn().mockReturnValue({ json: jsonMock });
+    mockReq = { user: { userId: 1, role: 'PARTICIPANT' } };
+    mockRes = { status: statusMock, json: jsonMock } as any;
+    mockNext = jest.fn();
+  });
+
+  function daysAgo(days: number): Date {
+    return new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  }
+
+  it('accepte un mot de passe modifié il y a 59 jours', async () => {
+    (pool.query as jest.Mock).mockResolvedValueOnce([[{
+      id: 1,
+      is_active: true,
+      password_updated_at: daysAgo(59),
+    }]]);
+
+    await requireFreshPassword(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
+
+    expect(mockNext).toHaveBeenCalled();
+    expect(statusMock).not.toHaveBeenCalled();
+  });
+
+  it('refuse un mot de passe modifié exactement il y a 60 jours', async () => {
+    (pool.query as jest.Mock).mockResolvedValueOnce([[{
+      id: 1,
+      is_active: true,
+      password_updated_at: daysAgo(60),
+    }]]);
+
+    await requireFreshPassword(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
+
+    expect(statusMock).toHaveBeenCalledWith(403);
+    expect(jsonMock).toHaveBeenCalledWith(expect.objectContaining({ code: 'PASSWORD_EXPIRED' }));
+    expect(mockNext).not.toHaveBeenCalled();
+  });
+
+  it('refuse un mot de passe modifié il y a 61 jours', async () => {
+    (pool.query as jest.Mock).mockResolvedValueOnce([[{
+      id: 1,
+      is_active: true,
+      password_updated_at: daysAgo(61),
+    }]]);
+
+    await requireFreshPassword(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
+
+    expect(statusMock).toHaveBeenCalledWith(403);
+    expect(jsonMock).toHaveBeenCalledWith(expect.objectContaining({ code: 'PASSWORD_EXPIRED' }));
+    expect(mockNext).not.toHaveBeenCalled();
+  });
+
+  it('refuse un compte désactivé', async () => {
+    (pool.query as jest.Mock).mockResolvedValueOnce([[{
+      id: 1,
+      is_active: false,
+      password_updated_at: daysAgo(1),
+    }]]);
+
+    await requireFreshPassword(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
+
+    expect(statusMock).toHaveBeenCalledWith(403);
+    expect(jsonMock).toHaveBeenCalledWith(expect.objectContaining({ code: 'ACCOUNT_INACTIVE' }));
+    expect(mockNext).not.toHaveBeenCalled();
   });
 });
 
@@ -72,21 +157,21 @@ describe('Middleware authorize', () => {
   });
 
   it('rejette si le rôle ne correspond pas', () => {
-    mockReq = { user: { userId: 1, email: 'test@test.com', role: 'PARTICIPANT' } };
+    mockReq = { user: { userId: 1, role: 'PARTICIPANT' } };
     const middleware = authorize('ADMIN');
     middleware(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
     expect(statusMock).toHaveBeenCalledWith(403);
   });
 
   it('accepte si le rôle correspond', () => {
-    mockReq = { user: { userId: 1, email: 'admin@test.com', role: 'ADMIN' } };
+    mockReq = { user: { userId: 1, role: 'ADMIN' } };
     const middleware = authorize('ADMIN');
     middleware(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
     expect(mockNext).toHaveBeenCalled();
   });
 
   it('accepte avec plusieurs rôles autorisés', () => {
-    mockReq = { user: { userId: 1, email: 'scanner@test.com', role: 'SCANNER' } };
+    mockReq = { user: { userId: 1, role: 'SCANNER' } };
     const middleware = authorize('ADMIN', 'SCANNER');
     middleware(mockReq as AuthenticatedRequest, mockRes as Response, mockNext);
     expect(mockNext).toHaveBeenCalled();

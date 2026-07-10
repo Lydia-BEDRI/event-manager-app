@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import Logo from '../atoms/Logo';
@@ -26,6 +26,12 @@ const ResetPasswordPage: React.FC = () => {
   };
 
   const isPasswordValid = Object.values(passwordChecks).every(Boolean);
+
+  useEffect(() => {
+    if (tokenFromUrl) {
+      window.history.replaceState({}, document.title, '/reset-password');
+    }
+  }, [tokenFromUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -148,8 +148,8 @@ describe('ParticipantDashboard', () => {
         expect(screen.getByText('Zones visitées')).toBeInTheDocument();
       });
 
-      // Vérifier que la section des zones est présente
-      expect(screen.getByText(/accès total/i)).toBeInTheDocument();
+      // Vérifier que la section des passages est présente
+      expect(screen.getByText(/passages au total/i)).toBeInTheDocument();
     });
 
     it('devrait afficher les statuts corrects pour les participations', async () => {

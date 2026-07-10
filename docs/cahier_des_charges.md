@@ -8,8 +8,8 @@ EventManager est une application web destinée à la gestion d’événements in
 
 - Permettre à un organisateur de créer et administrer des événements internes depuis une interface unique
 - Gérer les inscriptions des employés avec validation manuelle par l’organisateur
-- Contrôler l’accès aux événements et à leurs zones à l’aide de QR codes uniques et vérifiés côté serveur
-- Suivre en temps réel la présence des participants et l’historique des accès par zone
+- Contrôler l’accès aux événements et à leurs zones à l’aide de QR codes signés et vérifiés côté serveur
+- Suivre la présence des participants et l’historique des passages par zone
 - Mettre à disposition un espace de discussion sécurisé pour les participants validés
 - Fournir à l’organisateur des tableaux de suivi et des exports de données exploitables
 
@@ -22,7 +22,7 @@ Responsable de la gestion globale des événements.
 Actions principales :
 
 - Créer, modifier et supprimer des événements
-- Définir les zones et leurs règles d’accès
+- Définir les zones rattachées aux événements
 - Gérer les demandes de participation
 - Modérer les échanges du chat
 - Consulter les statistiques et l’historique des accès
@@ -49,7 +49,7 @@ Fonctionnalités :
 - Upload d'image QR code via l'application web
 - Vérification côté serveur avec contrôle de la signature du QR code
 - Vérification de l'identité de l'utilisateur connecté
-- Contrôle de l'unicité du scan (pas de double utilisation)
+- Enregistrement de chaque scan comme un passage
 - Marquage automatique du participant comme "présent"
 - Activation de l'accès au chat en temps réel
 
@@ -70,9 +70,9 @@ Fonctionnalités :
 - Association stricte du QR code au compte utilisateur
 - Module de vérification par upload d'image QR code
 - Vérification côté serveur de la signature et de l'identité
-- Invalidation automatique après scan
-- Prévention des doubles scans et de l'utilisation par un autre compte
-- Historique des présences et accès
+- Accès aux zones de l’événement pour toute participation approuvée
+- Acceptation volontaire des scans répétés et simultanés
+- Historique des présences et passages
 
 ### 4.3 Chat événementiel
 
@@ -91,7 +91,7 @@ Fonctionnalités :
 
 ## 5. Flux métier
 
-1. L’organisateur crée un événement et définit les zones et règles d’accès.
+1. L’organisateur crée un événement et définit les zones associées.
 2. Les participants consultent les événements disponibles.
 3. Un participant envoie une demande de participation.
 4. L’organisateur valide ou refuse la demande.
@@ -99,7 +99,7 @@ Fonctionnalités :
 6. Le participant upload son QR code via le module de vérification.
 7. Le serveur valide la signature cryptographique et l'identité de l'utilisateur.
 8. Le participant est marqué comme "présent" et l'accès au chat en temps réel est activé.
-9. Les accès sont enregistrés et consultables par l'organisateur.
+9. Chaque passage est enregistré et consultable par l'organisateur.
 
 ## 6. Sécurité et authentification
 
@@ -120,9 +120,8 @@ L’application devra respecter les bonnes pratiques de sécurité enseignées e
 - QR codes uniques et non falsifiables
 - Vérification côté serveur obligatoire avec validation de la signature
 - Association stricte au compte utilisateur
-- Invalidation automatique après scan
 - Impossibilité d'utilisation par un autre compte
-- Protection contre les tentatives de réutilisation
+- Journalisation des réutilisations comme passages supplémentaires
 
 ## 7. Architecture technique
 

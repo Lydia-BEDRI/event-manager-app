@@ -108,7 +108,7 @@ const ParticipantDashboard: React.FC = () => {
               <p className="text-2xl font-bold text-indigo-900">{stats.zoneAccess.unique_zones_visited}</p>
             </div>
           </div>
-          <p className="text-xs text-indigo-700">{stats.zoneAccess.total_zone_accesses} accès total</p>
+          <p className="text-xs text-indigo-700">{stats.zoneAccess.total_zone_accesses} passages au total</p>
         </div>
 
         <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 border border-green-200">

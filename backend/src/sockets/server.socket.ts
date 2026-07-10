@@ -11,6 +11,8 @@ import { TokenPayload } from "../utils/jwt";
 import type { Notification } from "../services/notification.service";
 import { notifyChatMentions } from "../services/chat-mention.service";
 import { getAllowedOrigins } from "../config/cors";
+import pool from "../config/database";
+import { isPasswordExpired } from "../utils/password";
 
 interface AuthenticatedSocket extends Socket {
   data: {
@@ -49,7 +51,7 @@ export function initSocketServer(server: HttpServer): Server {
     },
   });
 
-  io.use((socket: AuthenticatedSocket, next) => {
+  io.use(async (socket: AuthenticatedSocket, next) => {
     const token =
       socket.handshake.auth?.token || socket.handshake.headers.authorization;
     const rawToken =
@@ -62,6 +64,19 @@ export function initSocketServer(server: HttpServer): Server {
 
     try {
       const decoded = verifyToken(rawToken);
+      const [users] = await pool.query<any[]>(
+        'SELECT id, is_active, password_updated_at FROM users WHERE id = ?',
+        [decoded.userId],
+      );
+      const user = users[0];
+      if (!user?.is_active) {
+        next(new Error("Compte désactivé ou introuvable."));
+        return;
+      }
+      if (isPasswordExpired(user.password_updated_at)) {
+        next(new Error("PASSWORD_EXPIRED"));
+        return;
+      }
       socket.data.user = decoded;
       next();
     } catch {

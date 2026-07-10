@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { authenticate } from '../middlewares/authenticate';
 import { authorize } from '../middlewares/authorize';
+import { requireFreshPassword } from '../middlewares/requireFreshPassword';
 import {
   exportEvents,
   exportParticipations,
@@ -14,6 +15,7 @@ import {
 const router = Router();
 
 router.use(authenticate);
+router.use(requireFreshPassword);
 router.use(authorize('ADMIN'));
 
 router.get('/events', exportEvents);

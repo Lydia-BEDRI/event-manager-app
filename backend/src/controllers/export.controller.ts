@@ -66,7 +66,7 @@ export const exportEvents = async (req: Request, res: Response): Promise<void> =
     res.send('\uFEFF' + csv);
   } catch (error) {
     console.error('Error exporting events:', error);
-    res.status(500).json({ error: 'Erreur lors de l\'export des événements' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 };
 
@@ -117,7 +117,7 @@ export const exportParticipations = async (req: Request, res: Response): Promise
     res.send('\uFEFF' + csv);
   } catch (error) {
     console.error('Error exporting participations:', error);
-    res.status(500).json({ error: 'Erreur lors de l\'export des participations' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 };
 
@@ -173,7 +173,7 @@ export const exportAccessLogs = async (req: Request, res: Response): Promise<voi
     res.send('\uFEFF' + csv);
   } catch (error) {
     console.error('Error exporting access logs:', error);
-    res.status(500).json({ error: 'Erreur lors de l\'export des accès' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 };
 
@@ -223,7 +223,7 @@ export const exportUsers = async (req: Request, res: Response): Promise<void> =>
     res.send('\uFEFF' + csv);
   } catch (error) {
     console.error('Error exporting users:', error);
-    res.status(500).json({ error: 'Erreur lors de l\'export des utilisateurs' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 };
 
@@ -263,7 +263,7 @@ export const exportZones = async (req: Request, res: Response): Promise<void> =>
     res.send('\uFEFF' + csv);
   } catch (error) {
     console.error('Error exporting zones:', error);
-    res.status(500).json({ error: 'Erreur lors de l\'export des zones' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 };
 
@@ -322,7 +322,7 @@ export const exportStatistics = async (_req: Request, res: Response): Promise<vo
     res.send('\uFEFF' + csv);
   } catch (error) {
     console.error('Error exporting statistics:', error);
-    res.status(500).json({ error: 'Erreur lors de l\'export des statistiques' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 };
 
@@ -378,6 +378,6 @@ export const exportComplete = async (req: Request, res: Response): Promise<void>
     res.send('\uFEFF' + csv);
   } catch (error) {
     console.error('Error exporting complete data:', error);
-    res.status(500).json({ error: 'Erreur lors de l\'export complet' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 };

@@ -35,7 +35,7 @@ export async function getNotifications(
     res.json(await listNotifications(userId, page, limit, unreadOnly));
   } catch (error) {
     console.error("Erreur getNotifications:", error);
-    res.status(500).json({ error: "Impossible de charger les notifications." });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -47,7 +47,7 @@ export async function getNotificationsUnreadCount(
     res.json({ unreadCount: await getUnreadCount(req.user!.userId) });
   } catch (error) {
     console.error("Erreur getNotificationsUnreadCount:", error);
-    res.status(500).json({ error: "Impossible de charger le compteur." });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -70,7 +70,7 @@ export async function readNotification(
     res.json({ notification });
   } catch (error) {
     console.error("Erreur readNotification:", error);
-    res.status(500).json({ error: "Impossible de lire la notification." });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -83,7 +83,7 @@ export async function readAllNotifications(
     res.json({ updatedCount });
   } catch (error) {
     console.error("Erreur readAllNotifications:", error);
-    res.status(500).json({ error: "Impossible de lire les notifications." });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -105,7 +105,7 @@ export async function removeNotification(
     res.json({ success: true });
   } catch (error) {
     console.error("Erreur removeNotification:", error);
-    res.status(500).json({ error: "Impossible de supprimer la notification." });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -163,6 +163,6 @@ export async function createSystemNotification(
     res.status(201).json({ createdCount: notifications.length });
   } catch (error) {
     console.error("Erreur createSystemNotification:", error);
-    res.status(500).json({ error: "Impossible de créer la notification système." });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }

@@ -49,7 +49,7 @@ export async function register(req: Request, res: Response): Promise<void> {
 
     const userId = result.insertId;
 
-    const tokenPayload = { userId, email, role: 'PARTICIPANT' };
+    const tokenPayload = { userId, role: 'PARTICIPANT' };
     const accessToken = generateAccessToken(tokenPayload);
     const refreshToken = generateRefreshToken(tokenPayload);
 
@@ -84,7 +84,7 @@ export async function register(req: Request, res: Response): Promise<void> {
     });
   } catch (err) {
     console.error('Erreur inscription:', err);
-    res.status(500).json({ error: 'Erreur serveur.' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -158,7 +158,7 @@ export async function login(req: Request, res: Response): Promise<void> {
     // Vérifier expiration du mot de passe (60 jours)
     const passwordExpired = isPasswordExpired(user.password_updated_at);
 
-    const tokenPayload = { userId: user.id, email: user.email, role: user.role };
+    const tokenPayload = { userId: user.id, role: user.role };
     const [twoFactorRows] = await pool.query<RowDataPacket[]>(
       'SELECT is_enabled FROM two_factor_auth WHERE user_id = ?',
       [user.id],
@@ -203,7 +203,7 @@ export async function login(req: Request, res: Response): Promise<void> {
     });
   } catch (err) {
     console.error('Erreur login:', err);
-    res.status(500).json({ error: 'Erreur serveur.' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -230,7 +230,6 @@ export async function refreshAccessToken(req: Request, res: Response): Promise<v
     const decoded = verifyToken(refreshToken);
     const newAccessToken = generateAccessToken({
       userId: decoded.userId,
-      email: decoded.email,
       role: decoded.role,
     });
 
@@ -263,7 +262,7 @@ export async function logout(req: AuthenticatedRequest, res: Response): Promise<
     res.json({ message: 'Déconnexion réussie.' });
   } catch (err) {
     console.error('Erreur logout:', err);
-    res.status(500).json({ error: 'Erreur serveur.' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -322,7 +321,7 @@ export async function forgotPassword(req: Request, res: Response): Promise<void>
     res.json({ message: 'Si un compte existe avec cet email, un lien de réinitialisation a été envoyé.' });
   } catch (err) {
     console.error('Erreur forgot-password:', err);
-    res.status(500).json({ error: 'Erreur serveur.' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -376,7 +375,7 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
     res.json({ message: 'Mot de passe réinitialisé avec succès. Veuillez vous reconnecter.' });
   } catch (err) {
     console.error('Erreur reset-password:', err);
-    res.status(500).json({ error: 'Erreur serveur.' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -399,6 +398,11 @@ export async function getMe(req: AuthenticatedRequest, res: Response): Promise<v
     }
 
     const user = rows[0];
+    if (!user.is_active) {
+      res.status(403).json({ code: 'ACCOUNT_INACTIVE', error: 'Compte désactivé.' });
+      return;
+    }
+
     res.json({
       user: {
         id: user.id,
@@ -412,7 +416,7 @@ export async function getMe(req: AuthenticatedRequest, res: Response): Promise<v
     });
   } catch (err) {
     console.error('Erreur get me:', err);
-    res.status(500).json({ error: 'Erreur serveur.' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -455,7 +459,7 @@ export async function updateUserRole(req: AuthenticatedRequest, res: Response): 
     res.json({ message: `Rôle mis à jour : ${role}` });
   } catch (err) {
     console.error('Erreur update role:', err);
-    res.status(500).json({ error: 'Erreur serveur.' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -514,7 +518,7 @@ export async function updateProfile(req: AuthenticatedRequest, res: Response): P
 
       const passwordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
       await pool.query(
-        'UPDATE users SET password_hash = ?, password_updated_at = NOW() WHERE id = ?',
+        'UPDATE users SET password_hash = ?, password_updated_at = NOW(), failed_login_attempts = 0, locked_until = NULL WHERE id = ?',
         [passwordHash, req.user.userId]
       );
 
@@ -557,6 +561,6 @@ export async function updateProfile(req: AuthenticatedRequest, res: Response): P
     });
   } catch (err) {
     console.error('Erreur update profile:', err);
-    res.status(500).json({ error: 'Erreur serveur.' });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }

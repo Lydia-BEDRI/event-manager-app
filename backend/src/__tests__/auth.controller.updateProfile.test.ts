@@ -170,7 +170,79 @@ describe('Auth Controller - updateProfile', () => {
 
       expect(bcrypt.compare).toHaveBeenCalledWith('oldPassword123', 'hashedOldPassword');
       expect(bcrypt.hash).toHaveBeenCalledWith('NewPassword456!', 12);
+      expect(pool.query).toHaveBeenCalledWith(
+        expect.stringContaining('password_updated_at = NOW()'),
+        ['hashedNewPassword', 1],
+      );
+      expect(pool.query).toHaveBeenCalledWith(
+        expect.stringContaining('failed_login_attempts = 0'),
+        ['hashedNewPassword', 1],
+      );
+      expect(pool.query).toHaveBeenCalledWith(
+        expect.stringContaining('locked_until = NULL'),
+        ['hashedNewPassword', 1],
+      );
+      expect(pool.query).toHaveBeenCalledWith(
+        'UPDATE refresh_tokens SET revoked = TRUE WHERE user_id = ?',
+        [1],
+      );
 
+      expect(responseJson).toHaveBeenCalledWith({
+        message: 'Profil mis à jour avec succès.',
+        user: expect.any(Object),
+      });
+    });
+
+    it('devrait permettre le changement de mot de passe après expiration', async () => {
+      mockRequest.body = {
+        currentPassword: 'oldPassword123',
+        newPassword: 'NewPassword456!',
+      };
+
+      const expiredPasswordDate = new Date(Date.now() - 61 * 24 * 60 * 60 * 1000);
+      const mockCurrentUser = [{
+        id: 1,
+        email: 'test@example.com',
+        first_name: 'Test',
+        last_name: 'User',
+        password_hash: 'hashedOldPassword',
+        password_updated_at: expiredPasswordDate,
+        failed_login_attempts: 3,
+        locked_until: new Date(),
+        role: 'PARTICIPANT',
+        created_at: new Date('2024-01-01'),
+      }];
+
+      const mockUpdatedUser = [{
+        id: 1,
+        email: 'test@example.com',
+        first_name: 'Test',
+        last_name: 'User',
+        role: 'PARTICIPANT',
+        created_at: new Date('2024-01-01'),
+      }];
+
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
+      (bcrypt.hash as jest.Mock).mockResolvedValue('hashedNewPassword');
+
+      (pool.query as jest.Mock)
+        .mockResolvedValueOnce([mockCurrentUser])
+        .mockResolvedValueOnce([{ affectedRows: 1 }])
+        .mockResolvedValueOnce([{ affectedRows: 2 }])
+        .mockResolvedValueOnce([{ insertId: 1 }])
+        .mockResolvedValueOnce([mockUpdatedUser]);
+
+      await updateProfile(mockRequest as AuthenticatedRequest, mockResponse as Response);
+
+      expect(responseStatus).not.toHaveBeenCalledWith(403);
+      expect(pool.query).toHaveBeenCalledWith(
+        'UPDATE users SET password_hash = ?, password_updated_at = NOW(), failed_login_attempts = 0, locked_until = NULL WHERE id = ?',
+        ['hashedNewPassword', 1],
+      );
+      expect(pool.query).toHaveBeenCalledWith(
+        'UPDATE refresh_tokens SET revoked = TRUE WHERE user_id = ?',
+        [1],
+      );
       expect(responseJson).toHaveBeenCalledWith({
         message: 'Profil mis à jour avec succès.',
         user: expect.any(Object),
@@ -311,7 +383,7 @@ describe('Auth Controller - updateProfile', () => {
 
       expect(responseStatus).toHaveBeenCalledWith(500);
       expect(responseJson).toHaveBeenCalledWith({
-        error: 'Erreur serveur.',
+        message: 'Une erreur interne est survenue.',
       });
     });
   });

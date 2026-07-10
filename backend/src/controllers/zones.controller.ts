@@ -29,7 +29,7 @@ export const createZone = async (req: Request, res: Response) => {
     return res.status(201).json(newZone[0]);
   } catch (error) {
     console.error('Error creating zone:', error);
-    return res.status(500).json({ message: 'Erreur serveur', error });
+    return res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 };
 export const getAllZones = async (_req: Request, res: Response) => {
@@ -44,7 +44,7 @@ export const getAllZones = async (_req: Request, res: Response) => {
     return res.json(zones);
   } catch (error) {
     console.error('Error fetching zones:', error);
-    return res.status(500).json({ message: 'Erreur serveur', error });
+    return res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 };
 
@@ -61,7 +61,7 @@ export const getDistinctZones = async (_req: Request, res: Response) => {
     return res.json(zones);
   } catch (error) {
     console.error('Error fetching distinct zones:', error);
-    return res.status(500).json({ message: 'Erreur serveur', error });
+    return res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 };
 
@@ -78,7 +78,7 @@ export const getEventZones = async (req: Request, res: Response) => {
     res.json(zones);
   } catch (error) {
     console.error('Error fetching zones:', error);
-    res.status(500).json({ message: 'Erreur serveur', error });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 };
 
@@ -131,7 +131,7 @@ export const updateZone = async (req: Request, res: Response) => {
     return res.json(updatedZone[0]);
   } catch (error) {
     console.error('Error updating zone:', error);
-    return res.status(500).json({ message: 'Erreur serveur', error });
+    return res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 };
 
@@ -153,6 +153,6 @@ export const deleteZone = async (req: Request, res: Response) => {
     return res.json({ message: 'Zone supprimée avec succès' });
   } catch (error) {
     console.error('Error deleting zone:', error);
-    return res.status(500).json({ message: 'Erreur serveur', error });
+    return res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 };

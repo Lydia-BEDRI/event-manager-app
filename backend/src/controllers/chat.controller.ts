@@ -67,7 +67,7 @@ export async function getMessages(
     res.json({ messages });
   } catch (error) {
     console.error("Erreur getMessages:", error);
-    res.status(500).json({ error: "Erreur serveur." });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -85,7 +85,7 @@ export async function getChatEvents(
     res.json({ events });
   } catch (error) {
     console.error("Erreur getChatEvents:", error);
-    res.status(500).json({ error: "Erreur serveur." });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -141,7 +141,7 @@ export async function postMessage(
     res.status(201).json({ message });
   } catch (error) {
     console.error("Erreur postMessage:", error);
-    res.status(500).json({ error: "Erreur serveur." });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -187,7 +187,7 @@ export async function deleteOwnMessage(
     res.json({ success: true });
   } catch (error) {
     console.error("Erreur deleteOwnMessage:", error);
-    res.status(500).json({ error: "Erreur serveur." });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -236,7 +236,7 @@ export async function moderateChatMessage(
     res.json({ success: true });
   } catch (error) {
     console.error("Erreur moderateChatMessage:", error);
-    res.status(500).json({ error: "Erreur serveur." });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }
 
@@ -273,6 +273,6 @@ export async function getMembers(
     res.json({ members });
   } catch (error) {
     console.error("Erreur getMembers:", error);
-    res.status(500).json({ error: "Erreur serveur." });
+    res.status(500).json({ message: 'Une erreur interne est survenue.' });
   }
 }

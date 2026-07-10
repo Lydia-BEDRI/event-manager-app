@@ -9,14 +9,18 @@ import {
 } from '../controllers/zones.controller';
 import { authenticate } from '../middlewares/authenticate';
 import { authorize } from '../middlewares/authorize';
+import { requireFreshPassword } from '../middlewares/requireFreshPassword';
 
 const router = express.Router();
 
-router.get('/distinct', authenticate, getDistinctZones);
-router.get('/event/:eventId', authenticate, getEventZones);
+router.use(authenticate);
+router.use(requireFreshPassword);
+
+router.get('/distinct', getDistinctZones);
+router.get('/event/:eventId', getEventZones);
 // Routes admin
-router.get('/', authenticate, authorize('ADMIN'), getAllZones);
-router.post('/:eventId/zones', authenticate, authorize('ADMIN'), createZone);
-router.put('/:eventId/zones/:zoneId', authenticate, authorize('ADMIN'), updateZone);
-router.delete('/:eventId/zones/:zoneId', authenticate, authorize('ADMIN'), deleteZone);
+router.get('/', authorize('ADMIN'), getAllZones);
+router.post('/:eventId/zones', authorize('ADMIN'), createZone);
+router.put('/:eventId/zones/:zoneId', authorize('ADMIN'), updateZone);
+router.delete('/:eventId/zones/:zoneId', authorize('ADMIN'), deleteZone);
 export default router;

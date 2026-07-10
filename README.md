@@ -28,9 +28,11 @@ EventManager est une application web de gestion d’événements internes en ent
 
 - Vérification côté serveur de la signature du QR code.
 - Contrôle de l’identité de l’utilisateur connecté.
-- Vérification de l’événement et de la zone associés au QR code.
-- Journalisation de chaque scan, y compris les passages répétés.
-- Application des mêmes règles d’autorisation aux accès QR code et NFC.
+- Vérification de l’événement et de l’appartenance de la zone à cet événement.
+- Une participation approuvée donne accès à toutes les zones de l’événement.
+- Chaque scan est un passage journalisé, pas une entrée ou une sortie.
+- Les scans répétés et simultanés sont acceptés volontairement et conservés dans l’historique.
+- La capacité des zones est une information de configuration, pas une jauge de présence en temps réel.
 
 ## Stack technique
 

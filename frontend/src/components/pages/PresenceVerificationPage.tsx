@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import Button from '../atoms/Button';
 import { getAllZones, getEventZones } from '../../services/zone.service';
-import { getMyQrCodes, verifyPresence } from '../../services/participation.service';
+import { getMyQrCodes, verifyAccessScan } from '../../services/participation.service';
 import { ParticipantQrCode, PresenceVerificationResult } from '../../types/participation.types';
 import { Zone } from '../../types/zone.types';
 import { useAuth } from '../../contexts/AuthContext';
@@ -148,7 +148,7 @@ const PresenceVerificationPage: React.FC = () => {
 
     try {
       setSubmitting(true);
-      const verification = await verifyPresence(token, Number(selectedZoneId));
+      const verification = await verifyAccessScan(token, Number(selectedZoneId));
       setResult(verification);
       setScanReady(false);
 
