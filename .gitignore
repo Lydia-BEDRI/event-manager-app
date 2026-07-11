@@ -55,6 +55,21 @@ releases/
 *.dump
 db/data/
 
+# Backup secrets and generated backup artifacts
+secure-backups/
+backups/*.sql
+backups/*.sql.gz
+backups/*.sha256
+backups/*.dump
+backups/*.env
+!backups/*.env.example
+backups/**/*.sql
+backups/**/*.sql.gz
+backups/**/*.sha256
+backups/**/*.dump
+backups/**/*.env
+!backups/**/*.env.example
+
 # Test coverage
 coverage/
 *.lcov
