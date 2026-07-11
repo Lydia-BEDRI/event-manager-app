@@ -1,60 +1,218 @@
-# Sauvegardes et restauration
+# Sauvegardes et restauration MySQL
 
-Les volumes Docker assurent la persistance après un redémarrage, mais ne remplacent pas une sauvegarde externe. Cette procédure décrit la cible à mettre en place et doit être validée dans un environnement de test avant son automatisation en production.
+Les volumes Docker gardent les donnees apres un redemarrage, mais ils ne remplacent pas une vraie sauvegarde. Cette procedure met en place une sauvegarde 3-2-1 pour la base MySQL metier :
 
-## Données à protéger
+- 1 copie active : la base MySQL dans Docker.
+- 1 copie locale : un dump compresse sur le VPS.
+- 1 copie externe : le meme dump envoye vers un stockage objet OVH/S3 avec rclone.
 
-- Base MySQL métier.
-- Base MariaDB et fichiers Matomo.
-- Configuration Uptime Kuma.
-- Données Grafana non provisionnées par Git.
-- Historique Prometheus si sa conservation est requise.
-- Données et configuration Caddy nécessaires au fonctionnement TLS.
-- Fichier `.env.production`, dans un coffre de secrets séparé.
+Les secrets restent hors du depot Git dans `/home/ubuntu/secure-backups/env/mysql-backup.env`.
 
-## Principes
+## Fichiers ajoutes
 
-- Chiffrer les archives avant leur transfert.
-- Stocker au moins une copie hors du VPS.
-- Limiter l’accès aux clés et journaux de sauvegarde.
-- Définir une durée de rétention et surveiller les échecs.
-- Tester régulièrement une restauration complète.
-- Ne jamais ajouter une archive, une clé ou `.env.production` au dépôt Git.
+- `backups/mysql-backup.sh` : genere le dump MySQL, compresse, calcule le SHA-256, applique la retention et envoie vers rclone.
+- `backups/mysql-backup.env.example` : modele de configuration a copier sur le VPS.
+- `backups/mysql-restore-test.sh` : restaure un dump dans une base separee pour valider que la sauvegarde est exploitable.
 
-## Sauvegarde de MySQL
+## Configuration sur le VPS
 
-Depuis la racine du projet sur le VPS, créez un répertoire protégé hors du dépôt, puis exportez la base :
+Depuis le VPS :
 
 ```bash
-umask 077
-mkdir -p <REPERTOIRE_SAUVEGARDES>
-
-docker compose --env-file .env.production -f docker-compose.prod.yml exec -T db \
-  sh -c 'mysqldump --single-transaction -u root -p"$MYSQL_ROOT_PASSWORD" eventmanager' \
-  > <REPERTOIRE_SAUVEGARDES>/eventmanager.sql
+cd ~/applications/event-manager-app
+mkdir -p ~/secure-backups/env ~/secure-backups/mysql/eventmanager
+cp backups/mysql-backup.env.example ~/secure-backups/env/mysql-backup.env
+nano ~/secure-backups/env/mysql-backup.env
+chmod 600 ~/secure-backups/env/mysql-backup.env
+chmod +x backups/mysql-backup.sh backups/mysql-restore-test.sh
 ```
 
-Chiffrez ensuite le fichier avec l’outil retenu par l’équipe, transférez l’archive vers le stockage externe et supprimez de façon appropriée la copie SQL non chiffrée. Ne placez jamais le mot de passe directement dans la ligne de commande ou dans un script versionné.
-
-## Restauration de MySQL
-
-Avant toute restauration :
-
-1. Informez l’équipe et stoppez les écritures applicatives.
-2. Sauvegardez l’état courant.
-3. Vérifiez l’intégrité et déchiffrez l’archive dans un emplacement protégé.
-4. Restaurez d’abord sur un environnement isolé si possible.
+Dans `~/secure-backups/env/mysql-backup.env`, utiliser les valeurs de production :
 
 ```bash
-docker compose --env-file .env.production -f docker-compose.prod.yml exec -T db \
-  sh -c 'mysql -u root -p"$MYSQL_ROOT_PASSWORD" eventmanager' \
-  < <REPERTOIRE_SAUVEGARDES>/eventmanager.sql
+MYSQL_CONTAINER="eventmanager-production-db-1"
+MYSQL_DATABASE="eventmanager"
+MYSQL_USER="root"
+MYSQL_PASSWORD="<valeur de MYSQL_ROOT_PASSWORD dans le .env de prod>"
+BACKUP_DIR="/home/ubuntu/secure-backups/mysql/eventmanager"
+LOG_FILE="/home/ubuntu/secure-backups/mysql/backup.log"
+REMOTE_TARGET="ovh:event-manager-backups/mysql"
+RETENTION_LOCAL_DAYS=14
+RETENTION_REMOTE_DAYS=60
+ALERT_WEBHOOK_URL=""
 ```
 
-Redémarrez ou reconstruisez les services seulement si nécessaire, puis vérifiez `/health`, l’authentification, les événements, les inscriptions et les journaux d’accès.
+Pour retrouver le mot de passe root MySQL :
 
-## Validation
+```bash
+cd ~/applications/event-manager-app
+grep MYSQL_ROOT_PASSWORD .env
+```
 
-Une sauvegarde n’est considérée comme exploitable qu’après un test de restauration. Consignez hors du dépôt la date, la version de l’application, l’archive testée, le résultat et la personne ayant effectué le contrôle.
+Ne jamais copier ce fichier `mysql-backup.env` dans Git.
 
-L’option `docker compose down -v` ne doit jamais être utilisée en production : elle supprimerait les volumes persistants.
+## Stockage externe OVH avec rclone
+
+Actions cote OVH :
+
+1. Ouvrir le projet Public Cloud OVH.
+2. Creer un bucket Object Storage compatible S3, par exemple `event-manager-backups`.
+3. Creer un utilisateur S3 ou des identifiants d'acces pour ce bucket.
+4. Noter la region, l'endpoint S3, l'access key et la secret key.
+5. Limiter les droits au bucket de sauvegarde quand c'est possible.
+
+Actions cote VPS :
+
+```bash
+sudo apt update
+sudo apt install rclone
+rclone config
+```
+
+Configuration type :
+
+```text
+n) New remote
+name> ovh
+Storage> s3
+provider> Other
+access_key_id> <access key OVH>
+secret_access_key> <secret key OVH>
+endpoint> <endpoint S3 de la region OVH>
+acl> private
+```
+
+Verifier ensuite :
+
+```bash
+rclone mkdir ovh:event-manager-backups/mysql
+rclone lsd ovh:
+```
+
+Mettre ensuite dans `mysql-backup.env` :
+
+```bash
+REMOTE_TARGET="ovh:event-manager-backups/mysql"
+```
+
+## Test manuel d'une sauvegarde
+
+```bash
+cd ~/applications/event-manager-app
+./backups/mysql-backup.sh
+```
+
+Verifier les fichiers locaux :
+
+```bash
+ls -lh ~/secure-backups/mysql/eventmanager
+cat ~/secure-backups/mysql/backup.log
+```
+
+Verifier l'integrite SHA-256 :
+
+```bash
+cd ~/secure-backups/mysql/eventmanager
+sha256sum -c *.sha256
+```
+
+Verifier la copie distante :
+
+```bash
+rclone ls ovh:event-manager-backups/mysql
+```
+
+## Automatisation avec cron
+
+Ouvrir la crontab de l'utilisateur `ubuntu` :
+
+```bash
+crontab -e
+```
+
+Executer tous les jours a 03:15 :
+
+```cron
+15 3 * * * /home/ubuntu/applications/event-manager-app/backups/mysql-backup.sh
+```
+
+Pour verifier que cron a bien tourne :
+
+```bash
+tail -n 50 ~/secure-backups/mysql/backup.log
+```
+
+## Alertes en cas d'echec
+
+Le script journalise tout echec dans `LOG_FILE`. Pour recevoir une alerte, renseigner `ALERT_WEBHOOK_URL` dans `mysql-backup.env`.
+
+Exemples possibles :
+
+- Webhook Discord.
+- Webhook Slack.
+- URL push Uptime Kuma.
+- Webhook d'un outil de monitoring.
+
+Si `REMOTE_TARGET` est configure mais que rclone echoue, le backup est considere comme echoue.
+
+## Politique de retention
+
+La retention est controlee par :
+
+```bash
+RETENTION_LOCAL_DAYS=14
+RETENTION_REMOTE_DAYS=60
+```
+
+Le VPS garde donc 14 jours de dumps locaux et le stockage externe garde 60 jours. Adapter ces valeurs selon l'espace disque et le besoin de restauration.
+
+## Test de restauration dans une base separee
+
+Ne jamais tester une restauration directement dans la base de production.
+
+```bash
+cd ~/applications/event-manager-app
+./backups/mysql-restore-test.sh /home/ubuntu/secure-backups/mysql/eventmanager/eventmanager_YYYY-MM-DD_HH-MM-SS.sql.gz
+```
+
+Le script :
+
+1. Verifie le SHA-256 si le fichier `.sha256` existe.
+2. Cree ou remplace la base `eventmanager_restore_test`.
+3. Restaure le dump dedans.
+4. Affiche les tables restaurees.
+
+Quand le test est fini, supprimer la base de test :
+
+```bash
+docker exec -e MYSQL_PWD="<MYSQL_ROOT_PASSWORD>" eventmanager-production-db-1 \
+  mysql -uroot -e "DROP DATABASE IF EXISTS eventmanager_restore_test;"
+```
+
+## Restauration production
+
+Avant toute restauration production :
+
+1. Informer l'equipe.
+2. Stopper les ecritures applicatives si possible.
+3. Faire un backup de l'etat courant.
+4. Verifier le SHA-256 de l'archive.
+5. Tester la restauration dans `eventmanager_restore_test`.
+
+Commande de restauration production, uniquement apres validation :
+
+```bash
+gunzip -c /home/ubuntu/secure-backups/mysql/eventmanager/eventmanager_YYYY-MM-DD_HH-MM-SS.sql.gz \
+  | docker exec -i -e MYSQL_PWD="<MYSQL_ROOT_PASSWORD>" eventmanager-production-db-1 \
+    mysql -uroot eventmanager
+```
+
+Verifier ensuite l'application :
+
+- endpoint `/health`;
+- connexion utilisateur;
+- liste des evenements;
+- inscriptions;
+- controle d'acces et journaux d'acces.
+
+`docker compose down -v` ne doit jamais etre utilise en production : cette commande supprime les volumes persistants.
