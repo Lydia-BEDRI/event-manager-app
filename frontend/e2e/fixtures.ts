@@ -39,7 +39,6 @@ export async function mockNotifications(page: Page) {
 export async function mockAuthenticatedUser(page: Page, user = participantUser) {
   await page.addInitScript(() => {
     window.localStorage.setItem('accessToken', 'e2e-access-token');
-    window.localStorage.setItem('refreshToken', 'e2e-refresh-token');
   });
 
   await page.route('**/api/auth/me', async (route) => {
@@ -54,7 +53,6 @@ export async function mockLogin(page: Page, user = participantUser) {
         message: 'Connexion réussie',
         user,
         accessToken: 'e2e-access-token',
-        refreshToken: 'e2e-refresh-token',
       },
     });
   });
@@ -83,7 +81,6 @@ export async function mockTwoFactorLogin(page: Page, user = participantUser) {
         message: 'Connexion réussie',
         user,
         accessToken: 'e2e-access-token',
-        refreshToken: 'e2e-refresh-token',
       },
     });
   });
@@ -105,7 +102,6 @@ export async function mockRegister(page: Page) {
           lastName: requestBody.lastName,
         },
         accessToken: 'e2e-access-token',
-        refreshToken: 'e2e-refresh-token',
       },
     });
   });

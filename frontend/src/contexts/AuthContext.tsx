@@ -53,7 +53,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setUser(null);
     setAccessToken(null);
     localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
   }, []);
 
   useEffect(() => {
@@ -116,43 +115,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }
 
         // token invalide, essayer de rafraîchir
-        const refreshToken = localStorage.getItem("refreshToken");
-        if (refreshToken) {
-          try {
-            const refreshData = await authService.refresh(refreshToken);
-            localStorage.setItem("accessToken", refreshData.accessToken);
-            setAccessToken(refreshData.accessToken);
-            const userData = await authService.getMe(refreshData.accessToken);
+        try {
+          const refreshData = await authService.refresh();
+          localStorage.setItem("accessToken", refreshData.accessToken);
+          setAccessToken(refreshData.accessToken);
+          const userData = await authService.getMe(refreshData.accessToken);
 
-            // vérifier à nouveau que les données sont valides
-            if (
-              !userData.user ||
-              !userData.user.id ||
-              !userData.user.email ||
-              !userData.user.role
-            ) {
-              console.error(
-                "Données utilisateur invalides après rafraîchissement:",
-                userData,
-              );
-              clearAuth();
-              setIsLoading(false);
-              return;
-            }
-
-            setUser(userData.user);
-          } catch (refreshError) {
-            const refreshUnauthorized =
-              refreshError instanceof ApiError && refreshError.status === 401;
-            if (!refreshUnauthorized) {
-              console.error(
-                "Erreur de rafraîchissement du token:",
-                refreshError,
-              );
-            }
+          // vérifier à nouveau que les données sont valides
+          if (
+            !userData.user ||
+            !userData.user.id ||
+            !userData.user.email ||
+            !userData.user.role
+          ) {
+            console.error(
+              "Données utilisateur invalides après rafraîchissement:",
+              userData,
+            );
             clearAuth();
+            setIsLoading(false);
+            return;
           }
-        } else {
+
+          setUser(userData.user);
+        } catch (refreshError) {
+          const refreshUnauthorized =
+            refreshError instanceof ApiError && refreshError.status === 401;
+          if (!refreshUnauthorized) {
+            console.error(
+              "Erreur de rafraîchissement du token:",
+              refreshError,
+            );
+          }
           clearAuth();
         }
       } finally {
@@ -176,7 +170,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setUser(response.user);
     setAccessToken(response.accessToken);
     localStorage.setItem("accessToken", response.accessToken);
-    localStorage.setItem("refreshToken", response.refreshToken);
     return { passwordExpired: response.passwordExpired };
   };
 
@@ -185,7 +178,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setUser(response.user);
     setAccessToken(response.accessToken);
     localStorage.setItem('accessToken', response.accessToken);
-    localStorage.setItem('refreshToken', response.refreshToken);
     return {
       passwordExpired: response.passwordExpired,
       backupCodeUsed: response.backupCodeUsed,
@@ -197,14 +189,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setUser(response.user);
     setAccessToken(response.accessToken);
     localStorage.setItem("accessToken", response.accessToken);
-    localStorage.setItem("refreshToken", response.refreshToken);
   };
 
   const logout = async () => {
-    const refreshToken = localStorage.getItem("refreshToken");
     try {
-      if (refreshToken && accessToken) {
-        await authService.logout(refreshToken, accessToken);
+      if (accessToken) {
+        await authService.logout(accessToken);
       }
     } finally {
       clearAuth();

@@ -77,7 +77,6 @@ function notifyTokenRefreshed(accessToken: string) {
 
 function expireSession() {
   localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
   sockets.forEach((socket) => socket.disconnect());
   sockets.clear();
   window.dispatchEvent(
@@ -88,17 +87,12 @@ function expireSession() {
 }
 
 async function refreshAccessToken(): Promise<string> {
-  const refreshToken = localStorage.getItem("refreshToken");
-  if (!refreshToken) {
-    expireSession();
-    throw new ApiError("Votre session a expiré. Veuillez vous reconnecter.", 401);
-  }
-
   if (!refreshPromise) {
     refreshPromise = fetch(`${API_BASE_URL}${AUTH_REFRESH_ENDPOINT}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ refreshToken }),
+      credentials: "include",
+      body: JSON.stringify({}),
     })
       .then(async (response) => {
         if (!response.ok) {
@@ -147,6 +141,7 @@ async function request<T>(
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     method,
     headers,
+    credentials: "include",
     ...(body === undefined ? {} : { body: JSON.stringify(body) }),
   });
 
@@ -179,6 +174,7 @@ export async function apiFetch(
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     ...init,
     headers,
+    credentials: "include",
   });
 
   if (response.status === 401 && shouldRefresh(endpoint, retry)) {
@@ -195,6 +191,7 @@ export async function apiBlob(endpoint: string, token?: string, retry = false): 
   const response = await fetch(`${API_BASE_URL}${endpoint}`, {
     method: "GET",
     headers: authHeader(effectiveToken),
+    credentials: "include",
   });
 
   if (response.status === 401 && shouldRefresh(endpoint, retry)) {

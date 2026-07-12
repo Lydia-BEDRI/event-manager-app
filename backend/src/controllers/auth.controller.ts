@@ -8,6 +8,7 @@ import { isPasswordExpired, isPasswordStrong } from '../utils/password';
 import { AuthenticatedRequest } from '../middlewares/authenticate';
 import { RowDataPacket, ResultSetHeader } from 'mysql2';
 import { sendPasswordResetEmail } from '../services/email.service';
+import { clearRefreshTokenCookie, getRefreshTokenFromRequest, setRefreshTokenCookie } from '../utils/authCookies';
 
 const SALT_ROUNDS = 12;
 const MAX_FAILED_ATTEMPTS = 5;
@@ -57,6 +58,7 @@ export async function register(req: Request, res: Response): Promise<void> {
       'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)',
       [userId, refreshToken, getRefreshExpiresAt()]
     );
+    setRefreshTokenCookie(res, refreshToken);
 
     await pool.query(
       `INSERT INTO audit_logs (user_id, action, entity_type, entity_id, ip_address)
@@ -80,7 +82,6 @@ export async function register(req: Request, res: Response): Promise<void> {
         createdAt: newUser[0].created_at,
       },
       accessToken,
-      refreshToken,
     });
   } catch (err) {
     console.error('Erreur inscription:', err);
@@ -180,6 +181,7 @@ export async function login(req: Request, res: Response): Promise<void> {
       'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)',
       [user.id, refreshToken, getRefreshExpiresAt()]
     );
+    setRefreshTokenCookie(res, refreshToken);
 
     await pool.query(
       `INSERT INTO audit_logs (user_id, action, entity_type, entity_id, ip_address)
@@ -198,7 +200,6 @@ export async function login(req: Request, res: Response): Promise<void> {
         createdAt: user.created_at,
       },
       accessToken,
-      refreshToken,
       passwordExpired,
     });
   } catch (err) {
@@ -209,7 +210,7 @@ export async function login(req: Request, res: Response): Promise<void> {
 
 // POST /api/auth/refresh
 export async function refreshAccessToken(req: Request, res: Response): Promise<void> {
-  const { refreshToken } = req.body;
+  const refreshToken = getRefreshTokenFromRequest(req) || req.body.refreshToken;
 
   if (!refreshToken) {
     res.status(400).json({ error: 'Refresh token requis.' });
@@ -241,7 +242,7 @@ export async function refreshAccessToken(req: Request, res: Response): Promise<v
 
 // POST /api/auth/logout
 export async function logout(req: AuthenticatedRequest, res: Response): Promise<void> {
-  const { refreshToken } = req.body;
+  const refreshToken = getRefreshTokenFromRequest(req) || req.body.refreshToken;
 
   try {
     if (refreshToken) {
@@ -250,6 +251,7 @@ export async function logout(req: AuthenticatedRequest, res: Response): Promise<
         [refreshToken]
       );
     }
+    clearRefreshTokenCookie(res);
 
     if (req.user) {
       await pool.query(
@@ -365,6 +367,7 @@ export async function resetPassword(req: Request, res: Response): Promise<void> 
       'UPDATE refresh_tokens SET revoked = TRUE WHERE user_id = ?',
       [resetToken.user_id]
     );
+    clearRefreshTokenCookie(res);
 
     await pool.query(
       `INSERT INTO audit_logs (user_id, action, entity_type, entity_id, ip_address)

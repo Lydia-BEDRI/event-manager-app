@@ -40,7 +40,6 @@ describe('AuthContext - two-factor login', () => {
     expect(result.current.user).toBeNull();
     expect(result.current.isAuthenticated).toBe(false);
     expect(localStorage.getItem('accessToken')).toBeNull();
-    expect(localStorage.getItem('refreshToken')).toBeNull();
   });
 
   it('stocke la session uniquement après un code 2FA valide', async () => {
@@ -55,7 +54,6 @@ describe('AuthContext - two-factor login', () => {
       message: 'Connexion réussie.',
       user,
       accessToken: 'access-token',
-      refreshToken: 'refresh-token',
       passwordExpired: false,
       backupCodeUsed: false,
     });
@@ -71,6 +69,6 @@ describe('AuthContext - two-factor login', () => {
     expect(result.current.user).toEqual(user);
     expect(result.current.isAuthenticated).toBe(true);
     expect(localStorage.getItem('accessToken')).toBe('access-token');
-    expect(localStorage.getItem('refreshToken')).toBe('refresh-token');
+    expect(localStorage.getItem('refreshToken')).toBeNull();
   });
 });
