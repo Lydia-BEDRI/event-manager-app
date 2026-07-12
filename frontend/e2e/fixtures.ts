@@ -40,6 +40,35 @@ export async function mockLogin(page: Page, user = participantUser) {
   });
 }
 
+export async function mockTwoFactorLogin(page: Page, user = participantUser) {
+  await page.route('**/api/auth/login', async (route) => {
+    await route.fulfill({
+      json: {
+        message: 'Code de vérification requis',
+        requiresTwoFactor: true,
+        challengeToken: 'e2e-2fa-challenge',
+      },
+    });
+  });
+
+  await page.route('**/api/auth/2fa/login/verify', async (route) => {
+    const requestBody = route.request().postDataJSON();
+    await expect(requestBody).toMatchObject({
+      challengeToken: 'e2e-2fa-challenge',
+      code: '123456',
+    });
+
+    await route.fulfill({
+      json: {
+        message: 'Connexion réussie',
+        user,
+        accessToken: 'e2e-access-token',
+        refreshToken: 'e2e-refresh-token',
+      },
+    });
+  });
+}
+
 export async function mockRegister(page: Page) {
   await page.route('**/api/auth/register', async (route) => {
     const requestBody = route.request().postDataJSON();
@@ -57,6 +86,19 @@ export async function mockRegister(page: Page) {
         },
         accessToken: 'e2e-access-token',
         refreshToken: 'e2e-refresh-token',
+      },
+    });
+  });
+}
+
+export async function mockForgotPassword(page: Page) {
+  await page.route('**/api/auth/forgot-password', async (route) => {
+    const requestBody = route.request().postDataJSON();
+    await expect(requestBody.email).toBe('participant@example.com');
+
+    await route.fulfill({
+      json: {
+        message: 'Email de réinitialisation envoyé',
       },
     });
   });
