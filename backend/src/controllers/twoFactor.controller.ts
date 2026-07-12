@@ -22,6 +22,7 @@ import {
   verifyTwoFactorChallengeToken,
 } from '../utils/jwt';
 import { isPasswordExpired } from '../utils/password';
+import { setRefreshTokenCookie } from '../utils/authCookies';
 
 interface TwoFactorRow extends RowDataPacket {
   user_id: number;
@@ -334,6 +335,7 @@ export async function verifyTwoFactorLogin(req: Request, res: Response): Promise
       'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES (?, ?, ?)',
       [user.id, refreshToken, getRefreshExpiresAt()],
     );
+    setRefreshTokenCookie(res, refreshToken);
     await pool.query(
       `INSERT INTO audit_logs (user_id, action, entity_type, entity_id, ip_address)
        VALUES (?, 'LOGIN_2FA', 'user', ?, ?)`,
@@ -351,7 +353,6 @@ export async function verifyTwoFactorLogin(req: Request, res: Response): Promise
         createdAt: user.created_at,
       },
       accessToken,
-      refreshToken,
       passwordExpired: isPasswordExpired(user.password_updated_at),
       backupCodeUsed: Boolean(validation.backupCodeHash),
     });

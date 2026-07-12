@@ -35,7 +35,6 @@ describe('api refresh token handling', () => {
 
   it('rafraîchit un access token expiré puis rejoue la requête initiale', async () => {
     localStorage.setItem('accessToken', 'expired-access-token');
-    localStorage.setItem('refreshToken', 'valid-refresh-token');
     const refreshed = jest.fn();
     window.addEventListener(AUTH_TOKEN_REFRESHED_EVENT, refreshed);
 
@@ -49,6 +48,9 @@ describe('api refresh token handling', () => {
     expect(localStorage.getItem('accessToken')).toBe('new-access-token');
     expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(fetchMock.mock.calls[1][0]).toBe('http://localhost:5000/api/auth/refresh');
+    expect(fetchMock.mock.calls[1][1]).toMatchObject({
+      credentials: 'include',
+    });
     expect(fetchMock.mock.calls[2][1].headers.Authorization).toBe(
       'Bearer new-access-token',
     );
@@ -58,7 +60,6 @@ describe('api refresh token handling', () => {
 
   it('supprime les tokens et signale la session expirée si le refresh est invalide', async () => {
     localStorage.setItem('accessToken', 'expired-access-token');
-    localStorage.setItem('refreshToken', 'invalid-refresh-token');
     const expired = jest.fn();
     window.addEventListener(AUTH_SESSION_EXPIRED_EVENT, expired);
 
@@ -76,7 +77,6 @@ describe('api refresh token handling', () => {
 
   it('ne lance qu’un refresh pour plusieurs 401 simultanés', async () => {
     localStorage.setItem('accessToken', 'expired-access-token');
-    localStorage.setItem('refreshToken', 'valid-refresh-token');
     let resolveRefresh: (response: Response) => void = () => undefined;
     const refreshResponse = new Promise<Response>((resolve) => {
       resolveRefresh = resolve;
@@ -107,7 +107,6 @@ describe('api refresh token handling', () => {
 
   it('rejoue la requête initiale une seule fois', async () => {
     localStorage.setItem('accessToken', 'expired-access-token');
-    localStorage.setItem('refreshToken', 'valid-refresh-token');
 
     fetchMock
       .mockResolvedValueOnce(jsonResponse({ error: 'Token expiré.' }, 401))
@@ -124,7 +123,6 @@ describe('api refresh token handling', () => {
 
   it('évite une boucle infinie si la requête rejouée retourne encore 401', async () => {
     localStorage.setItem('accessToken', 'expired-access-token');
-    localStorage.setItem('refreshToken', 'valid-refresh-token');
 
     fetchMock
       .mockResolvedValueOnce(jsonResponse({ error: 'Token expiré.' }, 401))

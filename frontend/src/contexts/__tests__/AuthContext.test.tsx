@@ -335,7 +335,6 @@ describe('AuthContext - updateUser', () => {
           role: 'PARTICIPANT',
         },
         accessToken: 'access-token',
-        refreshToken: 'refresh-token',
       };
 
       (authService.register as jest.Mock).mockResolvedValue(mockRegisterResponse);
@@ -378,7 +377,6 @@ describe('AuthContext - updateUser', () => {
           role: 'PARTICIPANT',
         },
         accessToken: 'access-token',
-        refreshToken: 'refresh-token',
       };
 
       (authService.login as jest.Mock).mockResolvedValue(mockLoginResponse);
