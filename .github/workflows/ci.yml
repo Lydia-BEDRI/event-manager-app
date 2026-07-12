@@ -180,11 +180,165 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare Trivy reports directory
+        run: |
+          mkdir -p trivy-reports
+          : > trivy-reports/critical-failures.txt
+
+      - name: Install Trivy
+        uses: aquasecurity/setup-trivy@v0.3.1
+        with:
+          version: v0.70.0
+          cache: true
+
       - name: Validate compose file
         run: docker compose config -q
 
       - name: Build backend image
         run: docker build --tag eventmanager-backend:ci ./backend
 
+      - name: Scan backend image with Trivy
+        run: |
+          trivy image \
+            --skip-version-check \
+            --format table \
+            --output trivy-reports/backend-image.txt \
+            --severity HIGH,CRITICAL \
+            --pkg-types os,library \
+            --ignore-unfixed \
+            --exit-code 0 \
+            eventmanager-backend:ci
+
       - name: Build frontend image
         run: docker build --tag eventmanager-frontend:ci ./frontend
+
+      - name: Scan frontend image with Trivy
+        run: |
+          trivy image \
+            --skip-version-check \
+            --format table \
+            --output trivy-reports/frontend-image.txt \
+            --severity HIGH,CRITICAL \
+            --pkg-types os,library \
+            --ignore-unfixed \
+            --exit-code 0 \
+            eventmanager-frontend:ci
+
+      - name: Scan repository filesystem with Trivy
+        run: |
+          trivy fs \
+            --skip-version-check \
+            --format table \
+            --output trivy-reports/filesystem.txt \
+            --scanners vuln \
+            --severity HIGH,CRITICAL \
+            --pkg-types os,library \
+            --ignore-unfixed \
+            --skip-dirs backend/node_modules \
+            --skip-dirs frontend/node_modules \
+            --exit-code 0 \
+            .
+
+      - name: Scan Docker and Compose configuration with Trivy
+        run: |
+          trivy config \
+            --skip-version-check \
+            --format table \
+            --output trivy-reports/configuration.txt \
+            --severity HIGH,CRITICAL \
+            --exit-code 0 \
+            .
+
+      - name: Enforce backend image critical vulnerability gate
+        run: |
+          trivy image \
+            --skip-version-check \
+            --format table \
+            --output trivy-reports/backend-image-critical.txt \
+            --severity CRITICAL \
+            --pkg-types os,library \
+            --ignore-unfixed \
+            --exit-code 1 \
+            eventmanager-backend:ci || echo "- backend Docker image" >> trivy-reports/critical-failures.txt
+
+      - name: Enforce frontend image critical vulnerability gate
+        run: |
+          trivy image \
+            --skip-version-check \
+            --format table \
+            --output trivy-reports/frontend-image-critical.txt \
+            --severity CRITICAL \
+            --pkg-types os,library \
+            --ignore-unfixed \
+            --exit-code 1 \
+            eventmanager-frontend:ci || echo "- frontend Docker image" >> trivy-reports/critical-failures.txt
+
+      - name: Enforce filesystem critical vulnerability gate
+        run: |
+          trivy fs \
+            --skip-version-check \
+            --format table \
+            --output trivy-reports/filesystem-critical.txt \
+            --scanners vuln \
+            --severity CRITICAL \
+            --pkg-types os,library \
+            --ignore-unfixed \
+            --skip-dirs backend/node_modules \
+            --skip-dirs frontend/node_modules \
+            --exit-code 1 \
+            . || echo "- repository filesystem" >> trivy-reports/critical-failures.txt
+
+      - name: Enforce configuration critical vulnerability gate
+        run: |
+          trivy config \
+            --skip-version-check \
+            --format table \
+            --output trivy-reports/configuration-critical.txt \
+            --severity CRITICAL \
+            --exit-code 1 \
+            . || echo "- Docker and Compose configuration" >> trivy-reports/critical-failures.txt
+
+      - name: Publish Trivy summary
+        if: always()
+        run: |
+          {
+            echo "## Trivy security scan"
+            echo
+            echo "Reports scan Docker images, application dependencies, OS packages and Docker/Compose configuration."
+            echo "The CI fails on fixed CRITICAL vulnerabilities. HIGH findings remain visible in the reports."
+            echo
+            if [ -s trivy-reports/critical-failures.txt ]; then
+              echo "### Blocking CRITICAL findings"
+              cat trivy-reports/critical-failures.txt
+              echo
+            fi
+            for report in trivy-reports/*.txt; do
+              echo "### ${report#trivy-reports/}"
+              echo '```text'
+              if [ -s "$report" ]; then
+                sed -n '1,220p' "$report"
+              else
+                echo "No findings."
+              fi
+              echo '```'
+              echo
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Trivy reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-security-reports
+          path: trivy-reports/
+          retention-days: 30
+
+      - name: Fail on critical Trivy findings
+        if: always()
+        run: |
+          if [ -s trivy-reports/critical-failures.txt ]; then
+            echo "Trivy found fixed CRITICAL vulnerabilities in:"
+            cat trivy-reports/critical-failures.txt
+            echo "Open the trivy-security-reports artifact or the job summary for details."
+            exit 1
+          fi

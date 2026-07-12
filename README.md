@@ -168,5 +168,6 @@ Les Pull Requests sont fusionnées avec **Create a merge commit** afin de conser
 
 - [Déploiement en production](docs/deploiement-production.md) : VPS, HTTPS, Docker Compose et configuration.
 - [Observabilité](docs/observabilite.md) : métriques, tableaux de bord, disponibilité, analytique et erreurs.
+- [Scan de sécurité Trivy](docs/securite-trivy.md) : analyse CI des images, dépendances et configurations Docker.
 - [Sauvegardes](docs/sauvegardes.md) : sauvegarde chiffrée et procédure de restauration.
 - [Android](docs/android.md) : configuration, build et test sur un appareil.
