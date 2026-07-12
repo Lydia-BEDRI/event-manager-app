@@ -22,6 +22,7 @@ jest.mock('bcrypt', () => ({
 describe('Auth Controller - password reset', () => {
   let json: jest.Mock;
   let status: jest.Mock;
+  let clearCookie: jest.Mock;
   let response: Partial<Response>;
 
   beforeEach(() => {
@@ -29,7 +30,8 @@ describe('Auth Controller - password reset', () => {
     process.env.FRONTEND_URL = 'https://events.example.com';
     json = jest.fn();
     status = jest.fn().mockReturnValue({ json });
-    response = { json, status };
+    clearCookie = jest.fn();
+    response = { json, status, clearCookie };
     (sendPasswordResetEmail as jest.Mock).mockResolvedValue(undefined);
   });
 
@@ -126,6 +128,14 @@ describe('Auth Controller - password reset', () => {
     expect((pool.query as jest.Mock).mock.calls[1][1]).toEqual(['hashed-password', 42]);
     expect((pool.query as jest.Mock).mock.calls[2][1]).toEqual([5]);
     expect((pool.query as jest.Mock).mock.calls[3][1]).toEqual([42]);
+    expect(clearCookie).toHaveBeenCalledWith(
+      'eventmanager_refresh_token',
+      expect.objectContaining({
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/api/auth',
+      }),
+    );
     expect(json).toHaveBeenCalledWith({
       message: 'Mot de passe réinitialisé avec succès. Veuillez vous reconnecter.',
     });

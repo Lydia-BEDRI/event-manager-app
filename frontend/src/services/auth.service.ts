@@ -14,7 +14,7 @@ export interface AuthResponse {
   message: string;
   user: User;
   accessToken: string;
-  refreshToken: string;
+  refreshToken?: string;
   passwordExpired?: boolean;
   backupCodeUsed?: boolean;
 }
@@ -57,11 +57,11 @@ export const authService = {
   verifyTwoFactorLogin: (challengeToken: string, code: string) =>
     api.post<AuthResponse>('/auth/2fa/login/verify', { challengeToken, code }),
 
-  logout: (refreshToken: string, accessToken: string) =>
-    api.post<{ message: string }>('/auth/logout', { refreshToken }, accessToken),
+  logout: (accessToken: string) =>
+    api.post<{ message: string }>('/auth/logout', {}, accessToken),
 
-  refresh: (refreshToken: string) =>
-    api.post<{ accessToken: string }>('/auth/refresh', { refreshToken }),
+  refresh: () =>
+    api.post<{ accessToken: string }>('/auth/refresh', {}),
 
   forgotPassword: (email: string) =>
     api.post<{ message: string }>('/auth/forgot-password', { email }),

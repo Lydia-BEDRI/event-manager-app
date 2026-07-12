@@ -38,13 +38,15 @@ describe('Auth Controller - login with two-factor authentication', () => {
   };
   let json: jest.Mock;
   let status: jest.Mock;
+  let cookie: jest.Mock;
   let response: Partial<Response>;
 
   beforeEach(() => {
     jest.clearAllMocks();
     json = jest.fn();
     status = jest.fn().mockReturnValue({ json });
-    response = { json, status };
+    cookie = jest.fn();
+    response = { json, status, cookie };
     (bcrypt.compare as jest.Mock).mockResolvedValue(true);
   });
 
@@ -87,8 +89,17 @@ describe('Auth Controller - login with two-factor authentication', () => {
 
     expect(json).toHaveBeenCalledWith(expect.objectContaining({
       accessToken: 'access-token',
-      refreshToken: 'refresh-token',
       passwordExpired: false,
     }));
+    expect(json.mock.calls[0][0]).not.toHaveProperty('refreshToken');
+    expect(cookie).toHaveBeenCalledWith(
+      'eventmanager_refresh_token',
+      'refresh-token',
+      expect.objectContaining({
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/api/auth',
+      }),
+    );
   });
 });

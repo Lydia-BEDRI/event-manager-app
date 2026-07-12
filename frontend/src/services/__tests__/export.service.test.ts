@@ -84,6 +84,7 @@ describe('Export Service', () => {
         'http://localhost:5000/api/export/events',
         {
           method: 'GET',
+          credentials: 'include',
           headers: {
             Authorization: 'Bearer mock-access-token',
           },
@@ -152,7 +153,6 @@ describe('Export Service', () => {
 
       await expect(exportService.exportParticipations()).rejects.toThrow('Erreur API');
       expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('accessToken');
-      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('refreshToken');
     });
   });
 
@@ -246,6 +246,7 @@ describe('Export Service', () => {
         'http://localhost:5000/api/export/statistics',
         {
           method: 'GET',
+          credentials: 'include',
           headers: {
             Authorization: 'Bearer mock-access-token',
           },
