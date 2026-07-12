@@ -1,7 +1,9 @@
 import { test, expect } from '@playwright/test';
 import {
+  mockCookieConsent,
   mockForgotPassword,
   mockLogin,
+  mockNotifications,
   mockParticipantDashboard,
   mockRegister,
   mockTwoFactorLogin,
@@ -9,21 +11,8 @@ import {
 } from './fixtures';
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => {
-    window.localStorage.setItem(
-      'cookiePreferences',
-      JSON.stringify({
-        essential: true,
-        functional: false,
-        analytics: false,
-        timestamp: new Date().toISOString(),
-      }),
-    );
-  });
-
-  await page.route('**/api/notifications?limit=20', async (route) => {
-    await route.fulfill({ json: [] });
-  });
+  await mockCookieConsent(page);
+  await mockNotifications(page);
 });
 
 test('redirige un visiteur non connecté vers la page de connexion', async ({ page }) => {
