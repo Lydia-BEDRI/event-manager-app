@@ -198,6 +198,7 @@ jobs:
       - name: Scan backend image with Trivy
         run: |
           trivy image \
+            --skip-version-check \
             --format table \
             --output trivy-reports/backend-image.txt \
             --severity HIGH,CRITICAL \
@@ -212,6 +213,7 @@ jobs:
       - name: Scan frontend image with Trivy
         run: |
           trivy image \
+            --skip-version-check \
             --format table \
             --output trivy-reports/frontend-image.txt \
             --severity HIGH,CRITICAL \
@@ -222,7 +224,8 @@ jobs:
 
       - name: Scan repository filesystem with Trivy
         run: |
-          trivy fs . \
+          trivy fs \
+            --skip-version-check \
             --format table \
             --output trivy-reports/filesystem.txt \
             --scanners vuln \
@@ -231,19 +234,23 @@ jobs:
             --ignore-unfixed \
             --skip-dirs backend/node_modules \
             --skip-dirs frontend/node_modules \
-            --exit-code 0
+            --exit-code 0 \
+            .
 
       - name: Scan Docker and Compose configuration with Trivy
         run: |
-          trivy config . \
+          trivy config \
+            --skip-version-check \
             --format table \
             --output trivy-reports/configuration.txt \
             --severity HIGH,CRITICAL \
-            --exit-code 0
+            --exit-code 0 \
+            .
 
       - name: Enforce backend image critical vulnerability gate
         run: |
           trivy image \
+            --skip-version-check \
             --format table \
             --output trivy-reports/backend-image-critical.txt \
             --severity CRITICAL \
@@ -255,6 +262,7 @@ jobs:
       - name: Enforce frontend image critical vulnerability gate
         run: |
           trivy image \
+            --skip-version-check \
             --format table \
             --output trivy-reports/frontend-image-critical.txt \
             --severity CRITICAL \
@@ -265,7 +273,8 @@ jobs:
 
       - name: Enforce filesystem critical vulnerability gate
         run: |
-          trivy fs . \
+          trivy fs \
+            --skip-version-check \
             --format table \
             --output trivy-reports/filesystem-critical.txt \
             --scanners vuln \
@@ -274,15 +283,18 @@ jobs:
             --ignore-unfixed \
             --skip-dirs backend/node_modules \
             --skip-dirs frontend/node_modules \
-            --exit-code 1
+            --exit-code 1 \
+            .
 
       - name: Enforce configuration critical vulnerability gate
         run: |
-          trivy config . \
+          trivy config \
+            --skip-version-check \
             --format table \
             --output trivy-reports/configuration-critical.txt \
             --severity CRITICAL \
-            --exit-code 1
+            --exit-code 1 \
+            .
 
       - name: Publish Trivy summary
         if: always()
