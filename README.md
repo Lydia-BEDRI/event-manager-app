@@ -5,6 +5,11 @@
 
 EventManager est une application web de gestion d’événements internes en entreprise. Elle permet aux organisateurs de créer et suivre leurs événements, et aux participants de s’inscrire, valider leur présence et échanger dans un espace sécurisé.
 
+L’application est déployée sur un VPS OVH et accessible en HTTPS :
+
+- Application : [https://eventmanager.website](https://eventmanager.website)
+- Healthcheck : [https://eventmanager.website/health](https://eventmanager.website/health)
+
 ## Fonctionnalités principales
 
 ### Pour les organisateurs
@@ -47,11 +52,16 @@ EventManager est une application web de gestion d’événements internes en ent
 ## Sécurité et conformité
 
 - Authentification avec politique de mot de passe fort.
+- Jetons JWT signés en `HS256`, secrets fournis uniquement par l’environnement et durée de vie courte des access tokens.
+- Refresh token stocké côté client dans un cookie `HttpOnly`, `Secure` en production et limité au scope d’authentification.
 - Double authentification TOTP et codes de secours à usage unique.
 - Chiffrement des secrets TOTP en base de données.
 - QR codes signés et liés au compte utilisateur.
 - Validation des autorisations exclusivement côté serveur.
 - Journalisation des passages.
+- Analyse Trivy en CI sur les images Docker, dépendances, paquets système et fichiers Docker/Compose.
+- Tests unitaires, tests d’intégration backend/frontend et tests end-to-end Playwright.
+- Sauvegardes MySQL locales et sauvegarde externe sur Cloudflare R2 Object Storage via rclone.
 - Gestion du consentement analytique et des données personnelles.
 
 ## Installation locale
@@ -59,17 +69,49 @@ EventManager est une application web de gestion d’événements internes en ent
 ### Prérequis
 
 - Node.js 18 ou supérieur et npm.
+- MySQL 8 si vous lancez l’application sans conteneurs.
 - Docker et Docker Compose pour l’exécution conteneurisée.
 
-### Avec npm
+### Sans conteneurs
 
 ```bash
 git clone https://github.com/Lydia-BEDRI/event-manager-app
 cd event-manager-app
+```
 
+Installez et démarrez MySQL 8 localement, puis créez la base et l’utilisateur attendus par le backend :
+
+```bash
+mysql -u root -p
+```
+
+```sql
+CREATE DATABASE IF NOT EXISTS eventmanager CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER IF NOT EXISTS 'eventmanager'@'localhost' IDENTIFIED BY 'eventmanager123';
+GRANT ALL PRIVILEGES ON eventmanager.* TO 'eventmanager'@'localhost';
+FLUSH PRIVILEGES;
+EXIT;
+```
+
+Initialisez ensuite le schéma et les données de démonstration :
+
+```bash
+mysql -u root -p eventmanager < db/init.sql
+mysql -u root -p eventmanager < db/sample_data.sql
+```
+
+Configurez le backend avec le port de votre MySQL local. Sur une installation MySQL native, le port est généralement `3306` :
+
+```bash
 cd backend
 npm install
 cp .env.example .env
+# Dans backend/.env, vérifier notamment :
+# DB_HOST=localhost
+# DB_PORT=3306
+# DB_USER=eventmanager
+# DB_PASSWORD=eventmanager123
+# DB_NAME=eventmanager
 npm run dev
 ```
 
@@ -137,6 +179,9 @@ cd backend && npm test
 # Tests frontend
 cd frontend && npm test
 
+# Tests end-to-end frontend
+cd frontend && npm run test:e2e
+
 # Builds web
 cd backend && npm run build
 cd frontend && npm run build
@@ -148,9 +193,18 @@ cd frontend && npm run build:android
 curl --fail http://localhost:5000/health
 ```
 
+En CI, les tests Playwright sont exécutés après les tests frontend avec Chromium. Le job Docker construit les images puis lance Trivy ; la CI bloque les vulnérabilités `CRITICAL` corrigibles et publie les rapports en artefact `trivy-security-reports`.
+
 ## Déploiement en production
 
 Le déploiement utilise Docker Compose, Caddy comme point d’entrée HTTPS et un fichier `.env.production` présent uniquement sur le serveur. Les services applicatifs et d’observabilité sont séparés en deux fichiers Compose.
+
+La production actuelle est hébergée sur un VPS OVH derrière HTTPS :
+
+- Application : [https://eventmanager.website](https://eventmanager.website)
+- Healthcheck : [https://eventmanager.website/health](https://eventmanager.website/health)
+
+Les sauvegardes MySQL sont générées sur le VPS, conservées localement puis répliquées vers Cloudflare R2 Object Storage. Les secrets de sauvegarde, JWT, SMTP, TOTP et base de données restent hors Git.
 
 La procédure complète se trouve dans [docs/deploiement-production.md](docs/deploiement-production.md).
 

@@ -2,6 +2,11 @@
 
 Ce guide décrit le déploiement sur un VPS Linux sans publier son adresse, ses identifiants ni les secrets applicatifs. Remplacez les valeurs entre chevrons par celles transmises via un canal sécurisé.
 
+La production EventManager est hébergée sur un VPS OVH et exposée en HTTPS :
+
+- Application : https://eventmanager.website
+- Healthcheck : https://eventmanager.website/health
+
 ## Prérequis
 
 - Un VPS avec Docker, le plugin Docker Compose et Git.
@@ -165,4 +170,4 @@ docker compose \
 
 > N’utilisez jamais `docker compose down -v` en production : l’option `-v` supprime les volumes qui contiennent les bases et les configurations persistantes.
 
-Consultez également les guides [Observabilité](observabilite.md), [Sauvegardes](sauvegardes.md) et [Android](android.md).
+Consultez également les guides [Observabilité](observabilite.md), [Sauvegardes](sauvegardes.md), [Scan de sécurité Trivy](securite-trivy.md) et [Android](android.md).

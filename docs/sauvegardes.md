@@ -4,7 +4,7 @@ Les volumes Docker gardent les donnees apres un redemarrage, mais ils ne remplac
 
 - 1 copie active : la base MySQL dans Docker.
 - 1 copie locale : un dump compresse sur le VPS.
-- 1 copie externe : le meme dump envoye vers un stockage objet OVH/S3 avec rclone.
+- 1 copie externe : le meme dump envoye vers Cloudflare R2 Object Storage avec rclone.
 
 Les secrets restent hors du depot Git dans `/home/ubuntu/secure-backups/env/mysql-backup.env`.
 
@@ -36,7 +36,7 @@ MYSQL_USER="root"
 MYSQL_PASSWORD="<valeur de MYSQL_ROOT_PASSWORD dans le .env de prod>"
 BACKUP_DIR="/home/ubuntu/secure-backups/mysql/eventmanager"
 LOG_FILE="/home/ubuntu/secure-backups/mysql/backup.log"
-REMOTE_TARGET="ovh:event-manager-backups/mysql"
+REMOTE_TARGET="cloudflare-r2:event-manager-backups/mysql"
 RETENTION_LOCAL_DAYS=14
 RETENTION_REMOTE_DAYS=60
 ALERT_WEBHOOK_URL=""
@@ -51,15 +51,15 @@ grep MYSQL_ROOT_PASSWORD .env
 
 Ne jamais copier ce fichier `mysql-backup.env` dans Git.
 
-## Stockage externe OVH avec rclone
+## Stockage externe Cloudflare R2 avec rclone
 
-Actions cote OVH :
+Actions cote Cloudflare :
 
-1. Ouvrir le projet Public Cloud OVH.
-2. Creer un bucket Object Storage compatible S3, par exemple `event-manager-backups`.
-3. Creer un utilisateur S3 ou des identifiants d'acces pour ce bucket.
-4. Noter la region, l'endpoint S3, l'access key et la secret key.
-5. Limiter les droits au bucket de sauvegarde quand c'est possible.
+1. Ouvrir le tableau de bord Cloudflare R2.
+2. Creer un bucket R2, par exemple `event-manager-backups`.
+3. Creer un token d'API R2 ou des identifiants S3 limites a ce bucket.
+4. Noter l'endpoint S3 R2, l'access key ID et la secret access key.
+5. Limiter les droits au strict necessaire : ecriture, lecture et suppression des objets de sauvegarde.
 
 Actions cote VPS :
 
@@ -73,26 +73,26 @@ Configuration type :
 
 ```text
 n) New remote
-name> ovh
+name> cloudflare-r2
 Storage> s3
-provider> Other
-access_key_id> <access key OVH>
-secret_access_key> <secret key OVH>
-endpoint> <endpoint S3 de la region OVH>
+provider> Cloudflare
+access_key_id> <access key R2>
+secret_access_key> <secret key R2>
+endpoint> https://<ACCOUNT_ID>.r2.cloudflarestorage.com
 acl> private
 ```
 
 Verifier ensuite :
 
 ```bash
-rclone mkdir ovh:event-manager-backups/mysql
-rclone lsd ovh:
+rclone mkdir cloudflare-r2:event-manager-backups/mysql
+rclone lsd cloudflare-r2:
 ```
 
 Mettre ensuite dans `mysql-backup.env` :
 
 ```bash
-REMOTE_TARGET="ovh:event-manager-backups/mysql"
+REMOTE_TARGET="cloudflare-r2:event-manager-backups/mysql"
 ```
 
 ## Test manuel d'une sauvegarde
@@ -119,7 +119,7 @@ sha256sum -c *.sha256
 Verifier la copie distante :
 
 ```bash
-rclone ls ovh:event-manager-backups/mysql
+rclone ls cloudflare-r2:event-manager-backups/mysql
 ```
 
 ## Automatisation avec cron
