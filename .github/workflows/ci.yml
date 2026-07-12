@@ -180,11 +180,134 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Prepare Trivy reports directory
+        run: mkdir -p trivy-reports
+
       - name: Validate compose file
         run: docker compose config -q
 
       - name: Build backend image
         run: docker build --tag eventmanager-backend:ci ./backend
 
+      - name: Scan backend image with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: eventmanager-backend:ci
+          format: table
+          output: trivy-reports/backend-image.txt
+          severity: HIGH,CRITICAL
+          vuln-type: os,library
+          ignore-unfixed: true
+          exit-code: 0
+
       - name: Build frontend image
         run: docker build --tag eventmanager-frontend:ci ./frontend
+
+      - name: Scan frontend image with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: eventmanager-frontend:ci
+          format: table
+          output: trivy-reports/frontend-image.txt
+          severity: HIGH,CRITICAL
+          vuln-type: os,library
+          ignore-unfixed: true
+          exit-code: 0
+
+      - name: Scan repository filesystem with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          output: trivy-reports/filesystem.txt
+          scanners: vuln
+          severity: HIGH,CRITICAL
+          vuln-type: os,library
+          ignore-unfixed: true
+          exit-code: 0
+
+      - name: Scan Docker and Compose configuration with Trivy
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: config
+          scan-ref: .
+          format: table
+          output: trivy-reports/configuration.txt
+          severity: HIGH,CRITICAL
+          exit-code: 0
+
+      - name: Enforce backend image critical vulnerability gate
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: eventmanager-backend:ci
+          format: table
+          output: trivy-reports/backend-image-critical.txt
+          severity: CRITICAL
+          vuln-type: os,library
+          ignore-unfixed: true
+          exit-code: 1
+
+      - name: Enforce frontend image critical vulnerability gate
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: eventmanager-frontend:ci
+          format: table
+          output: trivy-reports/frontend-image-critical.txt
+          severity: CRITICAL
+          vuln-type: os,library
+          ignore-unfixed: true
+          exit-code: 1
+
+      - name: Enforce filesystem critical vulnerability gate
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          output: trivy-reports/filesystem-critical.txt
+          scanners: vuln
+          severity: CRITICAL
+          vuln-type: os,library
+          ignore-unfixed: true
+          exit-code: 1
+
+      - name: Enforce configuration critical vulnerability gate
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          scan-type: config
+          scan-ref: .
+          format: table
+          output: trivy-reports/configuration-critical.txt
+          severity: CRITICAL
+          exit-code: 1
+
+      - name: Publish Trivy summary
+        if: always()
+        run: |
+          {
+            echo "## Trivy security scan"
+            echo
+            echo "Reports scan Docker images, application dependencies, OS packages and Docker/Compose configuration."
+            echo "The CI fails on fixed CRITICAL vulnerabilities. HIGH findings remain visible in the reports."
+            echo
+            for report in trivy-reports/*.txt; do
+              echo "### ${report#trivy-reports/}"
+              echo '```text'
+              if [ -s "$report" ]; then
+                sed -n '1,220p' "$report"
+              else
+                echo "No findings."
+              fi
+              echo '```'
+              echo
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload Trivy reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-security-reports
+          path: trivy-reports/
+          retention-days: 30
